@@ -244,6 +244,22 @@ def seed_memberships():
 
     db.session.add_all(memberships)
     db.session.commit()
+    # Ensure commission rates even if columns were added late
+    rates = {
+        "Starter": (0.5, 5.0),
+        "Silver": (0.8, 8.0),
+        "Gold": (1.0, 10.0),
+        "VIP": (1.5, 15.0),
+    }
+    for name, (c, cc) in rates.items():
+        m = Membership.query.filter_by(name=name).first()
+        if m:
+            m.commission_percent = c
+            try:
+                m.combo_commission_percent = cc
+            except Exception:
+                pass
+    db.session.commit()
     print("Memberships seeded (UGX defaults).")
 
     # ==========================================================

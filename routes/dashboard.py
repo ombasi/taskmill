@@ -13,9 +13,24 @@ from utils.security import csrf_protect
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
+def _ensure_membership(user):
+    """Assign Starter if user has no membership (broken signup / empty seed)."""
+    if user.membership_id and user.membership:
+        return
+    from models.membership import Membership
+    starter = (
+        Membership.query.filter_by(name="Starter").first()
+        or Membership.query.order_by(Membership.price.asc()).first()
+    )
+    if starter:
+        user.membership_id = starter.id
+        db.session.commit()
+
+
 @dashboard_bp.route("/")
 @login_required
 def index():
+    _ensure_membership(current_user)
     TaskService.ensure_daily_reset(current_user)
     progress = TaskService.progress(current_user)
 

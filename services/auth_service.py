@@ -36,10 +36,22 @@ class AuthService:
 
         from models.membership import Membership
 
-        # Default to Starter if none provided
-        membership_id = membership
+        # Resolve membership (form may send id or name); always fall back to Starter
+        membership_id = None
+        if membership:
+            try:
+                membership_id = int(membership)
+            except (TypeError, ValueError):
+                m = Membership.query.filter_by(name=str(membership)).first()
+                membership_id = m.id if m else None
+            if membership_id and not Membership.query.get(membership_id):
+                membership_id = None
+
         if not membership_id:
-            starter = Membership.query.filter_by(name="Starter").first()
+            starter = (
+                Membership.query.filter_by(name="Starter").first()
+                or Membership.query.filter_by(active=True).order_by(Membership.price.asc()).first()
+            )
             membership_id = starter.id if starter else None
 
         user = User(
@@ -51,6 +63,7 @@ class AuthService:
             country=country or "Uganda",
             currency="UGX",
             currency_symbol="UGX",
+            is_active=True,
         )
 
         user.set_password(password)
