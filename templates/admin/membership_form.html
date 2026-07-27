@@ -1,0 +1,192 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+{% if membership %}
+Edit Membership
+{% else %}
+Create Membership
+{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if membership %}
+Edit Membership
+{% else %}
+Create Membership
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+
+<div class="space-y-8">
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Membership Details
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+
+                <label class="block mb-2">Membership Name</label>
+
+                <input
+                    type="text"
+                    name="name"
+                    required
+                    value="{{ membership.name if membership else '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Price</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="price"
+                    required
+                    value="{{ membership.price if membership else 0 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Daily Tasks</label>
+
+                <input
+                    type="number"
+                    name="daily_tasks"
+                    value="{{ membership.daily_tasks if membership else 20 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Tasks Per Set</label>
+
+                <input
+                    type="number"
+                    name="tasks_per_set"
+                    value="{{ membership.tasks_per_set if membership else 10 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Daily Sets</label>
+
+                <input
+                    type="number"
+                    name="daily_sets"
+                    value="{{ membership.daily_sets if membership else 2 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Combo Probability (%)</label>
+
+                <input
+                    type="number"
+                    name="combo_probability"
+                    value="{{ membership.combo_probability if membership else 5 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Maximum Product Price</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="max_product_price"
+                    value="{{ membership.max_product_price if membership else 100 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Withdrawal Limit</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="withdrawal_limit"
+                    value="{{ membership.withdrawal_limit if membership else 100000 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Minimum Deposit</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="minimum_deposit"
+                    value="{{ membership.minimum_deposit if membership else 0 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">Referral Bonus</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="referral_bonus"
+                    value="{{ membership.referral_bonus if membership else 0 }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="flex gap-4">
+
+        <button
+            type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 px-10 py-4 rounded-xl">
+
+            <i class="fa fa-save mr-2"></i>
+
+            Save Membership
+
+        </button>
+
+        <a
+            href="{{ url_for('admin.memberships') }}"
+            class="bg-slate-700 hover:bg-slate-600 px-10 py-4 rounded-xl">
+
+            Cancel
+
+        </a>
+
+    </div>
+
+</div>
+
+</form>
+
+{% endblock %}

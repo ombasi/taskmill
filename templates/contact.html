@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Support{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+
+    <div class="glass rounded-3xl p-12 mb-10 text-center">
+        <div class="w-28 h-28 mx-auto rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mb-8">
+            <i class="fa-solid fa-headset text-white text-6xl"></i>
+        </div>
+        <h1 class="text-5xl font-black text-white">Customer Support</h1>
+        <a href="{{ url_for('chat.inbox') }}"
+           class="inline-block mt-6 bg-indigo-600 hover:bg-indigo-500 rounded-xl px-8 py-3 font-semibold">
+            Open Live Chat with Admin
+        </a>
+        <p class="text-zinc-400 text-lg mt-5 max-w-2xl mx-auto">
+            Need assistance? Contact our support team through WhatsApp,
+            Telegram or Live Chat. We are available 24 hours a day.
+        </p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+
+        {% if support.whatsapp1_enabled and support.whatsapp1 %}
+        <a href="https://wa.me/{{ support.whatsapp1|replace('+', '')|replace(' ', '')|replace('-', '') }}"
+           target="_blank" rel="noopener"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-green-600 flex items-center justify-center">
+                    <i class="fab fa-whatsapp text-4xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">WhatsApp Support 1</h2>
+                    <p class="text-zinc-400 mt-2">{{ support.whatsapp1 }}</p>
+                    <p class="text-sm text-green-400 mt-1">Tap to chat</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if support.whatsapp2_enabled and support.whatsapp2 %}
+        <a href="https://wa.me/{{ support.whatsapp2|replace('+', '')|replace(' ', '')|replace('-', '') }}"
+           target="_blank" rel="noopener"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-green-600 flex items-center justify-center">
+                    <i class="fab fa-whatsapp text-4xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">WhatsApp Support 2</h2>
+                    <p class="text-zinc-400 mt-2">{{ support.whatsapp2 }}</p>
+                    <p class="text-sm text-green-400 mt-1">Tap to chat</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if support.telegram1_enabled and support.telegram1 %}
+        <a href="{% if support.telegram1.startswith('http') %}{{ support.telegram1 }}{% else %}https://t.me/{{ support.telegram1|replace('@','') }}{% endif %}"
+           target="_blank" rel="noopener"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-sky-500 flex items-center justify-center">
+                    <i class="fab fa-telegram text-4xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Telegram Support 1</h2>
+                    <p class="text-zinc-400 mt-2">{{ support.telegram1 }}</p>
+                    <p class="text-sm text-sky-400 mt-1">Tap to open</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if support.telegram2_enabled and support.telegram2 %}
+        <a href="{% if support.telegram2.startswith('http') %}{{ support.telegram2 }}{% else %}https://t.me/{{ support.telegram2|replace('@','') }}{% endif %}"
+           target="_blank" rel="noopener"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-sky-500 flex items-center justify-center">
+                    <i class="fab fa-telegram text-4xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Telegram Support 2</h2>
+                    <p class="text-zinc-400 mt-2">{{ support.telegram2 }}</p>
+                    <p class="text-sm text-sky-400 mt-1">Tap to open</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if support.livechat_enabled and support.livechat %}
+        <a href="{{ support.livechat }}"
+           target="_blank" rel="noopener"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition lg:col-span-2">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center">
+                    <i class="fa-solid fa-comments text-4xl text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Live Chat</h2>
+                    <p class="text-zinc-400 mt-2">Chat with our team online</p>
+                    <p class="text-sm text-indigo-400 mt-1">Open live chat</p>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+    </div>
+
+    {% if not (support.whatsapp1_enabled and support.whatsapp1)
+          and not (support.whatsapp2_enabled and support.whatsapp2)
+          and not (support.telegram1_enabled and support.telegram1)
+          and not (support.telegram2_enabled and support.telegram2)
+          and not (support.livechat_enabled and support.livechat) %}
+    <div class="glass rounded-3xl p-8 mt-8 text-center text-zinc-400">
+        Support channels are not configured yet. Please check back soon.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

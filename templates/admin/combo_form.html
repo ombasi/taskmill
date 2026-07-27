@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+{{ "Edit Combo" if combo else "Create Combo" }}
+{% endblock %}
+
+{% block page_title %}
+{{ "Edit Combo" if combo else "Create Combo" }}
+{% endblock %}
+
+{% block content %}
+
+<div class="glass rounded-3xl p-8 max-w-3xl mx-auto">
+
+<form method="POST">
+
+    <label>User</label>
+
+    <select
+        name="user_id"
+        class="w-full bg-slate-800 rounded-xl p-3 mb-6"
+        {% if combo %}disabled{% endif %}>
+
+        {% for user in users %}
+
+        <option
+            value="{{ user.id }}"
+            {% if combo and combo.user_id==user.id %}selected{% endif %}>
+
+            {{ user.username }}
+
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+    <label>Trigger Task</label>
+
+    <input
+        type="number"
+        name="trigger_task"
+        value="{{ combo.trigger_task if combo else '' }}"
+        class="w-full bg-slate-800 rounded-xl p-3 mb-6">
+
+    <label>Penalty Amount</label>
+
+    <input
+        type="number"
+        step="0.01"
+        name="amount"
+        value="{{ combo.amount if combo else '' }}"
+        class="w-full bg-slate-800 rounded-xl p-3 mb-6">
+        <label>Combo Type</label>
+
+<select
+    name="combo_type"
+    class="w-full bg-slate-800 rounded-xl p-3 mb-6">
+
+    <option value="fixed">Fixed Amount</option>
+
+    <option value="percentage">Percentage</option>
+
+</select>
+        <label>Tasks After Recharge</label>
+
+<input
+    type="number"
+    name="tasks_required"
+    value="3"
+    class="w-full bg-slate-800 rounded-xl p-3 mb-6">
+    <label>Admin Notes</label>
+
+<textarea
+    name="notes"
+    rows="4"
+    class="w-full bg-slate-800 rounded-xl p-3 mb-6"></textarea>
+
+    <button
+        class="bg-purple-600 px-6 py-3 rounded-xl">
+
+        Save Combo
+
+    </button>
+    
+
+</form>
+
+</div>
+
+{% endblock %}

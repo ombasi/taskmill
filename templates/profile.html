@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <div class="glass rounded-3xl p-8 mb-8">
+
+        <div class="flex flex-col lg:flex-row items-center gap-8">
+
+            <div class="relative">
+
+                <img src="{{ url_for('static', filename='images/default-avatar.png') }}"
+                     class="w-40 h-40 rounded-full object-cover border-4 border-indigo-500 shadow-xl">
+
+                <button
+                    class="absolute bottom-2 right-2 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-700 transition flex items-center justify-center">
+
+                    <i class="fa-solid fa-camera text-white"></i>
+
+                </button>
+
+            </div>
+
+            <div class="flex-1">
+
+                <h1 class="text-4xl font-bold">
+                    {{ current_user.full_name }}
+                </h1>
+
+                <p class="text-zinc-400 mt-2">
+                    {{ current_user.email }}
+                </p>
+
+                <div class="flex flex-wrap gap-4 mt-6">
+
+                    <div class="px-5 py-3 rounded-2xl bg-indigo-500/20 text-indigo-300">
+                        {{ current_user.membership.name }}
+                    </div>
+
+                    <div class="px-5 py-3 rounded-2xl bg-emerald-500/20 text-emerald-300">
+                        Active Member
+                    </div>
+
+                    <div class="px-5 py-3 rounded-2xl bg-yellow-500/20 text-yellow-300">
+                        Referral:
+                        <strong>{{ current_user.referral_code }}</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+
+        <!-- LEFT -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <h2 class="text-2xl font-semibold mb-6">
+                Account
+            </h2>
+
+            <div class="space-y-5">
+
+                <div>
+                    <p class="text-zinc-400 text-sm">
+                        Username
+                    </p>
+
+                    <h3 class="text-xl">
+                        {{ current_user.username }}
+                    </h3>
+                </div>
+
+                <div>
+                    <p class="text-zinc-400 text-sm">
+                        Member Since
+                    </p>
+
+                    <h3 class="text-xl">
+                        {{ current_user.created_at.strftime('%d %b %Y') }}
+                    </h3>
+                </div>
+
+                <div>
+                    <p class="text-zinc-400 text-sm">
+                        Phone
+                    </p>
+
+                    <h3 class="text-xl">
+                        {{ current_user.phone or 'Not Added' }}
+                    </h3>
+                </div>
+
+                <div>
+                    <p class="text-zinc-400 text-sm">
+                        Country
+                    </p>
+
+                    <h3 class="text-xl">
+                        {{ current_user.country or 'Uganda' }}
+                    </h3>
+                </div>
+
+            </div>
+
+        </div>
+                <!-- RIGHT SIDE -->
+
+        <div class="lg:col-span-2">
+
+            <div class="glass rounded-3xl p-8">
+
+                <h2 class="text-2xl font-semibold mb-8">
+                    Edit Profile
+                </h2>
+
+                <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-6">
+
+                    <div class="grid md:grid-cols-2 gap-6">
+
+                        <!-- Full Name -->
+
+                        <div>
+
+                            <label class="block mb-2 text-zinc-400 text-sm">
+                                Full Name
+                            </label>
+
+                            <div class="relative">
+
+                                <i class="fa-solid fa-user absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+
+                                <input
+                                    type="text"
+                                    name="full_name"
+                                    value="{{ current_user.full_name }}"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                            </div>
+
+                        </div>
+
+                        <!-- Username -->
+
+                        <div>
+
+                            <label class="block mb-2 text-zinc-400 text-sm">
+                                Username
+                            </label>
+
+                            <div class="relative">
+
+                                <i class="fa-solid fa-at absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value="{{ current_user.username }}"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Email -->
+
+                    <div>
+
+                        <label class="block mb-2 text-zinc-400 text-sm">
+                            Email Address
+                        </label>
+
+                        <div class="relative">
+
+                            <i class="fa-solid fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+
+                            <input
+                                type="email"
+                                name="email"
+                                value="{{ current_user.email }}"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                        </div>
+
+                    </div>
+
+                    <!-- Phone -->
+
+                    <div>
+
+                        <label class="block mb-2 text-zinc-400 text-sm">
+                            Phone Number
+                        </label>
+
+                        <div class="relative">
+
+                            <i class="fa-solid fa-phone absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+
+                            <input
+                                type="text"
+                                name="phone"
+                                value="{{ current_user.phone }}"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                        </div>
+
+                    </div>
+
+                    <hr class="border-white/10 my-8">
+
+                    <h3 class="text-xl font-semibold">
+                        Change Password
+                    </h3>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+
+                        <div>
+
+                            <label class="block mb-2 text-zinc-400 text-sm">
+                                New Password
+                            </label>
+
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="Leave blank to keep current"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                        </div>
+
+                        <div>
+
+                            <label class="block mb-2 text-zinc-400 text-sm">
+                                Confirm Password
+                            </label>
+
+                            <input
+                                type="password"
+                                name="confirm_password"
+                                placeholder="Confirm new password"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition">
+
+                        </div>
+
+                    </div>
+
+                    <div class="pt-6">
+
+                        <button
+                            type="submit"
+                            class="w-full md:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold hover:scale-[1.02] transition shadow-xl shadow-indigo-600/30">
+
+                            <i class="fa-solid fa-floppy-disk mr-2"></i>
+
+                            Save Changes
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

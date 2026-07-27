@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %}
+
+{% block title %}System Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+
+<form method="POST" enctype="multipart/form-data">
+
+<div class="space-y-8">
+
+    <!-- Website -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+            Website
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+                <label>Website Name</label>
+                <input
+                    name="site_name"
+                    class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                    value="{{ settings.site_name }}">
+            </div>
+
+            <div>
+                <label>Website URL</label>
+                <input
+                    name="site_url"
+                    class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                    value="{{ settings.site_url }}">
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- System -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+            System Controls
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-5">
+
+            <label>
+                <input type="checkbox"
+                       name="registration_enabled"
+                       {% if settings.registration_enabled %}checked{% endif %}>
+                Registration Enabled
+            </label>
+
+            <label>
+                <input type="checkbox"
+                       name="deposits_enabled"
+                       {% if settings.deposits_enabled %}checked{% endif %}>
+                Deposits Enabled
+            </label>
+
+            <label>
+                <input type="checkbox"
+                       name="withdrawals_enabled"
+                       {% if settings.withdrawals_enabled %}checked{% endif %}>
+                Withdrawals Enabled
+            </label>
+
+            <label>
+                <input type="checkbox"
+                       name="maintenance"
+                       {% if settings.maintenance %}checked{% endif %}>
+                Maintenance Mode
+            </label>
+
+        </div>
+
+    </div>
+
+    <!-- Referral -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+            Referral
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <input
+                name="referral_bonus"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.referral_bonus }}">
+
+            <input
+                name="referral_activation"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.referral_activation }}">
+
+        </div>
+
+    </div>
+
+    <!-- Combo -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+            Combo Engine
+        </h2>
+
+        <div class="grid md:grid-cols-3 gap-6">
+
+            <input
+                name="combo_probability"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.combo_probability }}">
+
+            <input
+                name="combo_penalty"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.combo_penalty }}">
+
+            <input
+                name="max_daily_combo"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.max_daily_combo }}">
+
+        </div>
+
+    </div>
+
+    <!-- Lucky Spin -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+            Lucky Spin
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <input
+                name="daily_spins"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.daily_spins }}">
+
+            <input
+                name="max_spin_reward"
+                class="bg-slate-800 rounded-xl p-3"
+                value="{{ settings.max_spin_reward }}">
+
+        </div>
+
+    </div>
+
+    <button
+        type="submit"
+        class="bg-indigo-600 px-10 py-4 rounded-xl">
+
+        Save Settings
+
+    </button>
+
+</div>
+
+</form>
+
+{% endblock %}

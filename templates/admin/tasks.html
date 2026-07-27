@@ -1,0 +1,190 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Task Manager{% endblock %}
+{% block page_title %}Task Manager{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Statistics -->
+
+    <div class="grid md:grid-cols-4 gap-6">
+
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Products</p>
+            <h2 class="text-4xl font-black">
+                {{ total_products }}
+            </h2>
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Tasks Today</p>
+            <h2 class="text-4xl font-black text-green-400">
+                {{ tasks_today }}
+            </h2>
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Completed</p>
+            <h2 class="text-4xl font-black text-blue-400">
+                {{ completed_today }}
+            </h2>
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Combo Tasks</p>
+            <h2 class="text-4xl font-black text-yellow-400">
+                {{ combo_tasks }}
+            </h2>
+        </div>
+
+    </div>
+
+    <!-- Toolbar -->
+
+    <div class="flex gap-4 flex-wrap">
+
+        <button class="bg-indigo-600 px-5 py-3 rounded-xl">
+            Add Product
+        </button>
+
+        <button class="bg-green-600 px-5 py-3 rounded-xl">
+            Generate Daily Tasks
+        </button>
+
+        <button class="bg-yellow-500 px-5 py-3 rounded-xl">
+            Generate Combo Tasks
+        </button>
+
+        <button class="bg-red-600 px-5 py-3 rounded-xl">
+            Reset Today's Tasks
+        </button>
+
+    </div>
+
+    <!-- Products -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-800">
+
+            <tr>
+
+                <th class="p-4">ID</th>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Commission</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for product in products.items %}
+
+            <tr class="border-t border-slate-700">
+
+                <td class="p-4">
+                    {{ product.id }}
+                </td>
+
+                <td>
+
+                    <img src="{{ product.image }}"
+                         class="w-16 rounded-xl">
+
+                </td>
+
+                <td>
+
+                    {{ product.name }}
+
+                </td>
+
+                <td>
+
+                    {{ money(current_user, product.price) }}
+
+                </td>
+
+                <td>
+
+                    {{ product.commission }}%
+
+                </td>
+
+                <td>
+
+                    {{ product.stock }}
+
+                </td>
+
+                <td>
+
+                    {% if product.active %}
+
+                    <span class="text-green-400">
+
+                        Active
+
+                    </span>
+
+                    {% else %}
+
+                    <span class="text-red-400">
+
+                        Disabled
+
+                    </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    <div class="flex gap-2">
+
+                        <button class="bg-blue-600 px-3 py-2 rounded-lg">
+
+                            Edit
+
+                        </button>
+
+                        <button class="bg-green-600 px-3 py-2 rounded-lg">
+
+                            Enable
+
+                        </button>
+
+                        <button class="bg-red-600 px-3 py-2 rounded-lg">
+
+                            Delete
+
+                        </button>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

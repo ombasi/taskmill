@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Task History{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-10 mb-10">
+
+        <div class="flex items-center justify-between">
+
+            <div>
+
+                <p class="uppercase tracking-[6px] text-indigo-400 text-sm">
+
+                    Activity
+
+                </p>
+
+                <h1 class="text-5xl font-black text-white mt-3">
+
+                    Task History
+
+                </h1>
+
+                <p class="text-zinc-400 mt-4">
+
+                    Every completed task and every commission you've earned.
+
+                </p>
+
+            </div>
+
+            <div class="hidden lg:flex w-28 h-28 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 items-center justify-center">
+
+                <i class="fa-solid fa-clock-rotate-left text-6xl text-white"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Summary -->
+
+    <div class="grid md:grid-cols-4 gap-6 mb-10">
+
+        <div class="glass rounded-3xl p-7">
+
+            <p class="text-zinc-400">
+
+                Total Tasks
+
+            </p>
+
+            <h2 class="text-5xl font-black text-white mt-4">
+
+                {{ completed }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-3xl p-7">
+
+            <p class="text-zinc-400">
+
+                Pending
+
+            </p>
+
+            <h2 class="text-5xl font-black text-yellow-400 mt-4">
+
+                {{ pending }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-3xl p-7">
+
+            <p class="text-zinc-400">
+
+                Total Earnings
+
+            </p>
+
+            <h2 class="text-4xl font-black text-emerald-400 mt-4">
+
+                {{ money(current_user, total_earnings) }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-3xl p-7">
+
+            <p class="text-zinc-400">
+
+                Membership
+
+            </p>
+
+            <h2 class="text-3xl font-black text-purple-400 mt-5">
+
+                {{ current_user.membership.name }}
+
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- History Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <div class="overflow-x-auto">
+
+            <table class="w-full">
+
+                <thead class="bg-white/5">
+
+                    <tr>
+
+                        <th class="p-6 text-left">
+
+                            Product
+
+                        </th>
+
+                        <th class="p-6">
+
+                            Date
+
+                        </th>
+
+                        <th class="p-6">
+
+                            Rating
+
+                        </th>
+
+                        <th class="p-6">
+
+                            Status
+
+                        </th>
+
+                        <th class="p-6 text-right">
+
+                            Earnings
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for task in history %}
+
+                <tr class="border-t border-white/10 hover:bg-white/5 transition">
+
+                    <td class="p-6">
+
+                        <div class="flex items-center gap-4">
+
+                            <img
+                                src="{{ media(task.product_image) }}" onerror="this.src='https://picsum.photos/seed/fallback/400/400'"
+                                class="w-16 h-16 rounded-xl object-cover">
+
+                            <div>
+
+                                <h3 class="font-semibold text-white">
+
+                                    {{ task.product_name }}
+
+                                </h3>
+
+                                <p class="text-zinc-400 text-sm">
+                                    {% if task.task_set == 99 %}Combo product{% else %}Product Review{% endif %}
+                                </p>
+                                <p class="text-sm mt-1">
+                                    {% if task.status == 'assigned' %}
+                                        <span class="text-yellow-400 font-semibold">Pending</span>
+                                    {% elif task.status == 'completed' %}
+                                        <span class="text-green-400 font-semibold">Completed</span>
+                                    {% else %}
+                                        <span class="text-zinc-400">{{ task.status }}</span>
+                                    {% endif %}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                    <td class="text-center">
+
+                        {% if task.completed_at %}{{ task.completed_at.strftime('%d %b %Y') }}{% elif task.created_at %}{{ task.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}
+
+                    </td>
+
+                    <td class="text-center">
+
+                        {% for i in range(task.rating) %}
+
+                        ⭐
+
+                        {% endfor %}
+
+                    </td>
+
+                    <td class="text-center">
+
+                        <span class="px-4 py-2 rounded-full bg-emerald-600/20 text-emerald-400">
+
+                            Completed
+
+                        </span>
+
+                    </td>
+
+                    <td class="text-right pr-8 font-bold text-emerald-400">
+
+                        +{{ money(current_user, task.commission) }}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

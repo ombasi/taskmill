@@ -1,0 +1,233 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Payment Settings{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto">
+
+    <div class="glass rounded-3xl p-8 mb-8">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <h1 class="text-4xl font-bold">
+
+                    Payment Settings
+
+                </h1>
+
+                <p class="text-zinc-400 mt-2">
+
+                    Manage all deposit methods.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ADD PAYMENT -->
+
+    <div class="glass rounded-3xl p-8 mb-10">
+
+        <h2 class="text-2xl font-bold mb-6">
+
+            Add Payment Method
+
+        </h2>
+
+        <form
+            action="{{ url_for('admin.add_payment_setting') }}"
+            method="POST">
+
+            <div class="grid md:grid-cols-2 gap-5">
+
+                <input
+                    name="method"
+                    placeholder="Method"
+                    required
+                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+
+                <input
+                    name="provider"
+                    placeholder="Provider"
+                    required
+                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+
+                <input
+                    name="account_name"
+                    placeholder="Account Name"
+                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+
+                <input
+                    name="account_number"
+                    placeholder="Wallet / Account Number"
+                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+
+            </div>
+
+            <textarea
+                name="instructions"
+                rows="4"
+                placeholder="Instructions..."
+                class="w-full mt-5 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"></textarea>
+
+            <button
+                class="mt-6 bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-xl">
+
+                Add Payment Method
+
+            </button>
+            <div class="mb-5">
+
+    <label class="block mb-2">
+
+        Payment Logo
+
+    </label>
+
+    <input
+        type="file"
+        name="logo"
+        accept="image/*"
+        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+
+</div>
+
+<div class="mb-5">
+
+    <label class="block mb-2">
+
+        QR Code
+
+    </label>
+
+    <input
+        type="file"
+        name="qr_code"
+        accept="image/*"
+        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+
+</div>
+
+        </form>
+
+    </div>
+
+    <!-- TABLE -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-zinc-900">
+
+                <tr>
+
+                    <th class="p-4 text-left">Method</th>
+
+                    <th class="p-4 text-left">Provider</th>
+
+                    <th class="p-4 text-left">Account</th>
+
+                    <th class="p-4 text-left">Status</th>
+
+                    <th class="p-4 text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for setting in settings %}
+
+                <tr class="border-t border-zinc-800">
+
+                    <td class="p-4">
+
+                        {{ setting.method }}
+
+                    </td>
+
+                    <td class="p-4">
+
+                        {{ setting.provider }}
+
+                    </td>
+
+                    <td class="p-4">
+
+                        {{ setting.account_number }}
+
+                    </td>
+
+                    <td class="p-4">
+
+                        {% if setting.active %}
+
+                            <span class="bg-green-600 px-3 py-1 rounded-full">
+
+                                Active
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="bg-red-600 px-3 py-1 rounded-full">
+
+                                Disabled
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-4">
+
+                        <div class="flex justify-center gap-2">
+
+                            <a
+                                href="{{ url_for('admin.toggle_payment_setting', id=setting.id) }}"
+                                class="bg-yellow-600 px-4 py-2 rounded-lg">
+
+                                Toggle
+
+                            </a>
+
+                            <form
+                                action="{{ url_for('admin.delete_payment_setting', id=setting.id) }}"
+                                method="POST">
+
+                                <button
+                                    onclick="return confirm('Delete payment method?')"
+                                    class="bg-red-600 px-4 py-2 rounded-lg">
+
+                                    Delete
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

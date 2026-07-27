@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Lucky Spin{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-12 mb-10 text-center">
+
+        <div class="w-32 h-32 mx-auto rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center mb-8 shadow-2xl">
+
+            <i class="fa-solid fa-gift text-white text-6xl"></i>
+
+        </div>
+
+        <h1 class="text-5xl font-black text-white">
+
+            Lucky Spin
+
+        </h1>
+
+        <p class="text-zinc-400 text-lg mt-5">
+
+            Spin the wheel once every 24 hours for amazing rewards.
+
+        </p>
+
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10">
+
+        <!-- Wheel -->
+
+        <div class="glass rounded-3xl p-10 text-center">
+
+            <div class="relative inline-block">
+
+                <!-- Pointer -->
+
+                <div class="absolute left-1/2 -translate-x-1/2 -top-6 z-20">
+
+                    <i class="fa-solid fa-caret-down text-red-500 text-5xl"></i>
+
+                </div>
+
+                <!-- Wheel -->
+
+                <div id="wheel"
+                     class="w-96 h-96 rounded-full border-[12px] border-yellow-400 transition-all duration-[5000ms] ease-out"
+
+                     style="background:
+                     conic-gradient(
+                        #6366f1 0deg 45deg,
+                        #10b981 45deg 90deg,
+                        #f59e0b 90deg 135deg,
+                        #ef4444 135deg 180deg,
+                        #8b5cf6 180deg 225deg,
+                        #06b6d4 225deg 270deg,
+                        #22c55e 270deg 315deg,
+                        #f97316 315deg 360deg
+                     );">
+
+                </div>
+
+            </div>
+
+            <button
+                id="spinButton"
+                class="mt-10 px-14 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-bold text-xl hover:scale-105 transition">
+
+                🎡 Spin Now
+
+            </button>
+
+        </div>
+
+        <!-- Rewards -->
+
+        <div class="glass rounded-3xl p-10">
+
+            <h2 class="text-3xl font-bold text-white mb-8">
+
+                Possible Rewards
+
+            </h2>
+
+            <div class="space-y-4">
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>UGX 5,000 Bonus</span>
+
+                    <span>💵</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>UGX 15,000 Bonus</span>
+
+                    <span>💰</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>UGX 50,000 Bonus</span>
+
+                    <span>🤑</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>Free Task</span>
+
+                    <span>🎁</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>Double Commission</span>
+
+                    <span>🚀</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>50 Points</span>
+
+                    <span>⭐</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>100 Points</span>
+
+                    <span>🏆</span>
+
+                </div>
+
+                <div class="glass rounded-2xl p-5 flex justify-between">
+
+                    <span>Jackpot</span>
+
+                    <span>👑</span>
+
+                </div>
+
+            </div>
+
+            <div class="mt-8 glass rounded-2xl p-6">
+
+                <h3 class="text-xl font-bold text-yellow-400 mb-4">
+
+                    Rules
+
+                </h3>
+
+                <ul class="space-y-3 text-zinc-400">
+
+                    <li>• One spin every 24 hours.</li>
+
+                    <li>• Rewards are credited automatically.</li>
+
+                    <li>• Diamond members receive two spins daily.</li>
+
+                    <li>• Jackpot rewards are manually verified.</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let spinning=false;
+
+document.getElementById("spinButton").onclick=function(){
+
+    if(spinning)return;
+
+    spinning=true;
+
+    let angle=3600+Math.floor(Math.random()*360);
+
+    document.getElementById("wheel").style.transform="rotate("+angle+"deg)";
+
+    setTimeout(function(){
+
+        alert("🎉 Congratulations! Your reward has been added.");
+
+        spinning=false;
+
+    },5000);
+
+}
+
+</script>
+
+{% endblock %}

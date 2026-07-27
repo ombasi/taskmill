@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+
+<div class="min-h-screen flex items-center justify-center px-6 py-16">
+
+    <div class="w-full max-w-3xl">
+
+        <!-- HERO -->
+
+        <div class="text-center mb-10">
+
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 mb-6 shadow-2xl shadow-indigo-500/40">
+
+                <i class="fa-solid fa-user-plus text-5xl text-white"></i>
+
+            </div>
+
+            <h1 class="text-5xl font-black text-white">
+
+                Join Taskmill
+
+            </h1>
+
+            <p class="text-zinc-400 text-lg mt-4">
+
+                Create your account and begin earning through product reviews.
+
+            </p>
+
+        </div>
+
+        <!-- REGISTER CARD -->
+
+        <div class="glass rounded-3xl p-10">
+
+            <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                    <!-- FULL NAME -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Full Name
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            name="full_name"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+
+                    <!-- USERNAME -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Username
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            name="username"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+
+                    <!-- EMAIL -->
+
+                    <div class="md:col-span-2">
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Email Address
+
+                        </label>
+
+                        <input
+
+                            type="email"
+
+                            name="email"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+
+                    <!-- PHONE -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Phone Number
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            name="phone"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+
+                    <!-- COUNTRY -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Country
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            name="country"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+                                        <!-- REFERRAL -->
+
+                    <div class="md:col-span-2">
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Referral Code
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            name="referral_code"
+
+                            placeholder="Required"
+
+                            required
+
+                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+                    </div>
+
+                    <!-- PASSWORD -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Password
+
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+
+                                id="password"
+
+                                type="password"
+
+                                name="password"
+
+                                required
+
+                                class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 pr-14 focus:border-indigo-500 focus:outline-none">
+
+                            <button
+                                type="button"
+                                onclick="togglePassword('password',this)"
+                                class="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div>
+
+                        <label class="block text-zinc-300 mb-3 font-semibold">
+
+                            Confirm Password
+
+                        </label>
+
+                        <div class="relative">
+
+                            <input
+
+                                id="confirm_password"
+
+                                type="password"
+
+                                name="confirm_password"
+
+                                required
+
+                                class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 pr-14 focus:border-indigo-500 focus:outline-none">
+
+                            <button
+                                type="button"
+                                onclick="togglePassword('confirm_password',this)"
+                                class="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- TERMS -->
+
+                <div class="mt-8 flex items-start gap-3">
+
+                    <input
+                        type="checkbox"
+                        required
+                        class="mt-1 w-5 h-5 accent-indigo-600">
+
+                    <label class="text-zinc-400 leading-7">
+
+                        I agree to the Terms & Conditions and understand
+                        Taskmill's earning policy.
+
+                    </label>
+
+                </div>
+
+                <!-- BUTTON -->
+
+                <button
+                    type="submit"
+                    class="w-full mt-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] transition shadow-2xl shadow-indigo-600/30">
+
+                    Create My Account
+
+                </button>
+
+            </form>
+            
+            <!-- LOGIN -->
+
+            <div class="mt-10 text-center">
+
+                <p class="text-zinc-400">
+
+                    Already have an account?
+
+                    <a href="{{ url_for('auth.login') }}"
+                       class="text-indigo-400 hover:text-indigo-300 font-semibold">
+
+                        Login Here
+
+                    </a>
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Password Toggle -->
+
+<script>
+
+function togglePassword(id, btn){
+
+    const input=document.getElementById(id);
+
+    const icon=btn.querySelector("i");
+
+    if(input.type==="password"){
+
+        input.type="text";
+
+        icon.classList.remove("fa-eye");
+
+        icon.classList.add("fa-eye-slash");
+
+    }else{
+
+        input.type="password";
+
+        icon.classList.remove("fa-eye-slash");
+
+        icon.classList.add("fa-eye");
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

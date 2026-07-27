@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block title %}Deposit Funds{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-10 mb-10">
+
+        <div class="flex flex-col lg:flex-row justify-between items-center">
+
+            <div>
+
+                <p class="uppercase tracking-[6px] text-indigo-400 text-sm">
+
+                    Secure Deposit
+
+                </p>
+
+                <h1 class="text-5xl font-black text-white mt-4">
+
+                    Deposit Funds
+
+                </h1>
+
+                <p class="text-zinc-400 text-lg mt-6 max-w-2xl">
+
+                    Choose your preferred payment method, complete payment,
+                    upload proof and wait for admin approval.
+
+                </p>
+
+            </div>
+
+            <div
+                class="hidden lg:flex w-40 h-40 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 items-center justify-center">
+
+                <i class="fa-solid fa-wallet text-7xl text-white"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="grid lg:grid-cols-2 gap-8">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- LEFT PANEL -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <h2 class="text-2xl font-bold mb-8">
+
+                Deposit Details
+
+            </h2>
+
+            <!-- Amount -->
+
+            <div class="mb-6">
+
+                <label class="block mb-3 text-zinc-300">
+
+                    Deposit Amount
+
+                </label>
+
+                <input
+                    type="number"
+                    name="amount"
+                    step="0.01"
+                    required
+                    placeholder="Enter amount"
+                    class="w-full rounded-2xl bg-zinc-900 border border-zinc-700 px-5 py-4 focus:border-indigo-500 focus:outline-none">
+
+            </div>
+
+            <!-- Currency -->
+
+            <div class="mb-6">
+
+                <label class="block mb-3 text-zinc-300">
+
+                    Currency
+
+                </label>
+
+                <input
+                    type="text"
+                    readonly
+                    value="{{ current_user.currency or 'USD' }}"
+                    class="w-full rounded-2xl bg-zinc-800 border border-zinc-700 px-5 py-4">
+
+            </div>
+
+            <!-- Payment Method -->
+
+            <div class="mb-6">
+
+                <label class="block mb-3 text-zinc-300">
+
+                    Payment Method
+
+                </label>
+
+                <select
+                    id="payment_method"
+                    name="payment_method"
+                    required
+                    class="w-full rounded-2xl bg-zinc-900 border border-zinc-700 px-5 py-4">
+
+                    {% for method in payment_settings %}
+
+                    <option
+    value="{{ method.method }}"
+    data-provider="{{ method.provider }}"
+    data-name="{{ method.account_name }}"
+    data-account="{{ method.account_number }}"
+    data-logo="{{ method.logo }}"
+    data-qr="{{ method.qr_code }}"
+    data-instructions="{{ method.instructions }}">
+
+    {{ method.method }}
+
+</option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <input
+                type="hidden"
+                id="provider"
+                name="provider">
+
+            <!-- Transaction ID -->
+
+            <div class="mb-6">
+
+                <label class="block mb-3">
+
+                    Transaction ID
+
+                </label>
+
+                <input
+                    type="text"
+                    name="transaction_id"
+                    placeholder="Transaction Reference"
+                    class="w-full rounded-2xl bg-zinc-900 border border-zinc-700 px-5 py-4">
+
+            </div>
+                        <!-- Notes -->
+
+            <div class="mb-8">
+
+                <label class="block mb-3">
+
+                    Notes (Optional)
+
+                </label>
+
+                <textarea
+                    name="notes"
+                    rows="4"
+                    placeholder="Any extra information..."
+                    class="w-full rounded-2xl bg-zinc-900 border border-zinc-700 px-5 py-4 resize-none"></textarea>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <h2 class="text-2xl font-bold mb-8">
+
+                Payment Information
+
+            </h2>
+
+            <div
+                class="rounded-3xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 p-8">
+
+                <!-- Logo -->
+
+                <div class="flex justify-center mb-8">
+
+    <img
+        id="paymentLogo"
+        src=""
+        class="w-28 h-28 object-contain rounded-2xl">
+
+</div>
+
+                <!-- Method -->
+
+                <div class="mb-6">
+
+                    <p class="text-zinc-500 uppercase text-sm">
+
+                        Payment Method
+
+                    </p>
+
+                    <h2
+                        id="methodTitle"
+                        class="text-3xl font-bold text-indigo-400 mt-2">
+
+                    </h2>
+
+                </div>
+
+                <!-- Provider -->
+
+                <div class="mb-6">
+
+                    <p class="text-zinc-500 uppercase text-sm">
+
+                        Provider
+
+                    </p>
+
+                    <h3
+                        id="providerName"
+                        class="text-xl font-semibold mt-2">
+
+                    </h3>
+
+                </div>
+
+                <!-- Account Name -->
+
+                <div class="mb-6">
+
+                    <p class="text-zinc-500 uppercase text-sm">
+
+                        Account Name
+
+                    </p>
+
+                    <h3
+                        id="accountName"
+                        class="text-lg font-semibold mt-2">
+
+                    </h3>
+
+                </div>
+
+                <!-- Wallet -->
+
+                <div>
+
+                    <p class="text-zinc-500 uppercase text-sm">
+
+                        Wallet / Account
+
+                    </p>
+
+                    <div
+                        class="flex mt-3">
+
+                        <input
+                            id="walletAddress"
+                            readonly
+                            class="flex-1 rounded-l-2xl bg-black border border-zinc-700 px-5 py-4 text-indigo-300 font-semibold">
+
+                        <button
+                            type="button"
+                            onclick="copyAddress()"
+                            class="bg-indigo-600 hover:bg-indigo-700 px-6 rounded-r-2xl">
+
+                            <i class="fa fa-copy"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- Instructions -->
+
+                <div
+                    id="instructions"
+                    class="mt-8 rounded-2xl bg-zinc-950 border border-zinc-700 p-5 text-sm text-zinc-300">
+
+                </div>
+
+            </div>
+
+            <!-- QR CODE -->
+
+           <div
+    class="mt-8 rounded-3xl bg-zinc-900 border border-zinc-700 p-8 text-center">
+
+    <img
+        id="paymentQR"
+        src=""
+        class="mx-auto w-56 h-56 object-contain hidden rounded-2xl">
+
+    <p
+        id="qrText"
+        class="text-zinc-400">
+
+        QR Code not available.
+
+    </p>
+
+</div>
+                        <!-- Upload Proof -->
+
+            <div class="mt-8">
+
+                <label class="block text-lg font-semibold mb-4">
+
+                    Upload Payment Proof
+
+                </label>
+
+                <input
+                    type="file"
+                    id="proof"
+                    name="proof"
+                    accept="image/*"
+                    required
+                    class="w-full rounded-2xl bg-zinc-900 border border-zinc-700 p-4">
+
+            </div>
+
+            <!-- Preview -->
+
+            <div
+                class="mt-6">
+
+                <img
+                    id="previewImage"
+                    class="hidden rounded-2xl border border-zinc-700 max-h-72 w-full object-cover">
+
+            </div>
+
+            <!-- Submit -->
+
+            <button
+                type="submit"
+                class="w-full mt-8 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-bold text-lg transition">
+
+                <i class="fa-solid fa-paper-plane mr-2"></i>
+
+                Submit Deposit
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+
+function refreshPayment(){
+
+    const select=document.getElementById("payment_method");
+
+    const option=select.options[select.selectedIndex];
+
+    document.getElementById("provider").value=
+        option.dataset.provider || "";
+
+    document.getElementById("providerName").innerHTML=
+        option.dataset.provider || "";
+
+    document.getElementById("methodTitle").innerHTML=
+        option.value;
+
+    document.getElementById("accountName").innerHTML=
+        option.dataset.name || "";
+
+    document.getElementById("walletAddress").value=
+        option.dataset.account || "";
+
+    (function(){
+        var logo = option.dataset.logo || "";
+        if (!logo) {
+            document.getElementById("paymentLogo").src = "";
+            return;
+        }
+        if (logo.indexOf("http") === 0 || logo.indexOf("/static/") === 0) {
+            document.getElementById("paymentLogo").src = logo;
+        } else if (logo.indexOf("images/") === 0 || logo.indexOf("uploads/") === 0) {
+            document.getElementById("paymentLogo").src = "/static/" + logo;
+        } else {
+            document.getElementById("paymentLogo").src = "/static/images/payments/" + logo;
+        }
+    })();
+
+    document.getElementById("instructions").innerHTML=
+        option.dataset.instructions || "";
+
+}
+
+document
+.getElementById("payment_method")
+.addEventListener("change", refreshPayment);
+
+refreshPayment();
+
+function copyAddress(){
+
+    const input=document.getElementById("walletAddress");
+
+    navigator.clipboard.writeText(input.value);
+
+    alert("Account copied successfully.");
+
+}
+const qr = document.getElementById("paymentQR");
+
+const qrText = document.getElementById("qrText");
+
+if(option.dataset.qr){
+
+    qr.src =
+        "/static/uploads/payment_qr/" + option.dataset.qr;
+
+    qr.classList.remove("hidden");
+
+    qrText.classList.add("hidden");
+
+}else{
+
+    qr.classList.add("hidden");
+
+    qrText.classList.remove("hidden");
+
+}
+document
+.getElementById("proof")
+.addEventListener("change", function(e){
+
+    const file=e.target.files[0];
+
+    if(!file) return;
+
+    const reader=new FileReader();
+
+    reader.onload=function(event){
+
+        const img=document.getElementById("previewImage");
+
+        img.src=event.target.result;
+
+        img.classList.remove("hidden");
+
+    };
+
+    reader.readAsDataURL(file);
+
+});
+
+</script>
+
+{% endblock %}

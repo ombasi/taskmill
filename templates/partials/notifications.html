@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+
+<div class="max-w-6xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-12 mb-10">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="uppercase tracking-[6px] text-indigo-400 text-sm">
+
+                    Notification Center
+
+                </p>
+
+                <h1 class="text-5xl font-black text-white mt-4">
+
+                    Notifications
+
+                </h1>
+
+                <p class="text-zinc-400 mt-5 text-lg">
+
+                    Stay updated with your latest activities.
+
+                </p>
+
+            </div>
+
+            <div class="hidden lg:flex w-32 h-32 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 items-center justify-center">
+
+                <i class="fa-solid fa-bell text-6xl text-white"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Notifications -->
+
+    <div class="space-y-5">
+
+        {% for notification in notifications %}
+
+        <div class="glass rounded-3xl p-7 hover:bg-white/5 transition">
+
+            <div class="flex items-start gap-5">
+
+                <!-- Icon -->
+
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center
+
+                    {% if notification.type == 'deposit' %}
+                        bg-emerald-600
+                    {% elif notification.type == 'withdraw' %}
+                        bg-red-500
+                    {% elif notification.type == 'task' %}
+                        bg-indigo-600
+                    {% elif notification.type == 'reward' %}
+                        bg-yellow-500
+                    {% else %}
+                        bg-purple-600
+                    {% endif %}
+                ">
+
+                    {% if notification.type == 'deposit' %}
+                        <i class="fa-solid fa-wallet text-white text-2xl"></i>
+
+                    {% elif notification.type == 'withdraw' %}
+                        <i class="fa-solid fa-money-bill-transfer text-white text-2xl"></i>
+
+                    {% elif notification.type == 'task' %}
+                        <i class="fa-solid fa-list-check text-white text-2xl"></i>
+
+                    {% elif notification.type == 'reward' %}
+                        <i class="fa-solid fa-gift text-white text-2xl"></i>
+
+                    {% else %}
+                        <i class="fa-solid fa-bell text-white text-2xl"></i>
+
+                    {% endif %}
+
+                </div>
+
+                <!-- Message -->
+
+                <div class="flex-1">
+
+                    <h3 class="text-white text-xl font-bold">
+
+                        {{ notification.title }}
+
+                    </h3>
+
+                    <p class="text-zinc-400 mt-3 leading-7">
+
+                        {{ notification.message }}
+
+                    </p>
+
+                    <span class="text-sm text-zinc-500 mt-4 block">
+
+                        {{ notification.created_at.strftime("%d %b %Y %I:%M %p") }}
+
+                    </span>
+
+                </div>
+
+                {% if not notification.read %}
+
+                <span class="w-4 h-4 rounded-full bg-indigo-500 mt-3"></span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="glass rounded-3xl p-20 text-center">
+
+            <i class="fa-solid fa-bell-slash text-7xl text-zinc-600 mb-8"></i>
+
+            <h2 class="text-4xl font-bold text-white">
+
+                No Notifications
+
+            </h2>
+
+            <p class="text-zinc-400 mt-5">
+
+                You're all caught up.
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

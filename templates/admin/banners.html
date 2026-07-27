@@ -1,0 +1,281 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Banner Management{% endblock %}
+{% block page_title %}Banner Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Banner Management
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                Manage homepage banners.
+
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_banner') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
+
+            <i class="fa-solid fa-plus mr-2"></i>
+
+            Create Banner
+
+        </a>
+
+    </div>
+
+    <!-- Search -->
+
+    <form method="GET">
+
+        <div class="flex gap-4">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search banner..."
+                class="flex-1 bg-slate-800 rounded-xl p-4">
+
+            <button
+                class="bg-indigo-600 px-6 rounded-xl">
+
+                Search
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-900">
+
+                <tr class="text-left">
+
+                    <th class="p-5">Preview</th>
+
+                    <th class="p-5">Title</th>
+
+                    <th class="p-5">Link</th>
+
+                    <th class="p-5">Status</th>
+
+                    <th class="p-5">Created</th>
+
+                    <th class="p-5 text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for banner in banners.items %}
+
+                <tr class="border-t border-slate-800 hover:bg-slate-900/40">
+
+                    <td class="p-5">
+
+                        {% if banner.image %}
+
+                        <img
+                            src="{{ banner.image }}"
+                            class="w-24 h-14 rounded-lg object-cover">
+
+                        {% else %}
+
+                        <div class="w-24 h-14 rounded-lg bg-slate-700 flex items-center justify-center">
+
+                            <i class="fa-solid fa-image"></i>
+
+                        </div>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5 font-semibold">
+
+                        {{ banner.title }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if banner.link %}
+
+                        <a
+                            href="{{ banner.link }}"
+                            target="_blank"
+                            class="text-indigo-400">
+
+                            {{ banner.link[:40] }}
+
+                        </a>
+
+                        {% else %}
+
+                        —
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if banner.active %}
+
+                        <span class="px-3 py-1 rounded-full bg-green-600">
+
+                            Active
+
+                        </span>
+
+                        {% else %}
+
+                        <span class="px-3 py-1 rounded-full bg-red-600">
+
+                            Disabled
+
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if banner.created_at %}
+
+                            {{ banner.created_at.strftime("%d %b %Y") }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        <div class="flex justify-center gap-2">
+
+                            <a
+                                href="{{ url_for('admin.edit_banner', id=banner.id) }}"
+                                class="bg-indigo-600 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.toggle_banner', id=banner.id) }}"
+                                class="bg-yellow-500 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-power-off"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.delete_banner', id=banner.id) }}"
+                                onclick="return confirm('Delete this banner?')"
+                                class="bg-red-600 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="6" class="text-center py-16 text-zinc-500">
+
+                        No banners found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+
+    {% if banners.pages > 1 %}
+
+    <div class="flex justify-between items-center">
+
+        {% if banners.has_prev %}
+
+        <a
+            href="{{ url_for('admin.banners', page=banners.prev_num, search=search) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Previous
+
+        </a>
+
+        {% else %}
+
+        <div></div>
+
+        {% endif %}
+
+        <span>
+
+            Page {{ banners.page }} of {{ banners.pages }}
+
+        </span>
+
+        {% if banners.has_next %}
+
+        <a
+            href="{{ url_for('admin.banners', page=banners.next_num, search=search) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Next
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Admin{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Inter, sans-serif;
+        }
+        .glass {
+            background: rgba(255,255,255,.06);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        .sidebar-link {
+            transition: .25s;
+        }
+        .sidebar-link:hover {
+            background: #4f46e5;
+            transform: translateX(6px);
+        }
+        .active {
+            background: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-72 glass border-r border-white/10">
+
+        <div class="p-8 text-center">
+            <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" 
+                 class="w-20 mx-auto mb-5">
+            <h2 class="text-3xl font-black">Taskmill</h2>
+            <p class="text-zinc-400">Administration</p>
+        </div>
+
+        <nav class="px-5 space-y-2">
+
+            <a href="{{ url_for('admin.dashboard') }}" 
+               class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line w-6"></i>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('admin.users') }}" 
+               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-users w-6"></i>
+                Users
+            </a>
+
+            <a href="{{ url_for('admin.products') }}" 
+               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-box w-6"></i>
+                Products
+            </a>
+            <a href="{{ url_for('admin.combos') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.combos' %}active{% endif %}">
+    <i class="fa-solid fa-bolt w-6"></i>
+    Combo Manager
+</a>
+            <a href="{{ url_for('admin.deposits') }}" 
+               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-wallet w-6"></i>
+                Deposits
+            </a>
+
+            <a href="{{ url_for('admin.withdrawals') }}" 
+               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-money-bill-wave w-6"></i>
+                Withdrawals
+            </a>
+        
+    <a href="{{ url_for('admin.payment_settings') }}"
+    class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+        <i class="fa-solid fa-money-check-dollar"></i>
+        Payment Settings
+    </a>
+
+            <a href="{{ url_for('admin.memberships') }}" class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-crown w-6"></i>
+                Memberships
+            </a>
+
+<a href="{{ url_for('admin.reports') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.reports' %}active{% endif %}">
+    <i class="fa-solid fa-chart-column w-6"></i>
+    Reports
+</a>
+
+            <a href="{{ url_for('admin.announcements') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.announcements' %}active{% endif %}">
+    <i class="fa-solid fa-bullhorn w-6"></i>
+    Announcements
+</a>
+            <a href="{{ url_for('admin.notifications') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.notifications' %}active{% endif %}">
+    <i class="fa-solid fa-bell w-6"></i>
+    Notifications
+</a>
+
+            <a href="{{ url_for('admin.support') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.support' %}active{% endif %}">
+   <i class="fa-solid fa-headset w-6"></i>             
+   Support
+            </a>
+            <a href="{{ url_for('chat.admin_inbox') }}"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint and request.endpoint.startswith('chat.') %}active{% endif %}">
+                <i class="fa-solid fa-comments w-6 text-center"></i>
+                <span>Live Chat</span>
+            </a>
+
+            <a href="#"
+   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.audit_logs' %}active{% endif %}">
+    <i class="fa-solid fa-file-alt w-6"></i>
+    Audit Logs
+</a>
+
+            <a href="{{ url_for('admin.settings') }}" class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
+                <i class="fa-solid fa-gear w-6"></i>
+                Settings
+            </a>
+
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+
+        <!-- Top Bar -->
+        <header class="glass px-10 py-6 flex justify-between items-center border-b border-white/10">
+            <div>
+                <h1 class="text-3xl font-black">
+                    {% block page_title %}Admin{% endblock %}
+                </h1>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <button class="text-2xl">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+                <button class="text-2xl">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold">{{ current_user.full_name }}</p>
+                        <p class="text-sm text-zinc-400">Administrator</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="p-10">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

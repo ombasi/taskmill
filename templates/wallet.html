@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- ================= HERO ================= -->
+
+    <div class="glass rounded-3xl p-10 mb-8">
+
+        <div class="flex flex-col lg:flex-row items-center justify-between">
+
+            <div>
+
+                <h1 class="text-4xl font-bold text-white">
+                    My Wallet
+                </h1>
+
+                <p class="text-zinc-400 mt-3">
+                    Manage your balances, deposits, withdrawals and transaction history.
+                </p>
+
+            </div>
+
+            <div class="text-right mt-8 lg:mt-0">
+
+                <p class="text-zinc-400 uppercase tracking-wider text-sm">
+                    Available Balance
+                </p>
+
+                <h2 class="text-6xl font-black text-emerald-400 mt-2">
+
+                    {{ money(current_user, current_user.available_balance) }}
+
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= SUMMARY ================= -->
+
+    <div class="grid lg:grid-cols-4 gap-6 mb-8">
+
+        <!-- Available -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+
+                    <p class="text-zinc-400 text-sm">
+
+                        Available
+
+                    </p>
+
+                    <h3 class="text-3xl font-bold text-emerald-400 mt-3">
+
+                        {{ money(current_user, current_user.available_balance) }}
+
+                    </h3>
+
+                </div>
+
+                <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
+
+                    <i class="fa-solid fa-wallet text-emerald-400 text-xl"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Pending -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+
+                    <p class="text-zinc-400 text-sm">
+
+                        Pending
+
+                    </p>
+
+                    <h3 class="text-3xl font-bold text-yellow-400 mt-3">
+
+                        {{ money(current_user, current_user.pending_balance) }}
+
+                    </h3>
+
+                </div>
+
+                <div class="w-14 h-14 rounded-2xl bg-yellow-500/20 flex items-center justify-center">
+
+                    <i class="fa-solid fa-hourglass-half text-yellow-400 text-xl"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Combo -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+
+                    <p class="text-zinc-400 text-sm">
+
+                        Combo Balance
+
+                    </p>
+
+                    <h3 class="text-3xl font-bold text-indigo-400 mt-3">
+
+                        {{ money(current_user, current_user.combo_balance) }}
+
+                    </h3>
+
+                </div>
+
+                <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center">
+
+                    <i class="fa-solid fa-layer-group text-indigo-400 text-xl"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Membership -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center">
+
+                <div>
+
+                    <p class="text-zinc-400 text-sm">
+
+                        Membership
+
+                    </p>
+
+                    <h3 class="text-2xl font-bold text-purple-400 mt-3">
+
+                        {{ current_user.membership }}
+
+                    </h3>
+
+                </div>
+
+                <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+
+                    <i class="fa-solid fa-crown text-purple-400 text-xl"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= ACTIONS ================= -->
+
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+
+        <!-- Deposit -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex items-center gap-4 mb-6">
+
+                <div class="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center">
+
+                    <i class="fa-solid fa-arrow-down text-white text-xl"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 class="text-2xl font-bold text-white">
+
+                        Deposit Funds
+
+                    </h2>
+
+                    <p class="text-zinc-400">
+
+                        Upgrade your balance instantly.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <a href="{{ url_for('wallet.deposit') }}"
+               class="block text-center rounded-2xl py-4 bg-indigo-600 hover:bg-indigo-700 transition font-semibold">
+
+                Deposit
+
+            </a>
+
+        </div>
+
+        <!-- Withdraw -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex items-center gap-4 mb-6">
+
+                <div class="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
+
+                    <i class="fa-solid fa-money-bill-transfer text-white text-xl"></i>
+
+                </div>
+
+                <div>
+
+                    <h2 class="text-2xl font-bold text-white">
+
+                        Withdraw Funds
+
+                    </h2>
+
+                    <p class="text-zinc-400">
+
+                        Transfer earnings to your account.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <a href="{{ url_for('wallet.withdraw') }}"
+               class="block text-center rounded-2xl py-4 bg-emerald-600 hover:bg-emerald-700 transition font-semibold">
+
+                Withdraw
+
+            </a>
+
+        </div>
+
+    </div>
+        <!-- ================= WALLET STATISTICS ================= -->
+
+    <div class="grid lg:grid-cols-4 gap-6 mb-8">
+
+        <div class="glass rounded-3xl p-6">
+
+            <p class="text-zinc-400 text-sm">
+                Total Earnings
+            </p>
+
+            <h3 class="text-3xl font-bold text-emerald-400 mt-3">
+
+                {{ money(current_user, current_user.total_earnings or 0) }}
+
+            </h3>
+
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+
+            <p class="text-zinc-400 text-sm">
+                Total Withdrawn
+            </p>
+
+            <h3 class="text-3xl font-bold text-red-400 mt-3">
+
+                {{ money(current_user, current_user.total_withdrawn or 0) }}
+
+            </h3>
+
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+
+            <p class="text-zinc-400 text-sm">
+                Frozen Balance
+            </p>
+
+            <h3 class="text-3xl font-bold text-orange-400 mt-3">
+
+                {{ money(current_user, current_user.frozen_balance or 0) }}
+
+            </h3>
+
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+
+            <p class="text-zinc-400 text-sm">
+                Total Transactions
+            </p>
+
+            <h3 class="text-3xl font-bold text-white mt-3">
+
+                {{ transactions|length }}
+
+            </h3>
+
+        </div>
+
+    </div>
+
+    <!-- ================= TRANSACTION HISTORY ================= -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <div class="flex items-center justify-between mb-8">
+
+            <div>
+
+                <h2 class="text-2xl font-bold text-white">
+
+                    Transaction History
+
+                </h2>
+
+                <p class="text-zinc-400 mt-2">
+
+                    All wallet activity appears below.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="overflow-x-auto">
+
+            <table class="w-full">
+
+                <thead>
+
+                    <tr class="border-b border-white/10">
+
+                        <th class="text-left py-4 text-zinc-400">
+                            Type
+                        </th>
+
+                        <th class="text-left py-4 text-zinc-400">
+                            Description
+                        </th>
+
+                        <th class="text-left py-4 text-zinc-400">
+                            Reference
+                        </th>
+
+                        <th class="text-left py-4 text-zinc-400">
+                            Date
+                        </th>
+
+                        <th class="text-right py-4 text-zinc-400">
+                            Amount
+                        </th>
+
+                        <th class="text-center py-4 text-zinc-400">
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for tx in transactions %}
+
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition">
+
+                        <td class="py-5">
+
+                            {{ tx.transaction_type }}
+
+                        </td>
+
+                        <td class="py-5 text-zinc-300">
+
+                            {{ tx.description }}
+
+                        </td>
+
+                        <td class="py-5 text-zinc-400">
+
+                            {{ tx.reference }}
+
+                        </td>
+
+                        <td class="py-5 text-zinc-400">
+
+                            {{ tx.created_at.strftime('%d %b %Y %H:%M') }}
+
+                        </td>
+
+                        <td class="py-5 text-right font-bold
+                            {% if tx.amount >= 0 %}
+                                text-emerald-400
+                            {% else %}
+                                text-red-400
+                            {% endif %}
+                        ">
+
+                            {% if tx.amount >= 0 %}+{% endif %}
+                            {{ money(current_user, tx.amount) }}
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">
+
+                                Completed
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6" class="py-16 text-center text-zinc-500">
+
+                            No transactions found.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+        <!-- ================= QUICK ACTIONS ================= -->
+
+    <div class="grid lg:grid-cols-3 gap-6 mt-8">
+
+        <a href="{{ url_for("wallet.deposit") }}"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+
+            <div class="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center mb-6">
+
+                <i class="fa-solid fa-arrow-down text-white text-xl"></i>
+
+            </div>
+
+            <h3 class="text-xl font-bold text-white">
+
+                Deposit Funds
+
+            </h3>
+
+            <p class="text-zinc-400 mt-3">
+
+                Add funds to increase your working balance.
+
+            </p>
+
+        </a>
+
+        <a href="{{ url_for('wallet.withdraw') }}"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+
+            <div class="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center mb-6">
+
+                <i class="fa-solid fa-money-bill-transfer text-white text-xl"></i>
+
+            </div>
+
+            <h3 class="text-xl font-bold text-white">
+
+                Withdraw Earnings
+
+            </h3>
+
+            <p class="text-zinc-400 mt-3">
+
+                Transfer your available earnings.
+
+            </p>
+
+        </a>
+
+        <a href="{{ url_for('wallet.index') }}"
+           class="glass rounded-3xl p-8 hover:scale-[1.02] transition">
+
+            <div class="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center mb-6">
+
+                <i class="fa-solid fa-clock-rotate-left text-white text-xl"></i>
+
+            </div>
+
+            <h3 class="text-xl font-bold text-white">
+
+                Earnings History
+
+            </h3>
+
+            <p class="text-zinc-400 mt-3">
+
+                Review completed tasks and commissions.
+
+            </p>
+
+        </a>
+
+    </div>
+
+    <!-- ================= FINANCIAL SUMMARY ================= -->
+
+    <div class="glass rounded-3xl p-8 mt-8">
+
+        <h2 class="text-2xl font-bold text-white mb-8">
+
+            Financial Summary
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+
+            <div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Available Balance
+
+                    </span>
+
+                    <span class="font-bold text-emerald-400">
+
+                        {{ money(current_user, current_user.available_balance) }}
+
+                    </span>
+
+                </div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Pending Balance
+
+                    </span>
+
+                    <span class="font-bold text-yellow-400">
+
+                        {{ money(current_user, current_user.pending_balance) }}
+
+                    </span>
+
+                </div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Combo Balance
+
+                    </span>
+
+                    <span class="font-bold text-indigo-400">
+
+                        {{ money(current_user, current_user.combo_balance) }}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Total Earnings
+
+                    </span>
+
+                    <span class="font-bold text-emerald-400">
+
+                        {{ money(current_user, current_user.total_earnings or 0) }}
+
+                    </span>
+
+                </div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Frozen Balance
+
+                    </span>
+
+                    <span class="font-bold text-orange-400">
+
+                        {{ money(current_user, current_user.frozen_balance or 0) }}
+
+                    </span>
+
+                </div>
+
+                <div class="flex justify-between py-4 border-b border-white/10">
+
+                    <span class="text-zinc-400">
+
+                        Membership
+
+                    </span>
+
+                    <span class="font-bold text-purple-400">
+
+                        {{ current_user.membership }}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+        <!-- ================= SECURITY NOTICE ================= -->
+
+    <div class="glass rounded-3xl p-8 mt-8">
+
+        <div class="flex items-start gap-5">
+
+            <div class="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+
+                <i class="fa-solid fa-shield-halved text-white text-xl"></i>
+
+            </div>
+
+            <div>
+
+                <h2 class="text-xl font-bold text-white">
+
+                    Wallet Security
+
+                </h2>
+
+                <p class="text-zinc-400 mt-3 leading-7">
+
+                    Keep your account secure by never sharing your password,
+                    verification code or payment PIN with anyone.
+                    All withdrawals are subject to verification and review.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

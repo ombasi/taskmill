@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Membership{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <div class="glass rounded-3xl p-12 text-center mb-10">
+        <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 mb-8">
+            <i class="fa-solid fa-crown text-5xl text-white"></i>
+        </div>
+        <h1 class="text-5xl font-black text-white">Membership Plans</h1>
+        <p class="text-zinc-400 mt-5 text-xl max-w-2xl mx-auto">
+            Upgrade to unlock higher commissions, more daily tasks and larger withdrawals.
+        </p>
+    </div>
+
+    {% if current %}
+    <div class="glass rounded-3xl p-8 mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <p class="text-zinc-400 text-sm uppercase tracking-widest">Current Plan</p>
+            <h2 class="text-3xl font-bold text-white mt-2">{{ current.name }}</h2>
+            <p class="text-zinc-400 mt-2">
+                {{ current.daily_tasks }} tasks / day ·
+                {{ current.commission_percent or 15 }}% commission ·
+                Max product {{ money(current_user, current.max_product_price) }}
+            </p>
+        </div>
+        <div class="text-right">
+            <p class="text-zinc-400 text-sm">Wallet balance</p>
+            <p class="text-2xl font-bold text-emerald-400">{{ money(current_user, current_user.available_balance) }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+        {% for plan in memberships %}
+        <div class="glass rounded-3xl p-8 flex flex-col {% if current and current.id == plan.id %}ring-2 ring-indigo-500{% endif %}">
+            <div class="mb-6">
+                <h3 class="text-2xl font-black text-white">{{ plan.name }}</h3>
+                <p class="text-3xl font-bold text-indigo-400 mt-3">
+                    {% if plan.price and plan.price > 0 %}
+                        {{ money(current_user, plan.price) }}
+                    {% else %}
+                        Free
+                    {% endif %}
+                </p>
+            </div>
+            <ul class="space-y-3 text-zinc-300 text-sm flex-1 mb-8">
+                <li>✔ {{ plan.tasks_per_set or plan.daily_tasks }} tasks × {{ plan.daily_sets or 1 }} sets / day</li>
+                <li>✔ {{ plan.commission_percent or 15 }}% commission</li>
+                <li>✔ Max product {{ money(current_user, plan.max_product_price) }}</li>
+                <li>✔ Withdrawal limit {{ money(current_user, plan.withdrawal_limit) }}</li>
+                <li>✔ Referral bonus {{ money(current_user, plan.referral_bonus) }}</li>
+            </ul>
+            {% if current and current.id == plan.id %}
+                <button class="w-full py-3 rounded-xl bg-zinc-700 text-zinc-300 font-bold cursor-default" disabled>
+                    Current Plan
+                </button>
+            {% elif current and plan.price <= (current.price or 0) %}
+                <button class="w-full py-3 rounded-xl bg-zinc-800 text-zinc-500 font-bold cursor-default" disabled>
+                    Lower Tier
+                </button>
+            {% else %}
+                <form method="POST" action="{{ url_for('dashboard.upgrade_membership', plan_id=plan.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition">
+                        {% if plan.price and plan.price > 0 %}Upgrade{% else %}Select{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-zinc-400 col-span-full text-center">No membership plans configured.</p>
+        {% endfor %}
+    </div>
+
+    <div class="glass rounded-3xl p-10 text-center">
+        <h2 class="text-2xl font-bold text-white mb-4">Why upgrade?</h2>
+        <p class="text-zinc-400 max-w-2xl mx-auto">
+            Higher plans give more daily tasks, better commission rates, larger product reviews
+            and bigger withdrawal limits. Complete your mandatory tasks and withdraw once per day
+            to keep earning.
+        </p>
+    </div>
+</div>
+{% endblock %}

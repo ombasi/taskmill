@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+
+    <div style="padding:80px;text-align:center;">
+
+        <h1 style="color:#10b981;">
+            Daily Task Limit Reached
+        </h1>
+
+        <p style="margin-top:20px;font-size:18px;">
+
+            You have completed all available task sets for today.
+
+        </p>
+
+        <p style="margin-top:10px;color:#6b7280;">
+
+            New tasks will automatically become available tomorrow.
+
+        </p>
+
+        <a
+            href="{{ url_for('dashboard.index') }}"
+            class="task-btn"
+            style="
+                margin-top:30px;
+                display:inline-block;
+            "
+        >
+            Back To Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

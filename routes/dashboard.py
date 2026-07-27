@@ -1,0 +1,206 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_required, current_user
+from extensions import db
+from models.task import Task
+from models.wallet_transaction import WalletTransaction
+from models.combo_task import ComboTask
+from datetime import datetime, timedelta
+from sqlalchemy import func
+
+from services.task_service import TaskService
+from utils.security import csrf_protect
+
+dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
+
+
+@dashboard_bp.route("/")
+@login_required
+def index():
+    TaskService.ensure_daily_reset(current_user)
+    progress = TaskService.progress(current_user)
+
+    completed = Task.query.filter_by(user_id=current_user.id, status="completed").count()
+    pending = Task.query.filter_by(user_id=current_user.id, status="assigned").count()
+
+    current_task = None
+    allowed, _ = TaskService.can_perform_tasks(current_user)
+    if allowed:
+        current_task = TaskService.assign_task(current_user)
+
+    membership = current_user.membership
+    mandatory = progress["mandatory"]
+    today_completed = progress["completed_today"]
+
+    combo = None
+    try:
+        combo = ComboTask.query.filter_by(user_id=current_user.id, completed=False).first()
+    except Exception:
+        combo = None
+
+    total_earned = float(current_user.total_earned or 0)
+    total_withdrawn = float(current_user.total_withdrawn or 0)
+    avg_per_task = round(total_earned / completed, 0) if completed > 0 else 0
+
+    today = datetime.utcnow().date()
+    current_month = today.replace(day=1)
+    month_total = db.session.query(func.sum(WalletTransaction.amount)).filter(
+        WalletTransaction.user_id == current_user.id,
+        func.date(WalletTransaction.created_at) >= current_month,
+        WalletTransaction.amount > 0
+    ).scalar() or 0.0
+
+    pending_amount = db.session.query(func.sum(Task.commission)).filter(
+        Task.user_id == current_user.id,
+        Task.status == "assigned"
+    ).scalar() or 0.0
+
+    referral_earnings = float(getattr(current_user, "referral_income", 0) or 0)
+    referral_bonus = referral_earnings
+    frozen_balance = float(getattr(current_user, "combo_balance", 0) or 0)
+    referral_count = int(getattr(current_user, "referral_count", 0) or 0)
+
+    weekly_labels = []
+    weekly_data = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        daily_earning = db.session.query(func.sum(WalletTransaction.amount)).filter(
+            WalletTransaction.user_id == current_user.id,
+            func.date(WalletTransaction.created_at) == day,
+            WalletTransaction.amount > 0
+        ).scalar() or 0.0
+        weekly_labels.append(day.strftime("%a"))
+        weekly_data.append(round(float(daily_earning), 0))
+
+    announcements = []
+    try:
+        from models.announcement import Announcement
+        announcements = Announcement.query.filter_by(active=True).order_by(
+            Announcement.created_at.desc()
+        ).limit(5).all()
+    except Exception:
+        pass
+
+    recent_transactions = (
+        WalletTransaction.query
+        .filter_by(user_id=current_user.id)
+        .order_by(WalletTransaction.created_at.desc())
+        .limit(8)
+        .all()
+    )
+
+    membership_commission = float(getattr(membership, "commission_percent", 15) or 15) if membership else 15
+    upgrade_progress = min(100, int((today_completed / max(mandatory, 1)) * 100))
+
+    return render_template(
+        "dashboard.html",
+        completed=completed,
+        pending=pending,
+        maximum=mandatory,
+        current_task=current_task,
+        today_completed=today_completed,
+        tasks_per_set=mandatory,
+        max_sets=1,
+        current_set=1,
+        progress=progress,
+        combo=combo,
+        total_earned=total_earned,
+        total_withdrawn=abs(total_withdrawn),
+        avg_per_task=avg_per_task,
+        month_total=float(month_total),
+        pending_amount=float(pending_amount),
+        referral_earnings=referral_earnings,
+        referral_bonus=referral_bonus,
+        frozen_balance=frozen_balance,
+        referral_count=referral_count,
+        active_referrals=referral_count,
+        referral_commission=5,
+        weekly_labels=weekly_labels,
+        weekly_data=weekly_data,
+        weekly_breakdown=[{"day": l, "amount": a} for l, a in zip(weekly_labels, weekly_data)],
+        weekly_percentage=0,
+        success_rate=95,
+        announcements=announcements,
+        leaderboard=[],
+        recent_transactions=recent_transactions,
+        membership_commission=membership_commission,
+        upgrade_progress=upgrade_progress,
+    )
+
+
+@dashboard_bp.route("/earn")
+@login_required
+def earn():
+    return render_template(
+        "earn.html",
+        total_referrals=getattr(current_user, "referral_count", 0) or 0,
+        referral_income=getattr(current_user, "referral_income", 0) or 0,
+    )
+
+
+@dashboard_bp.route("/faq")
+def faq():
+    return render_template("faq.html")
+
+
+@dashboard_bp.route("/contact", methods=["GET", "POST"])
+def contact():
+    from models.support import Support
+
+    support = Support.query.first()
+    if support is None:
+        support = Support()
+        db.session.add(support)
+        db.session.commit()
+
+    if request.method == "POST":
+        flash("Thank you! Your message has been received.", "success")
+        return redirect(url_for("dashboard.contact"))
+
+    return render_template("contact.html", support=support)
+
+
+@dashboard_bp.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@dashboard_bp.route("/certificate")
+@login_required
+def certificate():
+    return render_template("certificate.html")
+
+
+@dashboard_bp.route("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+@dashboard_bp.route("/membership")
+@login_required
+def membership():
+    from services.membership_service import MembershipService
+    plans = MembershipService.all()
+    return render_template(
+        "membership.html",
+        memberships=plans,
+        current=current_user.membership,
+    )
+
+
+@dashboard_bp.route("/membership/upgrade/<int:plan_id>", methods=["POST"])
+@login_required
+@csrf_protect
+def upgrade_membership(plan_id):
+    from services.membership_service import MembershipService
+    plan = MembershipService.get(plan_id)
+    if not plan or not plan.active:
+        flash("Membership plan not found.", "danger")
+        return redirect(url_for("dashboard.membership"))
+
+    if current_user.membership and current_user.membership.id == plan.id:
+        flash("You are already on this plan.", "info")
+        return redirect(url_for("dashboard.membership"))
+
+    ok, msg = MembershipService.upgrade(current_user, plan)
+    flash(msg, "success" if ok else "danger")
+    return redirect(url_for("dashboard.membership"))

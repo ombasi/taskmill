@@ -1,0 +1,272 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Partner Management{% endblock %}
+{% block page_title %}Partner Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Partner Management
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                Manage product partners.
+
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_partner') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
+
+            <i class="fa-solid fa-plus mr-2"></i>
+
+            Create Partner
+
+        </a>
+
+    </div>
+
+    <!-- Search -->
+
+    <form method="GET">
+
+        <div class="flex gap-4">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search partner..."
+                class="flex-1 bg-slate-800 rounded-xl p-4">
+
+            <button
+                class="bg-indigo-600 px-6 rounded-xl">
+
+                Search
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-900">
+
+                <tr class="text-left">
+
+                    <th class="p-5">Logo</th>
+                    <th class="p-5">Partner</th>
+                    <th class="p-5">Website</th>
+                    <th class="p-5">Products</th>
+                    <th class="p-5">Status</th>
+                    <th class="p-5">Created</th>
+                    <th class="p-5 text-center">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for partner in partners.items %}
+
+                <tr class="border-t border-slate-800 hover:bg-slate-900/40">
+
+                    <td class="p-5">
+
+                        {% if partner.logo %}
+
+                        <img
+                            src="{{ media(partner.logo) }}"
+                            class="w-16 h-16 rounded-xl object-cover">
+
+                        {% else %}
+
+                        <div class="w-16 h-16 rounded-xl bg-slate-700 flex items-center justify-center">
+
+                            <i class="fa-solid fa-building"></i>
+
+                        </div>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5 font-semibold">
+
+                        {{ partner.name }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if partner.website %}
+
+                        <a href="{{ partner.website }}"
+                           target="_blank"
+                           class="text-indigo-400">
+
+                            {{ partner.website[:40] }}
+
+                        </a>
+
+                        {% else %}
+
+                        —
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ partner.products|length }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if partner.active %}
+
+                        <span class="px-3 py-1 rounded-full bg-green-600">
+
+                            Active
+
+                        </span>
+
+                        {% else %}
+
+                        <span class="px-3 py-1 rounded-full bg-red-600">
+
+                            Disabled
+
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ partner.created_at.strftime("%d %b %Y") }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        <div class="flex justify-center gap-2">
+
+                            <a
+                                href="{{ url_for('admin.edit_partner', id=partner.id) }}"
+                                class="bg-indigo-600 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.toggle_partner', id=partner.id) }}"
+                                class="bg-yellow-500 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-power-off"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.delete_partner', id=partner.id) }}"
+                                onclick="return confirm('Delete this partner?')"
+                                class="bg-red-600 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="7" class="text-center py-16 text-zinc-500">
+
+                        No partners found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+
+    {% if partners.pages > 1 %}
+
+    <div class="flex justify-between items-center">
+
+        {% if partners.has_prev %}
+
+        <a href="{{ url_for('admin.partners', page=partners.prev_num, search=search) }}"
+           class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Previous
+
+        </a>
+
+        {% else %}
+
+        <div></div>
+
+        {% endif %}
+
+        <span>
+
+            Page {{ partners.page }} of {{ partners.pages }}
+
+        </span>
+
+        {% if partners.has_next %}
+
+        <a href="{{ url_for('admin.partners', page=partners.next_num, search=search) }}"
+           class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Next
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

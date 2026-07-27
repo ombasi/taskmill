@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade Membership{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-12 mb-12 text-center">
+
+        <div class="w-32 h-32 mx-auto rounded-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 flex items-center justify-center mb-8">
+
+            <i class="fa-solid fa-crown text-white text-6xl"></i>
+
+        </div>
+
+        <h1 class="text-5xl font-black text-white">
+
+            Upgrade Membership
+
+        </h1>
+
+        <p class="text-zinc-400 text-xl mt-5">
+
+            Unlock bigger commissions, larger products and higher daily earnings.
+
+        </p>
+
+    </div>
+
+    <!-- Current Membership -->
+
+    <div class="glass rounded-3xl p-8 mb-10">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+
+                <p class="text-zinc-400">
+
+                    Current Membership
+
+                </p>
+
+                <h2 class="text-5xl font-black text-yellow-400 mt-4">
+
+                    {{ current_user.membership.name }}
+
+                </h2>
+
+            </div>
+
+            <div>
+
+                <p class="text-zinc-400">
+
+                    Wallet Balance
+
+                </p>
+
+                <h2 class="text-5xl font-black text-emerald-400 mt-4">
+
+                    {{ money(current_user, current_user.available_balance) }}
+
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Plans -->
+
+    <div class="grid lg:grid-cols-5 gap-6">
+
+        {% for plan in memberships %}
+
+        <div class="glass rounded-3xl overflow-hidden hover:scale-105 transition">
+
+            <div class="p-8">
+
+                <h2 class="text-3xl font-black text-center text-white">
+
+                    {{ plan.name }}
+
+                </h2>
+
+                <p class="text-center text-indigo-400 text-3xl font-bold mt-4">
+
+                    {{ money(current_user, plan.price ) }}
+
+                </p>
+
+                <hr class="my-6 border-white/10">
+
+                <div class="space-y-4 text-zinc-300">
+
+                    <p>✅ {{ plan.tasks }} Tasks Daily</p>
+
+                    <p>✅ {{ plan.commission }}% Commission</p>
+
+                    <p>✅ Max Product {{ money(current_user, plan.max_product ) }}</p>
+
+                    <p>✅ {{ plan.withdrawals }} Withdrawals/Day</p>
+
+                    <p>✅ Referral Rewards</p>
+
+                </div>
+
+                <form method="POST" class="mt-8">
+
+                    <input type="hidden" name="membership" value="{{ plan.name }}">
+
+                    <button
+                        class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-bold">
+
+                        Upgrade
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- Benefits -->
+
+    <div class="glass rounded-3xl p-10 mt-12">
+
+        <h2 class="text-3xl font-bold text-white mb-8">
+
+            Membership Benefits
+
+        </h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <div class="text-center">
+
+                <i class="fa-solid fa-money-bill-trend-up text-5xl text-emerald-400 mb-5"></i>
+
+                <h3 class="text-2xl font-bold text-white">
+
+                    Bigger Earnings
+
+                </h3>
+
+                <p class="text-zinc-400 mt-3">
+
+                    Higher commissions on every completed task.
+
+                </p>
+
+            </div>
+
+            <div class="text-center">
+
+                <i class="fa-solid fa-box-open text-5xl text-yellow-400 mb-5"></i>
+
+                <h3 class="text-2xl font-bold text-white">
+
+                    Premium Products
+
+                </h3>
+
+                <p class="text-zinc-400 mt-3">
+
+                    Review expensive products and earn larger rewards.
+
+                </p>
+
+            </div>
+
+            <div class="text-center">
+
+                <i class="fa-solid fa-gift text-5xl text-purple-400 mb-5"></i>
+
+                <h3 class="text-2xl font-bold text-white">
+
+                    Exclusive Rewards
+
+                </h3>
+
+                <p class="text-zinc-400 mt-3">
+
+                    Weekly bonuses, Lucky Spin and referral incentives.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

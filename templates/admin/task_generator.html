@@ -1,0 +1,178 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Task Generator{% endblock %}
+{% block page_title %}Task Generator{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Membership Task Configuration -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Membership Configuration
+
+        </h2>
+
+        <table class="w-full">
+
+            <thead>
+
+            <tr class="border-b border-slate-700">
+
+                <th class="text-left p-4">Membership</th>
+                <th>Tasks / Set</th>
+                <th>Sets / Day</th>
+                <th>Commission %</th>
+                <th>Maximum Product</th>
+
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            <tr>
+
+                <td class="p-4">Novice</td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="18"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="2"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="0.30"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="30"></td>
+
+            </tr>
+
+            <tr>
+
+                <td class="p-4">Silver</td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="20"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="2"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="0.40"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="50"></td>
+
+            </tr>
+
+            <tr>
+
+                <td class="p-4">Gold</td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="25"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="2"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="0.50"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="100"></td>
+
+            </tr>
+
+            <tr>
+
+                <td class="p-4">Platinum</td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="30"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="2"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="0.60"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="150"></td>
+
+            </tr>
+
+            <tr>
+
+                <td class="p-4">Diamond</td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="35"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="2"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="0.80"></td>
+                <td><input class="bg-slate-800 p-2 rounded w-24" value="1000"></td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Combo Configuration -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Combo Engine
+
+        </h2>
+
+        <div class="grid grid-cols-2 gap-8">
+
+            <div>
+
+                <label>Combo Probability (%)</label>
+
+                <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                       value="18">
+
+            </div>
+
+            <div>
+
+                <label>Maximum Combos Per Day</label>
+
+                <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                       value="1">
+
+            </div>
+
+            <div>
+
+                <label>Penalty (%)</label>
+
+                <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                       value="30">
+
+            </div>
+
+            <div>
+
+                <label>Minimum Combo Price</label>
+
+                <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                       value="150">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Actions -->
+
+    <div class="flex gap-4 flex-wrap">
+
+        <button class="bg-indigo-600 px-6 py-3 rounded-xl">
+
+            Save Configuration
+
+        </button>
+
+        <button class="bg-green-600 px-6 py-3 rounded-xl">
+
+            Generate Today's Tasks
+
+        </button>
+
+        <button class="bg-yellow-500 px-6 py-3 rounded-xl">
+
+            Generate Combos
+
+        </button>
+
+        <button class="bg-red-600 px-6 py-3 rounded-xl">
+
+            Reset Everything
+
+        </button>
+
+    </div>
+
+</div>
+
+{% endblock %}

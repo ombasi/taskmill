@@ -1,0 +1,139 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Total</p>
+            <h2 class="text-4xl font-black">{{ total }}</h2>
+        </div>
+        <div class="glass rounded-3xl p-6">
+            <p class="text-zinc-400">Unread</p>
+            <h2 class="text-4xl font-black text-yellow-400">{{ unread }}</h2>
+        </div>
+        <div class="glass rounded-3xl p-6 flex items-end">
+            <form method="POST" action="{{ url_for('admin.clear_read_notifications') }}">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-xl"
+                        onclick="return confirm('Clear all read notifications?')">
+                    Clear read
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Send form -->
+    <div class="glass rounded-3xl p-8">
+        <h2 class="text-2xl font-bold mb-6">Send Notification</h2>
+        <form method="POST" action="{{ url_for('admin.send_broadcast_notification') }}" class="space-y-5">
+            <div>
+                <label class="block mb-2 text-zinc-400">Title</label>
+                <input type="text" name="title" required
+                       class="w-full bg-slate-800 rounded-xl p-3"
+                       placeholder="Notification title">
+            </div>
+            <div>
+                <label class="block mb-2 text-zinc-400">Message</label>
+                <textarea name="message" rows="5" required
+                          class="w-full bg-slate-800 rounded-xl p-3"
+                          placeholder="Write the message..."></textarea>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2 text-zinc-400">Send to</label>
+                    <select name="target" id="notifTarget" class="w-full bg-slate-800 rounded-xl p-3"
+                            onchange="document.getElementById('userPick').classList.toggle('hidden', this.value!=='one')">
+                        <option value="all">All users</option>
+                        <option value="one">One user</option>
+                    </select>
+                </div>
+                <div id="userPick" class="hidden">
+                    <label class="block mb-2 text-zinc-400">User</label>
+                    <select name="user_id" class="w-full bg-slate-800 rounded-xl p-3">
+                        <option value="">Select user</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-semibold">
+                Send Notification
+            </button>
+        </form>
+    </div>
+
+    <!-- History -->
+    <div class="glass rounded-3xl overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-slate-800">
+            <tr>
+                <th class="p-4 text-left">Title</th>
+                <th class="text-left">User</th>
+                <th class="text-left">Message</th>
+                <th class="text-left">Date</th>
+                <th class="text-left">Status</th>
+                <th class="text-left">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for n in notifications.items %}
+            <tr class="border-t border-slate-700">
+                <td class="p-4 font-semibold">{{ n.title }}</td>
+                <td>
+                    {% if n.user %}
+                        <a href="{{ url_for('admin.view_user', user_id=n.user_id) }}" class="text-indigo-400">
+                            {{ n.user.username }}
+                        </a>
+                    {% else %}
+                        #{{ n.user_id }}
+                    {% endif %}
+                </td>
+                <td class="max-w-xs truncate text-zinc-400">{{ n.message }}</td>
+                <td>
+                    {% if n.created_at %}{{ n.created_at.strftime("%d %b %Y %H:%M") }}{% endif %}
+                </td>
+                <td>
+                    {% if n.is_read %}
+                        <span class="text-zinc-400">Read</span>
+                    {% else %}
+                        <span class="text-yellow-400">Unread</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.delete_notification', id=n.id) }}"
+                          onsubmit="return confirm('Delete this notification?')">
+                        <button type="submit" class="bg-red-700 hover:bg-red-600 px-3 py-2 rounded-lg text-sm">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="p-8 text-center text-zinc-400">No notifications yet.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if notifications.pages > 1 %}
+    <div class="flex justify-center gap-4">
+        {% if notifications.has_prev %}
+        <a class="px-4 py-2 rounded-xl bg-slate-800"
+           href="{{ url_for('admin.notifications', page=notifications.prev_num) }}">Previous</a>
+        {% endif %}
+        <span class="px-4 py-2">Page {{ notifications.page }} / {{ notifications.pages }}</span>
+        {% if notifications.has_next %}
+        <a class="px-4 py-2 rounded-xl bg-slate-800"
+           href="{{ url_for('admin.notifications', page=notifications.next_num) }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

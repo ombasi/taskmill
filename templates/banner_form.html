@@ -1,0 +1,178 @@
+{% extends "admin/base.html" %}
+
+{% if banner %}
+    {% set page = "Edit Banner" %}
+{% else %}
+    {% set page = "Create Banner" %}
+{% endif %}
+
+{% block title %}{{ page }}{% endblock %}
+{% block page_title %}{{ page }}{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+
+<div class="max-w-5xl space-y-8">
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Banner Details
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+
+            <div class="space-y-6">
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Banner Title
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        required
+                        value="{{ banner.title if banner else '' }}"
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Banner Image URL
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="image"
+                        name="image"
+                        value="{{ banner.image if banner else '' }}"
+                        placeholder="https://..."
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Banner Link
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="link"
+                        value="{{ banner.link if banner else '' }}"
+                        placeholder="https://example.com"
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <label class="block mb-4">
+
+                    Preview
+
+                </label>
+
+                <div
+                    class="bg-slate-900 rounded-2xl p-5 flex items-center justify-center min-h-[250px]">
+
+                    <img
+                        id="preview"
+                        src="{{ banner.image if banner else '' }}"
+                        class="max-h-60 rounded-xl object-cover {% if not banner %}hidden{% endif %}">
+
+                    <div
+                        id="placeholder"
+                        class="{% if banner %}hidden{% endif %} text-zinc-500 text-center">
+
+                        <i class="fa-solid fa-image text-6xl mb-4"></i>
+
+                        <p>
+
+                            Banner preview
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="flex gap-4">
+
+        <button
+            type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 px-10 py-4 rounded-xl">
+
+            <i class="fa-solid fa-save mr-2"></i>
+
+            Save Banner
+
+        </button>
+
+        <a
+            href="{{ url_for('admin.banners') }}"
+            class="bg-slate-700 hover:bg-slate-600 px-10 py-4 rounded-xl">
+
+            Cancel
+
+        </a>
+
+    </div>
+
+</div>
+
+</form>
+
+<script>
+
+const imageInput = document.getElementById("image");
+
+const preview = document.getElementById("preview");
+
+const placeholder = document.getElementById("placeholder");
+
+imageInput.addEventListener("input", function(){
+
+    if(this.value.trim() !== ""){
+
+        preview.src = this.value;
+
+        preview.classList.remove("hidden");
+
+        placeholder.classList.add("hidden");
+
+    }else{
+
+        preview.classList.add("hidden");
+
+        placeholder.classList.remove("hidden");
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

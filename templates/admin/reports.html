@@ -1,0 +1,204 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+
+<!-- Statistics -->
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-10">
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Total Users
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4">
+
+            {{ total_users }}
+
+        </h2>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Active Users
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4 text-green-400">
+
+            {{ active_users }}
+
+        </h2>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Blocked Users
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4 text-red-400">
+
+            {{ blocked_users }}
+
+        </h2>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Total Deposits
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4 text-green-500">
+
+            {{ money(current_user, total_deposits) }}
+
+        </h2>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Total Withdrawals
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4 text-red-500">
+
+            {{ money(current_user, total_withdrawals) }}
+
+        </h2>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <p class="text-zinc-400">
+
+            Total Revenue
+
+        </p>
+
+        <h2 class="text-5xl font-black mt-4 text-indigo-400">
+
+            {{ money(current_user, total_revenue) }}
+
+        </h2>
+
+    </div>
+
+</div>
+
+<!-- Charts -->
+
+<div class="grid xl:grid-cols-2 gap-8">
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-2xl font-bold mb-8">
+
+            Membership Distribution
+
+        </h2>
+
+        <canvas id="membershipChart"></canvas>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-2xl font-bold mb-8">
+
+            Financial Overview
+
+        </h2>
+
+        <canvas id="financeChart"></canvas>
+
+    </div>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById("membershipChart"),{
+
+    type:"pie",
+
+    data:{
+
+        labels:{{ membership_labels|tojson }},
+
+        datasets:[{
+
+            data:{{ membership_values|tojson }}
+
+        }]
+
+    }
+
+});
+
+new Chart(document.getElementById("financeChart"),{
+
+    type:"bar",
+
+    data:{
+
+        labels:["Deposits","Withdrawals","Revenue"],
+
+        datasets:[{
+
+            label:"Amount",
+
+            data:[
+
+                {{ total_deposits }},
+
+                {{ total_withdrawals }},
+
+                {{ total_revenue }}
+
+            ]
+
+        }]
+
+    },
+
+    options:{
+
+        plugins:{
+
+            legend:{
+
+                display:false
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

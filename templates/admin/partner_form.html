@@ -1,0 +1,192 @@
+{% extends "admin/base.html" %}
+
+{% if partner %}
+    {% set page = "Edit Partner" %}
+{% else %}
+    {% set page = "Create Partner" %}
+{% endif %}
+
+{% block title %}{{ page }}{% endblock %}
+{% block page_title %}{{ page }}{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+
+<div class="max-w-6xl space-y-8">
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Partner Information
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-10">
+
+            <!-- Left -->
+
+            <div class="space-y-6">
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Partner Name
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        required
+                        value="{{ partner.name if partner else '' }}"
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Logo URL
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="logo"
+                        name="logo"
+                        value="{{ partner.logo if partner else '' }}"
+                        placeholder="https://..."
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Website
+
+                    </label>
+
+                    <input
+                        type="url"
+                        name="website"
+                        value="{{ partner.website if partner else '' }}"
+                        placeholder="https://example.com"
+                        class="w-full bg-slate-800 rounded-xl p-4">
+
+                </div>
+
+                <div>
+
+                    <label class="block mb-2">
+
+                        Description
+
+                    </label>
+
+                    <textarea
+                        name="description"
+                        rows="6"
+                        class="w-full bg-slate-800 rounded-xl p-4">{{ partner.description if partner else '' }}</textarea>
+
+                </div>
+
+            </div>
+
+            <!-- Right -->
+
+            <div>
+
+                <label class="block mb-4">
+
+                    Logo Preview
+
+                </label>
+
+                <div
+                    class="bg-slate-900 rounded-2xl p-10 flex items-center justify-center min-h-[300px]">
+
+                    <img
+                        id="preview"
+                        src="{{ partner.logo if partner else '' }}"
+                        class="max-h-60 max-w-full object-contain {% if not partner %}hidden{% endif %}">
+
+                    <div
+                        id="placeholder"
+                        class="{% if partner %}hidden{% endif %} text-center text-zinc-500">
+
+                        <i class="fa-solid fa-building text-7xl mb-5"></i>
+
+                        <p>
+
+                            Logo Preview
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="flex gap-4">
+
+        <button
+            type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 px-10 py-4 rounded-xl">
+
+            <i class="fa-solid fa-save mr-2"></i>
+
+            Save Partner
+
+        </button>
+
+        <a
+            href="{{ url_for('admin.partners') }}"
+            class="bg-slate-700 hover:bg-slate-600 px-10 py-4 rounded-xl">
+
+            Cancel
+
+        </a>
+
+    </div>
+
+</div>
+
+</form>
+
+<script>
+
+const logo = document.getElementById("logo");
+const preview = document.getElementById("preview");
+const placeholder = document.getElementById("placeholder");
+
+logo.addEventListener("input", function(){
+
+    if(this.value.trim() !== ""){
+
+        preview.src = this.value;
+        preview.classList.remove("hidden");
+        placeholder.classList.add("hidden");
+
+    }else{
+
+        preview.classList.add("hidden");
+        placeholder.classList.remove("hidden");
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

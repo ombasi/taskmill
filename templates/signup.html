@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taskmill — Create Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #f5c842;
+      --gold-light: #fde68a;
+      --gold-dark: #d4a017;
+      --emerald: #10b981;
+      --glass-bg: rgba(255, 255, 255, 0.07);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-blur: blur(24px);
+      --input-bg: rgba(255, 255, 255, 0.06);
+      --input-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #f1f5f9;
+      --text-muted: rgba(241, 245, 249, 0.55);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: #0a0e1a;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+      padding: 28px 20px;
+    }
+
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 80% 10%, rgba(16,185,129,0.16) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 70% at 10% 90%, rgba(245,200,66,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 60%),
+        #0a0e1a;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.22;
+      animation: drift 14s ease-in-out infinite alternate;
+      z-index: 0;
+    }
+    .orb-1 { width: 500px; height: 500px; background: #10b981; top: -150px; right: -120px; animation-delay: 0s; }
+    .orb-2 { width: 380px; height: 380px; background: #f5c842; bottom: -100px; left: -80px; animation-delay: -5s; }
+    .orb-3 { width: 260px; height: 260px; background: #8b5cf6; top: 50%; right: 30%; animation-delay: -9s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(-25px, 18px) scale(1.05); }
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* Layout */
+    .card-wrap {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-radius: 28px;
+      padding: 44px 44px 40px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 32px 80px rgba(0,0,0,0.5),
+        0 0 60px rgba(16,185,129,0.06);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent);
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f5c842, #d4a017);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(245,200,66,0.35);
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #0a0e1a;
+    }
+
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-slogan {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 99px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #f5c842);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* Headings */
+    .step-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--emerald);
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .heading {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    /* Grid form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(241,245,249,0.65);
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .required-star {
+      color: var(--gold);
+      margin-left: 2px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.28);
+      pointer-events: none;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      padding: 13px 14px 13px 42px;
+      font-size: 14px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    select option {
+      background: #1a1f30;
+      color: #f1f5f9;
+    }
+
+    input::placeholder { color: rgba(255,255,255,0.22); }
+
+    input:focus, select:focus {
+      border-color: rgba(16,185,129,0.5);
+      background: rgba(255,255,255,0.09);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.08), 0 0 20px rgba(16,185,129,0.05);
+    }
+
+    .input-wrap:focus-within .input-icon { color: var(--emerald); }
+
+    /* Referral badge */
+    .referral-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gold);
+      background: rgba(245,200,66,0.1);
+      border: 1px solid rgba(245,200,66,0.25);
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    /* Sex radio pills */
+    .pill-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill-label {
+      flex: 1;
+      position: relative;
+    }
+
+    .pill-label input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+
+    .pill-btn {
+      display: block;
+      text-align: center;
+      padding: 13px 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .pill-label input[type="radio"]:checked + .pill-btn {
+      background: rgba(16,185,129,0.12);
+      border-color: rgba(16,185,129,0.45);
+      color: var(--emerald);
+      font-weight: 600;
+      box-shadow: 0 0 16px rgba(16,185,129,0.1);
+    }
+
+    .pill-btn:hover {
+      border-color: rgba(16,185,129,0.3);
+      color: #fff;
+    }
+
+    /* CTA */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      box-shadow: 0 6px 28px rgba(16,185,129,0.3), 0 2px 0 rgba(255,255,255,0.12) inset;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 36px rgba(16,185,129,0.38);
+      filter: brightness(1.06);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+
+    /* Terms */
+    .terms {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+    .terms a { color: var(--gold-light); text-decoration: none; }
+    .terms a:hover { text-decoration: underline; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--glass-border); }
+    .divider span { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+    .login-row {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .login-row a {
+      color: var(--gold-light);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .login-row a:hover { color: var(--gold); }
+
+    @media (max-width: 540px) {
+      .card { padding: 36px 22px 30px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
+      .heading { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-mesh"></div>
+  <div class="grid-overlay"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="card-wrap">
+    <div class="card">
+
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L13.5 5.5L17 4L15.5 7.5L19 9L15.5 10.5L17 14L13.5 12.5L12 16L10.5 12.5L7 14L8.5 10.5L5 9L8.5 7.5L7 4L10.5 5.5L12 2Z"/>
+            <circle cx="12" cy="9" r="2.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">Taskmill</div>
+          <div class="brand-slogan">Earn to Grow</div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <!-- Header -->
+      <div class="step-label">✦ Join the platform</div>
+      <h1 class="heading">Create your account</h1>
+      <p class="sub">Start earning rewards from day one. It's free.</p>
+
+      <!-- Form -->
+      <form id="signupForm" action="#" method="post" autocomplete="on">
+        <div class="form-grid">
+
+          <!-- Full Name -->
+          <div class="field full">
+            <label for="fullname">Full Name</label>
+            <div class="input-wrap">
+              <input type="text" id="fullname" name="fullname" placeholder="Your legal full name" autocomplete="name" required />
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="field full">
+            <label for="username">Username</label>
+            <div class="input-wrap">
+              <input type="text" id="username" name="username" placeholder="@yourhandle" autocomplete="username" required />
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M20 12V7H4v5M4 12v5h16v-5"/>
+                  <path d="M12 7V4M12 17v3"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="field">
+            <label for="dob">Date of Birth</label>
+            <div class="input-wrap">
+              <input type="date" id="dob" name="dob" required />
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="field">
+            <label for="phone">Phone Number</label>
+            <div class="input-wrap">
+              <input type="tel" id="phone" name="phone" placeholder="+1 555 000 0000" autocomplete="tel" required />
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.4 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Sex -->
+          <div class="field full">
+            <label>Sex</label>
+            <div class="pill-group">
+              <label class="pill-label">
+                <input type="radio" name="sex" value="male" required />
+                <span class="pill-btn">♂ Male</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="sex" value="female" />
+                <span class="pill-btn">♀ Female</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="sex" value="other" />
+                <span class="pill-btn">⊕ Other</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Country -->
+          <div class="field full">
+            <label for="country">Country</label>
+            <div class="input-wrap">
+              <select id="country" name="country" required>
+                <option value="" disabled selected>Select your country</option>
+                <option>Afghanistan</option><option>Albania</option><option>Algeria</option>
+                <option>Argentina</option><option>Australia</option><option>Austria</option>
+                <option>Bangladesh</option><option>Belgium</option><option>Bolivia</option>
+                <option>Brazil</option><option>Cambodia</option><option>Canada</option>
+                <option>Chile</option><option>China</option><option>Colombia</option>
+                <option>Croatia</option><option>Czech Republic</option><option>Denmark</option>
+                <option>Egypt</option><option>Ethiopia</option><option>Finland</option>
+                <option>France</option><option>Germany</option><option>Ghana</option>
+                <option>Greece</option><option>Guatemala</option><option>Hungary</option>
+                <option>India</option><option>Indonesia</option><option>Iran</option>
+                <option>Iraq</option><option>Ireland</option><option>Israel</option>
+                <option>Italy</option><option>Japan</option><option>Jordan</option>
+                <option>Kenya</option><option>South Korea</option><option>Malaysia</option>
+                <option>Mexico</option><option>Morocco</option><option>Mozambique</option>
+                <option>Myanmar</option><option>Nepal</option><option>Netherlands</option>
+                <option>New Zealand</option><option>Nigeria</option><option>Norway</option>
+                <option>Pakistan</option><option>Peru</option><option>Philippines</option>
+                <option>Poland</option><option>Portugal</option><option>Romania</option>
+                <option>Russia</option><option>Saudi Arabia</option><option>Senegal</option>
+                <option>South Africa</option><option>Spain</option><option>Sri Lanka</option>
+                <option>Sudan</option><option>Sweden</option><option>Switzerland</option>
+                <option>Tanzania</option><option>Thailand</option><option>Turkey</option>
+                <option>Uganda</option><option>Ukraine</option><option>United Arab Emirates</option>
+                <option>United Kingdom</option><option>United States</option>
+                <option>Venezuela</option><option>Vietnam</option><option>Zambia</option>
+                <option>Zimbabwe</option>
+              </select>
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <!-- Referral Code -->
+          <div class="field full">
+            <label for="referral">
+              Referral Code
+              <span class="required-star">★</span>
+              <span class="referral-badge">Required</span>
+            </label>
+            <div class="input-wrap">
+              <input
+                type="text"
+                id="referral"
+                name="referral"
+                placeholder="Enter your referral code to join"
+                style="text-transform: uppercase; letter-spacing: 2px;"
+                required
+              />
+              <span class="input-icon">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-primary">Create My Account →</button>
+
+        <p class="terms">
+          By joining, you agree to Taskmill's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </p>
+
+      </form>
+
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span>Already have an account?</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="login-row">
+        <a href="login.html">← Sign in instead</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Track form fill progress
+    const form     = document.getElementById('signupForm');
+    const fill     = document.getElementById('progressFill');
+    const fields   = form.querySelectorAll('input[required], select[required]');
+    const total    = fields.length;
+
+    function updateProgress() {
+      let filled = 0;
+      fields.forEach(f => {
+        if (f.type === 'radio') {
+          if (form.querySelector(`input[name="${f.name}"]:checked`)) filled++;
+        } else if (f.value.trim()) {
+          filled++;
+        }
+      });
+      // deduplicate radio groups
+      const radioGroups = new Set([...form.querySelectorAll('input[type=radio][required]')].map(r => r.name));
+      const radioFilled = [...radioGroups].filter(n => form.querySelector(`input[name="${n}"]:checked`)).length;
+      const nonRadioFields = [...fields].filter(f => f.type !== 'radio');
+      const nonRadioFilled = nonRadioFields.filter(f => f.value.trim()).length;
+      const pct = Math.round(((nonRadioFilled + radioFilled) / (nonRadioFields.length + radioGroups.size)) * 100);
+      fill.style.width = pct + '%';
+    }
+
+    fields.forEach(f => f.addEventListener('input', updateProgress));
+    fields.forEach(f => f.addEventListener('change', updateProgress));
+
+    // Uppercase referral
+    const ref = document.getElementById('referral');
+    ref.addEventListener('input', () => { ref.value = ref.value.toUpperCase(); });
+  </script>
+
+</body>
+</html>

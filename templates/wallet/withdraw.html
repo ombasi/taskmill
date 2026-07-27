@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Withdraw Funds{% endblock %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto py-10">
+
+    <div class="glass rounded-3xl p-8 mb-8">
+
+        <h1 class="text-4xl font-bold mb-2">
+            Withdraw Funds
+        </h1>
+
+        <p class="text-slate-400">
+            Submit a withdrawal request. It will be reviewed by the administrator.
+        </p>
+
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+
+        <div class="glass rounded-3xl p-6">
+
+            <div class="text-slate-400">
+                Available Balance
+            </div>
+
+            <div class="text-3xl font-bold text-green-400 mt-2">
+                {{ money(current_user, current_user.available_balance) }}
+            </div>
+
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+
+            <div class="text-slate-400">
+                Combo Balance
+            </div>
+
+            <div class="text-3xl font-bold text-yellow-400 mt-2">
+                {{ money(current_user, current_user.combo_balance) }}
+            </div>
+
+        </div>
+
+        <div class="glass rounded-3xl p-6">
+
+            <div class="text-slate-400">
+                Pending Balance
+            </div>
+
+            <div class="text-3xl font-bold text-blue-400 mt-2">
+                {{ money(current_user, current_user.pending_balance) }}
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-5">
+
+                <label class="block mb-2">
+                    Amount
+                </label>
+
+                <input
+                    type="number"
+                    name="amount"
+                    min="1000"
+                    required
+                    class="w-full rounded-xl bg-slate-800 border border-slate-700 p-4">
+
+            </div>
+
+            <div class="mb-5">
+
+                <label class="block mb-2">
+                    Payment Method
+                </label>
+
+                <select
+                    name="payment_method"
+                    required
+                    class="w-full rounded-xl bg-slate-800 border border-slate-700 p-4">
+
+                    <option value="MTN Mobile Money">
+                        MTN Mobile Money
+                    </option>
+
+                    <option value="Airtel Money">
+                        Airtel Money
+                    </option>
+
+                    <option value="Bank Transfer">
+                        Bank Transfer
+                    </option>
+
+                    <option value="USDT TRC20">
+                        USDT TRC20
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="mb-5">
+
+                <label class="block mb-2">
+                    Account Name
+                </label>
+
+                <input
+                    type="text"
+                    name="account_name"
+                    required
+                    class="w-full rounded-xl bg-slate-800 border border-slate-700 p-4">
+
+            </div>
+
+            <div class="mb-6">
+
+                <label class="block mb-2">
+                    Account Number / Wallet Address
+                </label>
+
+                <input
+                    type="text"
+                    name="account_number"
+                    required
+                    class="w-full rounded-xl bg-slate-800 border border-slate-700 p-4">
+
+            </div>
+
+            <input
+                type="hidden"
+                name="provider"
+                value="Manual">
+
+            <button
+                type="submit"
+                class="w-full bg-green-600 hover:bg-green-700 rounded-xl py-4 text-lg font-bold">
+
+                Submit Withdrawal
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Wallet Management{% endblock %}
+{% block page_title %}Wallet Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Wallet Management
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                Credit, debit and monitor user balances.
+
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+
+    <form method="GET">
+
+        <div class="flex gap-4">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search user..."
+                class="flex-1 bg-slate-800 rounded-xl p-4">
+
+            <button
+                class="bg-indigo-600 px-6 rounded-xl">
+
+                Search
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- Wallet Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-900">
+
+                <tr>
+
+                    <th class="text-left p-5">User</th>
+
+                    <th class="text-left p-5">
+
+                        Available
+
+                    </th>
+
+                    <th class="text-left p-5">
+
+                        Pending
+
+                    </th>
+
+                    <th class="text-left p-5">
+
+                        Combo
+
+                    </th>
+
+                    <th class="text-left p-5">
+
+                        Earned
+
+                    </th>
+
+                    <th class="text-center p-5">
+
+                        Actions
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for user in users.items %}
+
+                <tr class="border-t border-slate-800 hover:bg-slate-900/30">
+
+                    <td class="p-5">
+
+                        <div>
+
+                            <div class="font-semibold">
+
+                                {{ user.full_name }}
+
+                            </div>
+
+                            <div class="text-sm text-zinc-400">
+
+                                {{ user.username }}
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                    <td class="p-5 text-green-400">
+
+                        {{ money(user, user.available_balance) }}
+
+                    </td>
+
+                    <td class="p-5 text-yellow-400">
+
+                        {{ money(user, user.pending_balance) }}
+
+                    </td>
+
+                    <td class="p-5 text-indigo-400">
+
+                        {{ money(user, user.combo_balance) }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ money(user, user.total_earned) }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        <div class="flex justify-center gap-2">
+
+                            <a
+                                href="{{ url_for('admin.credit_wallet', id=user.id) }}"
+                                class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-plus"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.debit_wallet', id=user.id) }}"
+                                class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-minus"></i>
+
+                            </a>
+
+                            <a
+                                href="{{ url_for('admin.wallet_history', id=user.id) }}"
+                                class="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg">
+
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="6"
+                        class="text-center py-16 text-zinc-500">
+
+                        No users found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+
+    {% if users.pages > 1 %}
+
+    <div class="flex justify-between">
+
+        {% if users.has_prev %}
+
+        <a
+            href="{{ url_for('admin.wallets', page=users.prev_num, search=search) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Previous
+
+        </a>
+
+        {% else %}
+
+        <div></div>
+
+        {% endif %}
+
+        <span>
+
+            Page {{ users.page }} of {{ users.pages }}
+
+        </span>
+
+        {% if users.has_next %}
+
+        <a
+            href="{{ url_for('admin.wallets', page=users.next_num, search=search) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Next
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

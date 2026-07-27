@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}Support Chat{% endblock %}
+{% block page_title %}Support Chat{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="glass rounded-3xl p-6">
+        <h2 class="text-2xl font-bold mb-2">User conversations</h2>
+        <p class="text-zinc-400 text-sm">Click a user to open the chat and reply.</p>
+    </div>
+
+    <div class="glass rounded-3xl overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-slate-800">
+            <tr>
+                <th class="p-4 text-left">User</th>
+                <th class="text-left">Last message</th>
+                <th class="text-left">Unread</th>
+                <th class="text-left"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user, last_at, unread in conversations %}
+            <tr class="border-t border-slate-700 hover:bg-slate-800/40">
+                <td class="p-4">
+                    <div class="font-semibold">{{ user.username }}</div>
+                    <div class="text-sm text-zinc-400">{{ user.email }}</div>
+                </td>
+                <td>
+                    {% if last_at %}{{ last_at.strftime('%d %b %Y %H:%M') }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if unread and unread > 0 %}
+                        <span class="bg-red-600 px-3 py-1 rounded-full text-sm">{{ unread }}</span>
+                    {% else %}
+                        <span class="text-zinc-500">0</span>
+                    {% endif %}
+                </td>
+                <td class="p-4">
+                    <a href="{{ url_for('chat.admin_thread', user_id=user.id) }}"
+                       class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-semibold">
+                        Open chat
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="p-10 text-center text-zinc-400">No chat messages yet.</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

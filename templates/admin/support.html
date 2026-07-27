@@ -1,0 +1,215 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Support Settings{% endblock %}
+{% block page_title %}Support Settings{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+
+<div class="space-y-8">
+
+    <!-- WhatsApp -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            WhatsApp Support
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+
+                <label class="block mb-2">
+
+                    WhatsApp Number 1
+
+                </label>
+
+                <input
+                    type="text"
+                    name="whatsapp1"
+                    value="{{ support.whatsapp1 or '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div class="flex items-center gap-3 mt-9">
+
+                <input
+                    type="checkbox"
+                    name="whatsapp1_enabled"
+                    {% if support.whatsapp1_enabled %}checked{% endif %}>
+
+                <span>Enabled</span>
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">
+
+                    WhatsApp Number 2
+
+                </label>
+
+                <input
+                    type="text"
+                    name="whatsapp2"
+                    value="{{ support.whatsapp2 or '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div class="flex items-center gap-3 mt-9">
+
+                <input
+                    type="checkbox"
+                    name="whatsapp2_enabled"
+                    {% if support.whatsapp2_enabled %}checked{% endif %}>
+
+                <span>Enabled</span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Telegram -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Telegram Support
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+
+                <label class="block mb-2">
+
+                    Telegram Link 1
+
+                </label>
+
+                <input
+                    type="text"
+                    name="telegram1"
+                    value="{{ support.telegram1 or '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div class="flex items-center gap-3 mt-9">
+
+                <input
+                    type="checkbox"
+                    name="telegram1_enabled"
+                    {% if support.telegram1_enabled %}checked{% endif %}>
+
+                <span>Enabled</span>
+
+            </div>
+
+            <div>
+
+                <label class="block mb-2">
+
+                    Telegram Link 2
+
+                </label>
+
+                <input
+                    type="text"
+                    name="telegram2"
+                    value="{{ support.telegram2 or '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div class="flex items-center gap-3 mt-9">
+
+                <input
+                    type="checkbox"
+                    name="telegram2_enabled"
+                    {% if support.telegram2_enabled %}checked{% endif %}>
+
+                <span>Enabled</span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Live Chat -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            Live Chat
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+
+                <label class="block mb-2">
+
+                    Live Chat URL
+
+                </label>
+
+                <input
+                    type="text"
+                    name="livechat"
+                    value="{{ support.livechat or '' }}"
+                    class="w-full bg-slate-800 rounded-xl p-3">
+
+            </div>
+
+            <div class="flex items-center gap-3 mt-9">
+
+                <input
+                    type="checkbox"
+                    name="livechat_enabled"
+                    {% if support.livechat_enabled %}checked{% endif %}>
+
+                <span>Enabled</span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Save -->
+
+    <div>
+
+        <button
+            type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 px-10 py-4 rounded-xl">
+
+            <i class="fa fa-save mr-2"></i>
+
+            Save Support Settings
+
+        </button>
+
+    </div>
+
+</div>
+
+</form>
+
+{% endblock %}

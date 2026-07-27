@@ -1,0 +1,147 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Combo Manager{% endblock %}
+{% block page_title %}Combo Manager{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <div class="flex justify-between items-center">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Combo Manager
+
+            </h2>
+
+            <p class="text-zinc-400">
+
+                Manage all user combos.
+
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_combo') }}"
+           class="bg-purple-600 px-6 py-3 rounded-xl">
+
+            <i class="fa fa-plus mr-2"></i>
+
+            New Combo
+
+        </a>
+
+    </div>
+
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-800">
+
+                <tr>
+
+                    <th class="p-4">User</th>
+
+                    <th>Trigger</th>
+
+                    <th>Amount</th>
+
+                    <th>Status</th>
+
+                    <th>Created</th>
+
+                    <th>Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for combo in combos.items %}
+
+                <tr class="border-t border-slate-700">
+
+                    <td class="p-4">
+
+                        {{ combo.user.username }}
+
+                    </td>
+
+                    <td>
+
+                        {{ combo.trigger_task }}
+
+                    </td>
+
+                    <td>
+
+                        {{ combo.amount }}
+
+                    </td>
+
+                    <td>
+
+                        {% if combo.status=="Pending" %}
+                            <span class="text-yellow-400">Pending</span>
+                        {% elif combo.status=="Triggered" %}
+                            <span class="text-red-400">Triggered</span>
+                        {% else %}
+                            <span class="text-green-400">Completed</span>
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {{ combo.created_at.strftime("%d %b %Y") }}
+
+                    </td>
+
+                    <td>
+
+                        <div class="flex gap-2">
+
+                            <a href="{{ url_for('admin.edit_combo', combo_id=combo.id) }}"
+                               class="bg-indigo-600 px-3 py-2 rounded">
+
+                                <i class="fa fa-pen"></i>
+
+                            </a>
+
+                            <a href="{{ url_for('admin.trigger_combo', combo_id=combo.id) }}"
+                               class="bg-yellow-600 px-3 py-2 rounded">
+
+                                <i class="fa fa-bolt"></i>
+
+                            </a>
+
+                            <a href="{{ url_for('admin.reset_combo', combo_id=combo.id) }}"
+                               class="bg-red-600 px-3 py-2 rounded">
+
+                                <i class="fa fa-rotate-left"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

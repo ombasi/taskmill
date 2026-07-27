@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Combo Products{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-10 space-y-8">
+
+    <div class="glass rounded-3xl p-8">
+        <p class="uppercase tracking-[4px] text-purple-400 text-sm">Premium Combo</p>
+        <h1 class="text-4xl font-black mt-2">Your Combo Products</h1>
+
+        <div class="mt-6 space-y-2 text-zinc-300 text-sm leading-relaxed">
+            <p><strong class="text-white">1.</strong> Combo charge is applied → balance may go <span class="text-red-400">negative</span>.</p>
+            <p><strong class="text-white">2.</strong> Deposit until balance is zero or positive.</p>
+            <p><strong class="text-white">3.</strong> Review both products below.</p>
+            <p><strong class="text-white">4.</strong> After both are completed you receive:
+                <span class="text-emerald-400">combo charge refunded + commission on each product</span>
+                (your deposit stays in the account).
+            </p>
+        </div>
+
+        <div class="mt-6 text-lg">
+            Balance:
+            <span class="{% if balance < 0 %}text-red-400{% else %}text-emerald-400{% endif %} font-bold">
+                {{ money(current_user, balance) }}
+            </span>
+        </div>
+        {% if needs_deposit %}
+        <a href="{{ url_for('wallet.deposit') }}"
+           class="inline-block mt-6 bg-indigo-600 hover:bg-indigo-500 rounded-xl px-6 py-3 font-semibold">
+            Deposit to clear negative
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass rounded-3xl p-6">
+            <p class="text-xs text-zinc-500 mb-2">Product 1</p>
+            {% if combo.product1_image %}
+            <img src="{{ media(combo.product1_image) }}"
+                 alt="" class="w-full h-48 object-cover rounded-2xl mb-4"
+                 onerror="this.style.display='none'">
+            {% endif %}
+            <h2 class="text-xl font-bold">{{ combo.product1_name }}</h2>
+            <p class="text-emerald-400 text-2xl font-black mt-2">
+                UGX {{ '{:,.0f}'.format(combo.product1_price|float) }}
+            </p>
+        </div>
+        <div class="glass rounded-3xl p-6">
+            <p class="text-xs text-zinc-500 mb-2">Product 2</p>
+            {% if combo.product2_image %}
+            <img src="{{ media(combo.product2_image) }}"
+                 alt="" class="w-full h-48 object-cover rounded-2xl mb-4"
+                 onerror="this.style.display='none'">
+            {% endif %}
+            <h2 class="text-xl font-bold">{{ combo.product2_name }}</h2>
+            <p class="text-emerald-400 text-2xl font-black mt-2">
+                UGX {{ '{:,.0f}'.format(combo.product2_price|float) }}
+            </p>
+        </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+        <h3 class="text-xl font-bold mb-4">Combo tasks</h3>
+        {% if combo_tasks %}
+        <div class="space-y-3">
+            {% for t in combo_tasks %}
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-800/60 rounded-xl p-4">
+                <div>
+                    <p class="font-semibold">{{ t.product_name }}</p>
+                    <p class="text-sm text-zinc-400">
+                        Price UGX {{ '{:,.0f}'.format(t.product_price|float) }}
+                        · Commission UGX {{ '{:,.0f}'.format(t.commission|float) }}
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if t.status == 'assigned' %}
+                        <span class="text-yellow-400 font-semibold">Pending</span>
+                        {% if not needs_deposit %}
+                        <a href="{{ url_for('task.index') }}"
+                           class="bg-indigo-600 rounded-lg px-4 py-2 text-sm">Review</a>
+                        {% endif %}
+                    {% elif t.status == 'completed' %}
+                        <span class="text-green-400 font-semibold">Completed</span>
+                    {% else %}
+                        <span class="text-zinc-400">{{ t.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-zinc-400">Waiting for admin to trigger the combo.</p>
+        {% endif %}
+        <p class="text-sm text-zinc-500 mt-4">
+            Combo charge: <strong>UGX {{ '{:,.0f}'.format(combo.amount|float) }}</strong>
+            · Status: {{ combo.status }}
+        </p>
+    </div>
+
+</div>
+{% endblock %}

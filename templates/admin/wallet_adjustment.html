@@ -1,0 +1,236 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ action }} Wallet{% endblock %}
+{% block page_title %}{{ action }} Wallet{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+
+<div class="max-w-4xl space-y-8">
+
+    <!-- User Information -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            User Information
+
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+            <div>
+
+                <label class="text-zinc-400">
+
+                    Full Name
+
+                </label>
+
+                <div class="mt-2 text-xl font-semibold">
+
+                    {{ user.full_name }}
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <label class="text-zinc-400">
+
+                    Username
+
+                </label>
+
+                <div class="mt-2 text-xl font-semibold">
+
+                    {{ user.username }}
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <label class="text-zinc-400">
+
+                    Available Balance
+
+                </label>
+
+                <div class="mt-2 text-green-400 text-xl font-bold">
+
+                    {{ money(user, user.available_balance) }}
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <label class="text-zinc-400">
+
+                    Pending Balance
+
+                </label>
+
+                <div class="mt-2 text-yellow-400 text-xl font-bold">
+
+                    {{ money(user, user.pending_balance) }}
+
+                </div>
+
+            </div>
+
+            <div>
+
+                <label class="text-zinc-400">
+
+                    Combo Balance
+
+                </label>
+
+                <div class="mt-2 text-indigo-400 text-xl font-bold">
+
+                    {{ money(user, user.combo_balance) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Adjustment -->
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-3xl font-bold mb-8">
+
+            {{ action }} Wallet
+
+        </h2>
+
+        <div class="space-y-6">
+
+            <div>
+
+                <label>
+
+                    Wallet
+
+                </label>
+
+                <select
+                    name="wallet"
+                    required
+                    class="w-full bg-slate-800 rounded-xl p-4 mt-2">
+
+                    <option value="available">
+
+                        Available Balance
+
+                    </option>
+
+                    <option value="pending">
+
+                        Pending Balance
+
+                    </option>
+
+                    <option value="combo">
+
+                        Combo Balance
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div>
+
+                <label>
+
+                    Amount
+
+                </label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    name="amount"
+                    class="w-full bg-slate-800 rounded-xl p-4 mt-2">
+
+            </div>
+
+            <div>
+
+                <label>
+
+                    Reason
+
+                </label>
+
+                <textarea
+                    name="reason"
+                    rows="5"
+                    required
+                    class="w-full bg-slate-800 rounded-xl p-4 mt-2"
+                    placeholder="Reason for this adjustment..."></textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Buttons -->
+
+    <div class="flex gap-4">
+
+        {% if action == "Credit" %}
+
+        <button
+            class="bg-green-600 hover:bg-green-700 px-10 py-4 rounded-xl">
+
+            <i class="fa-solid fa-plus mr-2"></i>
+
+            Credit Wallet
+
+        </button>
+
+        {% else %}
+
+        <button
+            class="bg-red-600 hover:bg-red-700 px-10 py-4 rounded-xl">
+
+            <i class="fa-solid fa-minus mr-2"></i>
+
+            Debit Wallet
+
+        </button>
+
+        {% endif %}
+
+        <a
+            href="{{ url_for('admin.wallets') }}"
+            class="bg-slate-700 hover:bg-slate-600 px-10 py-4 rounded-xl">
+
+            Cancel
+
+        </a>
+
+    </div>
+
+</div>
+
+</form>
+
+{% endblock %}

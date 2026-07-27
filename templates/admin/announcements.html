@@ -1,0 +1,149 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Announcements{% endblock %}
+{% block page_title %}Announcements{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex justify-between items-center">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Announcements
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                Broadcast messages to all users.
+
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_announcement') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
+
+            <i class="fa fa-plus mr-2"></i>
+
+            New Announcement
+
+        </a>
+
+    </div>
+
+    <!-- Cards -->
+
+    <div class="grid lg:grid-cols-2 gap-8">
+
+        {% for announcement in announcements %}
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-2xl font-bold">
+
+                    {{ announcement.title }}
+
+                </h2>
+
+                {% if announcement.active %}
+
+                    <span class="bg-green-600 px-3 py-1 rounded-full">
+
+                        Active
+
+                    </span>
+
+                {% else %}
+
+                    <span class="bg-red-600 px-3 py-1 rounded-full">
+
+                        Disabled
+
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+            <p class="text-zinc-300 whitespace-pre-wrap">
+
+                {{ announcement.message }}
+
+            </p>
+
+            <div class="mt-6 text-sm text-zinc-500">
+
+                {{ announcement.created_at.strftime("%d %b %Y %H:%M") }}
+
+            </div>
+
+            <div class="mt-8 flex gap-3">
+
+                <a href="{{ url_for('admin.edit_announcement', id=announcement.id) }}"
+                   class="flex-1 bg-indigo-600 text-center py-3 rounded-xl">
+
+                    <i class="fa fa-pen mr-2"></i>
+
+                    Edit
+
+                </a>
+
+                <a href="{{ url_for('admin.toggle_announcement', id=announcement.id) }}"
+                   class="flex-1 bg-yellow-500 text-center py-3 rounded-xl">
+
+                    <i class="fa fa-power-off mr-2"></i>
+
+                    Toggle
+
+                </a>
+
+            </div>
+
+            <a href="{{ url_for('admin.delete_announcement', id=announcement.id) }}"
+               onclick="return confirm('Delete this announcement?')"
+               class="block mt-3 bg-red-600 text-center py-3 rounded-xl">
+
+                <i class="fa fa-trash mr-2"></i>
+
+                Delete
+
+            </a>
+
+        </div>
+
+        {% else %}
+
+        <div class="glass rounded-3xl p-12 text-center col-span-2">
+
+            <i class="fa-solid fa-bullhorn text-6xl text-zinc-500 mb-6"></i>
+
+            <h3 class="text-2xl font-bold mb-2">
+
+                No announcements yet
+
+            </h3>
+
+            <p class="text-zinc-400">
+
+                Create your first announcement to broadcast to users.
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

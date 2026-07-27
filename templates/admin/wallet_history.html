@@ -1,0 +1,208 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Wallet History{% endblock %}
+{% block page_title %}Wallet History{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Wallet History
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                {{ user.full_name }} ({{ user.username }})
+
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.wallets') }}"
+           class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl">
+
+            <i class="fa-solid fa-arrow-left mr-2"></i>
+
+            Back
+
+        </a>
+
+    </div>
+
+    <!-- Current Balances -->
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+        <div class="glass rounded-2xl p-6">
+
+            <p class="text-zinc-400">Available</p>
+
+            <h2 class="text-3xl font-bold text-green-400 mt-2">
+
+                {{ money(user, user.available_balance) }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+
+            <p class="text-zinc-400">Pending</p>
+
+            <h2 class="text-3xl font-bold text-yellow-400 mt-2">
+
+                {{ money(user, user.pending_balance) }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+
+            <p class="text-zinc-400">Combo</p>
+
+            <h2 class="text-3xl font-bold text-indigo-400 mt-2">
+
+                {{ money(user, user.combo_balance) }}
+
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- Transaction Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-900">
+
+                <tr>
+
+                    <th class="text-left p-5">Date</th>
+
+                    <th class="text-left p-5">Type</th>
+
+                    <th class="text-left p-5">Amount</th>
+
+                    <th class="text-left p-5">Before</th>
+
+                    <th class="text-left p-5">After</th>
+
+                    <th class="text-left p-5">Reference</th>
+
+                    <th class="text-left p-5">Description</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for tx in transactions %}
+
+                <tr class="border-t border-slate-800 hover:bg-slate-900/40">
+
+                    <td class="p-5">
+
+                        {{ tx.created_at.strftime("%d %b %Y %H:%M") }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {% if "Credit" in tx.transaction_type %}
+
+                        <span class="px-3 py-1 rounded-full bg-green-600">
+
+                            {{ tx.transaction_type }}
+
+                        </span>
+
+                        {% elif "Debit" in tx.transaction_type %}
+
+                        <span class="px-3 py-1 rounded-full bg-red-600">
+
+                            {{ tx.transaction_type }}
+
+                        </span>
+
+                        {% else %}
+
+                        <span class="px-3 py-1 rounded-full bg-indigo-600">
+
+                            {{ tx.transaction_type }}
+
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="p-5 font-semibold">
+
+                        {{ money(user, tx.amount) }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ money(user, tx.balance_before) }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ money(user, tx.balance_after) }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ tx.reference or "-" }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ tx.description }}
+
+                    </td>
+
+                </tr>
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="7"
+                        class="text-center py-16 text-zinc-500">
+
+                        No wallet transactions found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

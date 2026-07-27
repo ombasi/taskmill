@@ -1,0 +1,175 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Statistics -->
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+
+    <div class="glass rounded-3xl p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-zinc-400">Total Users</p>
+                <h2 class="text-4xl font-black mt-3">{{ total_users }}</h2>
+            </div>
+            <i class="fa-solid fa-users text-5xl text-indigo-400"></i>
+        </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-zinc-400">Today's Deposits</p>
+                <h2 class="text-4xl font-black mt-3 text-emerald-400">
+                    {{ money(current_user, deposits_today) }}
+                </h2>
+            </div>
+            <i class="fa-solid fa-wallet text-5xl text-emerald-400"></i>
+        </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-zinc-400">Pending Withdrawals</p>
+                <h2 class="text-4xl font-black mt-3 text-red-400">
+                    {{ pending_withdrawals }}
+                </h2>
+            </div>
+            <i class="fa-solid fa-money-bill-wave text-5xl text-red-400"></i>
+        </div>
+    </div>
+
+    <div class="glass rounded-3xl p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-zinc-400">Active Tasks</p>
+                <h2 class="text-4xl font-black mt-3 text-yellow-400">
+                    {{ active_tasks }}
+                </h2>
+            </div>
+            <i class="fa-solid fa-box text-5xl text-yellow-400"></i>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Charts -->
+
+<div class="grid xl:grid-cols-2 gap-8 mb-8">
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-2xl font-bold mb-6">
+
+            Revenue (7 Days)
+
+        </h2>
+
+        <canvas id="revenueChart"></canvas>
+
+    </div>
+
+    <div class="glass rounded-3xl p-8">
+
+        <h2 class="text-2xl font-bold mb-6">
+
+            User Growth
+
+        </h2>
+
+        <canvas id="usersChart"></canvas>
+
+    </div>
+
+</div>
+
+
+<!-- Recent Activity -->
+
+<div class="glass rounded-3xl p-8">
+
+    <h2 class="text-2xl font-bold mb-6">
+
+        Recent Activity
+
+    </h2>
+
+    <div class="space-y-4">
+
+        {% for item in activities %}
+
+        <div class="flex justify-between items-center border-b border-white/10 pb-3">
+
+            <div>
+
+                <p class="font-semibold">
+
+                    {{ item.message }}
+
+                </p>
+
+                <small class="text-zinc-500">
+
+                    {{ item.time }}
+
+                </small>
+
+            </div>
+
+            <span class="text-indigo-400">
+
+                {{ item.type }}
+
+            </span>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<script>
+
+const revenueChart = new Chart(document.getElementById("revenueChart"),{
+    type:"line",
+    data:{
+        labels:{{ revenue_labels|tojson }},
+        datasets:[{
+            label:"Revenue",
+            data: {{ revenue_data|tojson }},
+            borderColor:"#6366f1",
+            backgroundColor:"rgba(99,102,241,.25)",
+            fill:true,
+            tension:.4
+        }]
+    },
+    options:{
+        plugins:{legend:{display:false}}
+    }
+});
+
+
+const usersChart = new Chart(document.getElementById("usersChart"),{
+    type:"bar",
+    data:{
+        labels:{{ user_labels|tojson }},
+        datasets:[{
+            data:{{ user_values|tojson }},
+            backgroundColor:"#22c55e"
+        }]
+    },
+    options:{
+        plugins:{legend:{display:false}}
+    }
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+{% block page_title %}Audit Logs{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex items-center justify-between">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+
+                Audit Logs
+
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+
+                Complete administrator activity history.
+
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- Search -->
+
+    <form method="GET">
+
+        <div class="grid md:grid-cols-3 gap-4">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search..."
+                class="bg-slate-800 rounded-xl p-4">
+
+            <select
+                name="module"
+                class="bg-slate-800 rounded-xl p-4">
+
+                <option value="">All Modules</option>
+
+                {% for item in modules %}
+
+                <option
+                    value="{{ item }}"
+                    {% if module==item %}selected{% endif %}>
+
+                    {{ item }}
+
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button
+                class="bg-indigo-600 rounded-xl">
+
+                Search
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <!-- Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-900">
+
+                <tr>
+
+                    <th class="text-left p-5">Date</th>
+                    <th class="text-left p-5">Admin</th>
+                    <th class="text-left p-5">Module</th>
+                    <th class="text-left p-5">Action</th>
+                    <th class="text-left p-5">Target</th>
+                    <th class="text-left p-5">IP</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for log in logs.items %}
+
+                <tr class="border-t border-slate-800 hover:bg-slate-900/30">
+
+                    <td class="p-5">
+
+                        {{ log.created_at.strftime("%d %b %Y %H:%M") }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ log.admin.username }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        <span class="bg-slate-700 px-3 py-1 rounded-full">
+
+                            {{ log.module }}
+
+                        </span>
+
+                    </td>
+
+                    <td class="p-5 font-semibold">
+
+                        {{ log.action }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ log.target or "-" }}
+
+                    </td>
+
+                    <td class="p-5">
+
+                        {{ log.ip_address }}
+
+                    </td>
+
+                </tr>
+
+            {% else %}
+
+                <tr>
+
+                    <td colspan="6"
+                        class="text-center py-16 text-zinc-500">
+
+                        No audit records found.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+
+    {% if logs.pages > 1 %}
+
+    <div class="flex justify-between items-center">
+
+        {% if logs.has_prev %}
+
+        <a
+            href="{{ url_for('admin.audit_logs',
+                page=logs.prev_num,
+                search=search,
+                module=module) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Previous
+
+        </a>
+
+        {% else %}
+
+        <div></div>
+
+        {% endif %}
+
+        <span>
+
+            Page {{ logs.page }} of {{ logs.pages }}
+
+        </span>
+
+        {% if logs.has_next %}
+
+        <a
+            href="{{ url_for('admin.audit_logs',
+                page=logs.next_num,
+                search=search,
+                module=module) }}"
+            class="bg-slate-700 px-5 py-3 rounded-xl">
+
+            Next
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

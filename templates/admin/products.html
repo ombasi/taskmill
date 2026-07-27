@@ -1,0 +1,237 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Products{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex justify-between items-center">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+                Products
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+                Manage Taskmill products.
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_product') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
+
+            <i class="fa fa-plus mr-2"></i>
+
+            New Product
+
+        </a>
+
+    </div>
+
+    <!-- Search -->
+
+    <form method="GET">
+
+        <div class="glass rounded-3xl p-6">
+
+            <input
+                type="text"
+                name="search"
+                placeholder="Search product..."
+                value="{{ request.args.get('search','') }}"
+                class="w-full bg-slate-800 rounded-xl p-4">
+
+        </div>
+
+    </form>
+
+    <!-- Table -->
+
+    <div class="glass rounded-3xl overflow-hidden">
+
+        <table class="w-full">
+
+            <thead class="bg-slate-800">
+
+            <tr>
+
+                <th class="p-4 text-left">Image</th>
+                <th class="p-4 text-left">Name</th>
+                <th class="p-4 text-left">Category</th>
+                <th class="p-4 text-left">Partner</th>
+                <th class="p-4 text-left">Price</th>
+                <th class="p-4 text-left">Commission</th>
+                <th class="p-4 text-left">Stock</th>
+                <th class="p-4 text-left">Status</th>
+                <th class="p-4 text-center">Actions</th>
+
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for product in products.items %}
+
+            <tr class="border-t border-slate-700 hover:bg-slate-800">
+
+                <td class="p-4">
+
+                    {% if product.image %}
+
+                        <img src="{{ media(product.image) }}"
+                             class="w-14 h-14 rounded-lg object-cover">
+
+                    {% else %}
+
+                        <div class="w-14 h-14 rounded-lg bg-slate-700 flex items-center justify-center">
+
+                            <i class="fa fa-box"></i>
+
+                        </div>
+
+                    {% endif %}
+
+                </td>
+
+                <td>{{ product.name }}</td>
+
+                <td>{{ product.category }}</td>
+
+                <td>
+
+                    {% if product.partner %}
+
+                        {{ product.partner.name }}
+
+                    {% else %}
+
+                        -
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    {{ money(current_user, product.price) }}
+
+                </td>
+
+                <td>
+
+                    {{ money(current_user, product.commission) }}
+
+                </td>
+
+                <td>
+
+                    {{ product.stock }}
+
+                </td>
+
+                <td>
+
+                    {% if product.active %}
+
+                        <span class="bg-green-600 px-3 py-1 rounded-full">
+
+                            Active
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="bg-red-600 px-3 py-1 rounded-full">
+
+                            Disabled
+
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+
+                    <div class="flex justify-center gap-2">
+
+                        <a href="{{ url_for('admin.edit_product',id=product.id) }}"
+                           class="bg-indigo-600 px-3 py-2 rounded-lg">
+
+                            <i class="fa fa-pen"></i>
+
+                        </a>
+
+                        <a href="{{ url_for('admin.toggle_product',id=product.id) }}"
+                           class="bg-yellow-500 px-3 py-2 rounded-lg">
+
+                            <i class="fa fa-power-off"></i>
+
+                        </a>
+
+                        <a href="{{ url_for('admin.delete_product',id=product.id) }}"
+                           onclick="return confirm('Delete product?')"
+                           class="bg-red-600 px-3 py-2 rounded-lg">
+
+                            <i class="fa fa-trash"></i>
+
+                        </a>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Pagination -->
+
+    <div class="flex justify-center gap-4">
+
+        {% if products.has_prev %}
+
+        <a href="{{ url_for('admin.products',page=products.prev_num) }}"
+           class="bg-slate-800 px-5 py-3 rounded-xl">
+
+            Previous
+
+        </a>
+
+        {% endif %}
+
+        <span class="px-5 py-3">
+
+            Page {{ products.page }} of {{ products.pages }}
+
+        </span>
+
+        {% if products.has_next %}
+
+        <a href="{{ url_for('admin.products',page=products.next_num) }}"
+           class="bg-slate-800 px-5 py-3 rounded-xl">
+
+            Next
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

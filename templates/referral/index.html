@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Earn More{% endblock %}
+
+{% block content %}
+
+<div class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Hero -->
+
+    <div class="glass rounded-3xl p-12 mb-10">
+
+        <div class="flex flex-col lg:flex-row justify-between items-center">
+
+            <div>
+
+                <p class="uppercase tracking-[6px] text-indigo-400 text-sm">
+
+                    Referral Program
+
+                </p>
+
+                <h1 class="text-5xl font-black text-white mt-4">
+
+                    Invite Friends.<br>
+
+                    Earn More.
+
+                </h1>
+
+                <p class="text-zinc-400 text-lg mt-6 max-w-xl">
+
+                    Share your referral code and receive rewards whenever
+                    someone joins Taskmill through your invitation.
+
+                </p>
+
+            </div>
+
+            <div class="hidden lg:flex w-40 h-40 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 items-center justify-center">
+
+                <i class="fa-solid fa-user-plus text-white text-7xl"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Stats -->
+
+    <div class="grid md:grid-cols-3 gap-6 mb-10">
+
+        <div class="glass rounded-3xl p-8">
+
+            <p class="text-zinc-400">
+
+                Referral Code
+
+            </p>
+
+            <h2 class="text-3xl font-black text-indigo-400 mt-4">
+
+                {{ current_user.referral_code }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-3xl p-8">
+
+            <p class="text-zinc-400">
+
+                Total Referrals
+
+            </p>
+
+            <h2 class="text-5xl font-black text-white mt-4">
+
+                {{ total_referrals }}
+
+            </h2>
+
+        </div>
+
+        <div class="glass rounded-3xl p-8">
+
+            <p class="text-zinc-400">
+
+                Referral Earnings
+
+            </p>
+
+            <h2 class="text-4xl font-black text-emerald-400 mt-4">
+
+                {{ money(current_user, referral_income) }}
+
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- Referral Link -->
+
+    <div class="glass rounded-3xl p-10 mb-10">
+
+        <h2 class="text-3xl font-bold text-white mb-8">
+
+            Your Referral Link
+
+        </h2>
+
+        <div class="flex flex-col md:flex-row gap-4">
+
+            <input
+                id="refLink"
+                readonly
+                value="{{ request.host_url }}register?ref={{ current_user.referral_code }}"
+                class="flex-1 rounded-2xl bg-zinc-900 border border-white/10 px-6 py-5 text-zinc-300">
+
+            <button
+                onclick="copyReferralLink()"
+                class="px-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-bold">
+
+                Copy Link
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Benefits -->
+
+    <div class="grid md:grid-cols-3 gap-6">
+
+        <div class="glass rounded-3xl p-8 text-center">
+
+            <i class="fa-solid fa-share-nodes text-5xl text-indigo-400 mb-6"></i>
+
+            <h3 class="text-2xl font-bold text-white mb-4">
+
+                Share
+
+            </h3>
+
+            <p class="text-zinc-400">
+
+                Share your referral link with friends.
+
+            </p>
+
+        </div>
+
+        <div class="glass rounded-3xl p-8 text-center">
+
+            <i class="fa-solid fa-user-check text-5xl text-emerald-400 mb-6"></i>
+
+            <h3 class="text-2xl font-bold text-white mb-4">
+
+                They Register
+
+            </h3>
+
+            <p class="text-zinc-400">
+
+                They create an account using your referral code.
+
+            </p>
+
+        </div>
+
+        <div class="glass rounded-3xl p-8 text-center">
+
+            <i class="fa-solid fa-coins text-5xl text-yellow-400 mb-6"></i>
+
+            <h3 class="text-2xl font-bold text-white mb-4">
+
+                Earn Rewards
+
+            </h3>
+
+            <p class="text-zinc-400">
+
+                Receive referral commissions automatically.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function copyReferralLink(){
+
+    let input=document.getElementById("refLink");
+
+    input.select();
+
+    input.setSelectionRange(0,99999);
+
+    navigator.clipboard.writeText(input.value);
+
+    alert("Referral link copied!");
+
+}
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,9 @@
+[DEFAULT]
+BASEURL=https://onehack.us/
+[{000214A0-0000-0000-C000-000000000046}]
+Prop3=19,11
+[InternetShortcut]
+IDList=
+URL=https://onehack.us/
+IconFile=https://onehack.us/uploads/default/optimized/3X/7/1/7142e96387380d64f4e9edb5fd147a12947baac8_2_32x32.png
+IconIndex=1

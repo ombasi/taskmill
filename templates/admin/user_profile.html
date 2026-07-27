@@ -1,0 +1,271 @@
+{% extends "admin/base.html" %}
+
+{% block title %}User Profile{% endblock %}
+{% block page_title %}User Profile{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-12 gap-8">
+
+    <!-- LEFT -->
+
+    <div class="col-span-3">
+
+        <div class="glass rounded-3xl p-8 text-center">
+
+            <div class="w-28 h-28 rounded-full bg-indigo-600 flex items-center justify-center mx-auto text-5xl font-bold">
+
+                {{ user.username[:1]|upper }}
+
+            </div>
+
+            <h2 class="text-3xl font-black mt-5">
+
+                {{ user.full_name }}
+
+            </h2>
+
+            <p class="text-zinc-400">
+
+                @{{ user.username }}
+
+            </p>
+
+            <div class="mt-6">
+
+                <span class="bg-yellow-500 px-4 py-2 rounded-full">
+
+                    {{ user.membership }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RIGHT -->
+
+    <div class="col-span-9">
+
+        <!-- BASIC -->
+
+        <div class="glass rounded-3xl p-8 mb-8">
+
+            <h2 class="text-2xl font-bold mb-6">
+
+                Basic Information
+
+            </h2>
+
+            <div class="grid grid-cols-2 gap-6">
+
+                <div>
+
+                    <label>Email</label>
+
+                    <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                           value="{{ user.email }}">
+
+                </div>
+
+                <div>
+
+                    <label>Phone</label>
+
+                    <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                           value="{{ user.phone }}">
+
+                </div>
+
+                <div>
+
+                    <label>Country</label>
+
+                    <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                           value="{{ user.country }}">
+
+                </div>
+
+                <div>
+
+                    <label>IP Address</label>
+
+                    <input class="w-full bg-slate-800 rounded-xl p-3 mt-2"
+                           value="{{ user.ip_address }}">
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- WALLET -->
+
+        <div class="glass rounded-3xl p-8 mb-8">
+
+            <h2 class="text-2xl font-bold mb-6">
+
+                Wallet
+
+            </h2>
+
+            <div class="grid grid-cols-3 gap-6">
+
+                <div class="bg-slate-800 rounded-2xl p-6">
+
+                    <p>Available</p>
+
+                    <h2 class="text-3xl mt-3">
+
+                        {{ money(user, user.available_balance) }}
+
+                    </h2>
+
+                </div>
+
+                <div class="bg-slate-800 rounded-2xl p-6">
+
+                    <p>Pending</p>
+
+                    <h2 class="text-3xl mt-3">
+
+                        {{ money(user, user.pending_balance) }}
+
+                    </h2>
+
+                </div>
+
+                <div class="bg-slate-800 rounded-2xl p-6">
+
+                    <p>Combo</p>
+
+                    <h2 class="text-3xl mt-3">
+
+                      {{ money(user, user.combo_balance) }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <div class="flex gap-4 mt-8">
+
+                <button class="bg-green-600 px-6 py-3 rounded-xl">
+
+                    Credit Wallet
+
+                </button>
+
+                <button class="bg-red-600 px-6 py-3 rounded-xl">
+
+                    Deduct Wallet
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- MEMBERSHIP -->
+
+        <div class="glass rounded-3xl p-8 mb-8">
+
+            <h2 class="text-2xl font-bold mb-6">
+
+                Membership
+
+            </h2>
+
+            <div class="flex gap-4">
+
+                <button class="bg-indigo-600 px-6 py-3 rounded-xl">
+
+                    Upgrade
+
+                </button>
+
+                <button class="bg-orange-600 px-6 py-3 rounded-xl">
+
+                    Downgrade
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- COMBO -->
+
+        <div class="glass rounded-3xl p-8 mb-8">
+
+            <h2 class="text-2xl font-bold mb-6">
+
+                Combo
+
+            </h2>
+
+            <div class="flex gap-4">
+
+                <button class="bg-indigo-600 px-6 py-3 rounded-xl">
+
+                    Assign Combo
+
+                </button>
+
+                <button class="bg-red-600 px-6 py-3 rounded-xl">
+
+                    Reset Combo
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACCOUNT -->
+
+        <div class="glass rounded-3xl p-8">
+
+            <h2 class="text-2xl font-bold mb-6">
+
+                Account Controls
+
+            </h2>
+
+            <div class="flex gap-4">
+
+                <button class="bg-yellow-500 px-6 py-3 rounded-xl">
+
+                    Suspend
+
+                </button>
+
+                <button class="bg-green-600 px-6 py-3 rounded-xl">
+
+                    Activate
+
+                </button>
+
+                <button class="bg-red-600 px-6 py-3 rounded-xl">
+
+                    Delete User
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

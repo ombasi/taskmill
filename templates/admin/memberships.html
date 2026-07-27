@@ -1,0 +1,180 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Memberships{% endblock %}
+{% block page_title %}Membership Management{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Header -->
+
+    <div class="flex justify-between items-center">
+
+        <div>
+
+            <h2 class="text-4xl font-black">
+                Membership Plans
+            </h2>
+
+            <p class="text-zinc-400 mt-2">
+                Manage Taskmill membership packages.
+            </p>
+
+        </div>
+
+        <a href="{{ url_for('admin.create_membership') }}"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
+
+            <i class="fa fa-plus mr-2"></i>
+
+            New Membership
+
+        </a>
+
+    </div>
+
+    <!-- Cards -->
+
+    <div class="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
+
+        {% for membership in memberships %}
+
+        <div class="glass rounded-3xl p-8">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-3xl font-bold">
+
+                    {{ membership.name }}
+
+                </h2>
+
+                {% if membership.active %}
+
+                    <span class="bg-green-600 px-3 py-1 rounded-full">
+
+                        Active
+
+                    </span>
+
+                {% else %}
+
+                    <span class="bg-red-600 px-3 py-1 rounded-full">
+
+                        Disabled
+
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+            <div class="space-y-3">
+
+                <p>
+                    <strong>Price:</strong>
+
+                    {{ money(current_user, membership.price) }}
+
+                </p>
+
+                <p>
+                    <strong>Daily Tasks:</strong>
+
+                    {{ membership.daily_tasks }}
+
+                </p>
+
+                <p>
+                    <strong>Tasks Per Set:</strong>
+
+                    {{ membership.tasks_per_set }}
+
+                </p>
+
+                <p>
+                    <strong>Daily Sets:</strong>
+
+                    {{ membership.daily_sets }}
+
+                </p>
+
+                <p>
+                    <strong>Combo Chance:</strong>
+
+                    {{ membership.combo_probability }}%
+
+                </p>
+
+                <p>
+                    <strong>Maximum Product:</strong>
+
+                    {{ money(current_user, membership.max_product_price) }}
+
+                </p>
+
+                <p>
+                    <strong>Withdrawal Limit:</strong>
+
+                    {{ money(current_user, membership.withdrawal_limit) }}
+
+                </p>
+
+                <p>
+                    <strong>Minimum Deposit:</strong>
+
+                    {{ money(current_user, membership.minimum_deposit) }}
+
+                </p>
+
+                <p>
+                    <strong>Referral Bonus:</strong>
+
+                    {{ money(current_user, membership.referral_bonus) }}
+
+                </p>
+
+            </div>
+
+            <div class="mt-8 flex gap-3">
+
+                <a href="{{ url_for('admin.edit_membership', id=membership.id) }}"
+                   class="flex-1 bg-indigo-600 text-center py-3 rounded-xl">
+
+                    <i class="fa fa-pen mr-2"></i>
+
+                    Edit
+
+                </a>
+
+                <a href="{{ url_for('admin.toggle_membership', id=membership.id) }}"
+                   class="flex-1 bg-yellow-500 text-center py-3 rounded-xl">
+
+                    <i class="fa fa-power-off mr-2"></i>
+
+                    Toggle
+
+                </a>
+
+            </div>
+
+            <a href="{{ url_for('admin.delete_membership', id=membership.id) }}"
+               onclick="return confirm('Delete this membership?')"
+               class="block mt-3 bg-red-600 text-center py-3 rounded-xl">
+
+                <i class="fa fa-trash mr-2"></i>
+
+                Delete
+
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
