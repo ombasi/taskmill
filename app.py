@@ -52,9 +52,19 @@ def create_app():
     os.makedirs(app.config.get("UPLOAD_FOLDER", "static/uploads"), exist_ok=True)
     os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
 
-    # Create tables
+    # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
         db.create_all()
+        try:
+            from models.user import User
+            if User.query.filter_by(is_admin=True).first() is None:
+                print("No admin found — running safe seed...")
+                from seed import run_safe_seed
+                run_safe_seed()
+            else:
+                print("Admin exists — skip auto-seed.")
+        except Exception as e:
+            print("Auto-seed skipped:", e)
 
     # Home
     @app.route("/")

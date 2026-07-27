@@ -16,10 +16,13 @@ from models.banner import Banner
 # RESET DATABASE
 # ==========================================================
 
-def reset_database():
-    db.drop_all()
+def reset_database(force=False):
+    """Only wipe DB when force=True (never on normal seed)."""
+    if force:
+        db.drop_all()
+        print("Database DROPPED (force).")
     db.create_all()
-    print("Database recreated.")
+    print("Tables ensured (create_all).")
 
 
 # ==========================================================
@@ -27,6 +30,9 @@ def reset_database():
 # ==========================================================
 
 def seed_settings():
+    if Settings.query.first():
+        print("Settings already exist — skipped.")
+        return
 
     settings = Settings(
 
@@ -86,6 +92,10 @@ def seed_settings():
 # ==========================================================
 
 def seed_support():
+    if Support.query.first():
+        print("Support already exists — skipped.")
+        return
+
 
     support = Support(
 
@@ -115,6 +125,10 @@ def seed_support():
 # ==========================================================
 
 def seed_banners():
+    if Banner.query.first():
+        print("Banners already exist — skipped.")
+        return
+
 
     banners = [
 
@@ -158,6 +172,9 @@ def seed_banners():
 # ==========================================================
 
 def seed_memberships():
+    if Membership.query.first():
+        print("Memberships already exist — skipped.")
+        return
 
     # Default memberships (admin-configured production values)
     memberships = [
@@ -234,11 +251,15 @@ def seed_memberships():
 # ==========================================================
 
 def seed_admin():
+    existing = User.query.filter(
+        (User.username == "admin") | (User.is_admin == True)
+    ).first()
+    if existing:
+        print(f"Admin already exists ({existing.username}) — skipped.")
+        return
 
     starter = Membership.query.filter_by(
-
         name="Starter"
-
     ).first()
 
     admin = User(
@@ -292,6 +313,9 @@ def seed_admin():
 # ==========================================================
 
 def seed_partners():
+    if Partner.query.first():
+        print("Partners already exist — skipped.")
+        return
 
     partners = [
 
@@ -399,6 +423,9 @@ PRODUCT_NAMES = [
 ]
 
 def seed_products():
+    if Product.query.first():
+        print("Products already exist — skipped.")
+        return
 
     partners = Partner.query.all()
 
@@ -528,11 +555,41 @@ def seed_payments():
     print("Payment methods seeded.")
 
 
+
+def run_safe_seed():
+    """
+    Idempotent seed for production boot.
+    Never drops tables. Only inserts missing baseline data.
+    """
+    reset_database(force=False)
+    seed_settings()
+    seed_support()
+    seed_banners()
+    seed_memberships()
+    seed_admin()
+    seed_partners()
+    seed_products()
+    seed_payments()
+    print("Safe seed finished.")
+
+
 if __name__ == "__main__":
+    import os
+    import sys
     from app import create_app
+
+    # Safe by default: does NOT wipe data.
+    # Wipe only if:  python seed.py --force
+    #            or:  FORCE_SEED=1 python seed.py
+    force = (
+        "--force" in sys.argv
+        or os.getenv("FORCE_SEED", "").strip() in ("1", "true", "yes")
+    )
+
     app = create_app()
     with app.app_context():
-        reset_database()
+        print("DATABASE_URL set:" , "yes" if os.getenv("DATABASE_URL") else "no (using local SQLite)")
+        reset_database(force=force)
         seed_settings()
         seed_support()
         seed_banners()
@@ -543,5 +600,9 @@ if __name__ == "__main__":
         seed_payments()
         print()
         print("=" * 60)
-        print("DATABASE SEEDED SUCCESSFULLY")
+        if force:
+            print("DATABASE FORCE-RESEEDED (all data was wiped first)")
+        else:
+            print("SAFE SEED COMPLETE (existing data kept)")
+        print("Admin login: admin / admin123")
         print("=" * 60)
