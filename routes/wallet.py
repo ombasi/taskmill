@@ -180,7 +180,7 @@ def withdraw():
         if withdrawal:
             flash("Withdrawal request submitted. Funds held pending admin approval.", "success")
         else:
-            flash("Insufficient balance or invalid amount.", "danger")
+            flash("Invalid amount, or you must leave UGX 15,000 in the wallet for next day tasks.", "danger")
 
         return redirect(url_for("wallet.index"))
 

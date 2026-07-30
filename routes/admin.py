@@ -888,9 +888,8 @@ def trigger_combo(combo_id):
     for i, (pid, pname, pprice, pimg) in enumerate(items, start=1):
         if not pname:
             continue
-        m = user.membership
-        combo_pct = float(getattr(m, "combo_commission_percent", None) or 5.0) if m else 5.0
-        commission = round(float(pprice or 0) * (combo_pct / 100.0), 2)
+        from services.task_service import TaskService
+        commission = TaskService.calculate_commission(user, pprice or 0, is_combo=True)
         task = Task(
             user_id=user.id,
             product_id=pid or fallback_pid,
@@ -898,7 +897,7 @@ def trigger_combo(combo_id):
             product_image=pimg,
             product_price=float(pprice or 0),
             commission=commission,
-            status="assigned",
+            status="frozen",  # Frozen until user deposits and clears negative
             task_number=i,
             task_set=99,
         )
@@ -1262,6 +1261,13 @@ def approve_deposit(deposit_id):
 
     if float(user.available_balance or 0) >= 0:
         user.negative_today = False
+        try:
+            from models.task import Task
+            Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
+                {"status": "assigned"}, synchronize_session=False
+            )
+        except Exception:
+            pass
 
     notification = Notification(
         user_id=user.id,
@@ -1269,6 +1275,28 @@ def approve_deposit(deposit_id):
         message=f"Your deposit of UGX {float(deposit.amount):,.0f} has been approved and added to your wallet.",
     )
     db.session.add(notification)
+
+    # 25% referral bonus to referrer on this deposit
+    try:
+        if getattr(user, "referred_by_id", None):
+            referrer = User.query.get(user.referred_by_id)
+            if referrer:
+                bonus = round(float(deposit.amount) * 0.25, 0)
+                if bonus > 0:
+                    rb = float(referrer.available_balance or 0)
+                    referrer.available_balance = rb + bonus
+                    referrer.total_earned = float(referrer.total_earned or 0) + bonus
+                    db.session.add(WalletTransaction(
+                        user_id=referrer.id,
+                        amount=bonus,
+                        transaction_type="referral_bonus",
+                        description=f"25% referral bonus from {user.username} deposit",
+                        balance_before=rb,
+                        balance_after=float(referrer.available_balance),
+                    ))
+    except Exception:
+        pass
+
     db.session.commit()
 
     flash("Deposit approved successfully.", "success")

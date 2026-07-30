@@ -49,6 +49,14 @@ class WalletService:
         user.available_balance += amount
         if float(user.available_balance or 0) >= 0:
             user.negative_today = False
+            # Unfreeze combo products so user can submit on Tasks page
+            try:
+                from models.task import Task
+                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
+                    {"status": "assigned"}, synchronize_session=False
+                )
+            except Exception:
+                pass
 
         if transaction_type == "task":
             user.total_earned += amount
@@ -194,6 +202,14 @@ class WalletService:
         user.available_balance += amount
         if float(user.available_balance or 0) >= 0:
             user.negative_today = False
+            # Unfreeze combo products so user can submit on Tasks page
+            try:
+                from models.task import Task
+                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
+                    {"status": "assigned"}, synchronize_session=False
+                )
+            except Exception:
+                pass
 
         deposit.status = "Approved"
         # support both column names if present
@@ -216,6 +232,42 @@ class WalletService:
             reference=getattr(deposit, "transaction_reference", None) or getattr(deposit, "transaction_id", None)
         )
         db.session.add(tx)
+
+        # Referral bonus: 25% of deposit to referrer when referred user deposits
+        try:
+            referrer_id = getattr(user, "referred_by_id", None)
+            if referrer_id:
+                from models.user import User
+                referrer = User.query.get(referrer_id)
+                if referrer:
+                    bonus = round(amount * 0.25, 0)
+                    if bonus > 0:
+                        rb = float(referrer.available_balance or 0)
+                        referrer.available_balance = rb + bonus
+                        referrer.total_earned = float(referrer.total_earned or 0) + bonus
+                        if hasattr(referrer, "referral_income"):
+                            referrer.referral_income = float(referrer.referral_income or 0) + bonus
+                        db.session.add(WalletTransaction(
+                            user_id=referrer.id,
+                            amount=bonus,
+                            transaction_type="referral_bonus",
+                            description=f"25% referral bonus from {user.username} deposit",
+                            balance_before=rb,
+                            balance_after=float(referrer.available_balance),
+                            reference=getattr(deposit, "transaction_id", None),
+                        ))
+                        try:
+                            from services.notification_service import NotificationService
+                            NotificationService.send(
+                                referrer,
+                                "Referral Deposit Bonus",
+                                f"You earned UGX {bonus:,.0f} (25%) because {user.username} deposited.",
+                            )
+                        except Exception:
+                            pass
+        except Exception as e:
+            print("referral bonus error:", e)
+
         db.session.commit()
 
         try:
@@ -287,12 +339,16 @@ class WalletService:
         if amount <= 0:
             return None
 
-        if float(user.available_balance) < amount:
+        # Must leave UGX 15,000 for next day's tasks
+        reserve = 15000.0
+        bal = float(user.available_balance or 0)
+        max_withdrawable = bal - reserve
+        if max_withdrawable <= 0 or amount > max_withdrawable:
             return None
 
         # Hold funds immediately
-        before = float(user.available_balance)
-        user.available_balance -= amount
+        before = bal
+        user.available_balance = bal - amount
 
         withdrawal = Withdrawal(
             user_id=user.id,
@@ -377,6 +433,14 @@ class WalletService:
         user.available_balance += amount
         if float(user.available_balance or 0) >= 0:
             user.negative_today = False
+            # Unfreeze combo products so user can submit on Tasks page
+            try:
+                from models.task import Task
+                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
+                    {"status": "assigned"}, synchronize_session=False
+                )
+            except Exception:
+                pass
 
         from models.wallet_transaction import WalletTransaction
         tx = WalletTransaction(

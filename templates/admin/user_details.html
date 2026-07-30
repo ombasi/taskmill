@@ -1,7 +1,43 @@
 {% extends "admin/base.html" %}
 
-{% block title %}User Details{% endblock %}
-{% block page_title %}User Details{% endblock %}
+{% block title %}User Details
+<script>
+document.querySelectorAll(".tab-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var tab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(function(b){
+      b.classList.remove("active", "border-b-2", "border-indigo-500");
+    });
+    btn.classList.add("active", "border-b-2", "border-indigo-500");
+    document.querySelectorAll(".tab-content").forEach(function(c){
+      c.classList.add("hidden");
+    });
+    var panel = document.getElementById(tab);
+    if (panel) panel.classList.remove("hidden");
+  });
+});
+</script>
+{% endblock %}
+
+{% block page_title %}User Details
+<script>
+document.querySelectorAll(".tab-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var tab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(function(b){
+      b.classList.remove("active", "border-b-2", "border-indigo-500");
+    });
+    btn.classList.add("active", "border-b-2", "border-indigo-500");
+    document.querySelectorAll(".tab-content").forEach(function(c){
+      c.classList.add("hidden");
+    });
+    var panel = document.getElementById(tab);
+    if (panel) panel.classList.remove("hidden");
+  });
+});
+</script>
+{% endblock %}
+
 
 {% block content %}
 
@@ -407,13 +443,97 @@
 
         <!-- Empty placeholders -->
 
-        <div class="tab-content hidden" id="wallet"></div>
+        <div class="tab-content hidden p-6" id="wallet">
+            <h3 class="text-xl font-bold mb-4">Wallet History</h3>
+            <table class="w-full text-sm">
+                <thead class="text-zinc-400"><tr>
+                    <th class="text-left py-2">Type</th><th class="text-left py-2">Amount</th>
+                    <th class="text-left py-2">Description</th><th class="text-left py-2">Date</th>
+                </tr></thead>
+                <tbody>
+                {% for tx in wallet_transactions %}
+                <tr class="border-t border-slate-700">
+                    <td class="py-2">{{ tx.transaction_type }}</td>
+                    <td class="py-2 {% if tx.amount|float < 0 %}text-red-400{% else %}text-green-400{% endif %}">
+                        {{ '%.0f'|format(tx.amount|float) }}
+                    </td>
+                    <td class="py-2 text-zinc-400">{{ tx.description or '—' }}</td>
+                    <td class="py-2">{% if tx.created_at %}{{ tx.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No wallet transactions</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <div class="tab-content hidden" id="tasks"></div>
+        <div class="tab-content hidden p-6" id="tasks">
+            <h3 class="text-xl font-bold mb-4">Tasks</h3>
+            <table class="w-full text-sm">
+                <thead class="text-zinc-400"><tr>
+                    <th class="text-left py-2">Product</th><th class="text-left py-2">Price</th>
+                    <th class="text-left py-2">Commission</th><th class="text-left py-2">Status</th>
+                    <th class="text-left py-2">Set</th>
+                </tr></thead>
+                <tbody>
+                {% for task in tasks %}
+                <tr class="border-t border-slate-700">
+                    <td class="py-2">{{ task.product_name }}</td>
+                    <td class="py-2">{{ '%.0f'|format(task.product_price|float) }}</td>
+                    <td class="py-2 text-green-400">{{ '%.0f'|format(task.commission|float) }}</td>
+                    <td class="py-2">{{ task.status }}</td>
+                    <td class="py-2">{{ task.task_set }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="py-6 text-center text-zinc-400">No tasks</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <div class="tab-content hidden" id="deposits"></div>
+        <div class="tab-content hidden p-6" id="deposits">
+            <h3 class="text-xl font-bold mb-4">Deposits</h3>
+            <table class="w-full text-sm">
+                <thead class="text-zinc-400"><tr>
+                    <th class="text-left py-2">Amount</th><th class="text-left py-2">Method</th>
+                    <th class="text-left py-2">Status</th><th class="text-left py-2">Date</th>
+                </tr></thead>
+                <tbody>
+                {% for d in deposits %}
+                <tr class="border-t border-slate-700">
+                    <td class="py-2">{{ '%.0f'|format(d.amount|float) }}</td>
+                    <td class="py-2">{{ d.payment_method }}</td>
+                    <td class="py-2">{{ d.status }}</td>
+                    <td class="py-2">{% if d.created_at %}{{ d.created_at.strftime('%d %b %Y') }}{% endif %}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No deposits</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <div class="tab-content hidden" id="withdrawals"></div>
+        <div class="tab-content hidden p-6" id="withdrawals">
+            <h3 class="text-xl font-bold mb-4">Withdrawals</h3>
+            <table class="w-full text-sm">
+                <thead class="text-zinc-400"><tr>
+                    <th class="text-left py-2">Amount</th><th class="text-left py-2">Method</th>
+                    <th class="text-left py-2">Status</th><th class="text-left py-2">Date</th>
+                </tr></thead>
+                <tbody>
+                {% for w in withdrawals %}
+                <tr class="border-t border-slate-700">
+                    <td class="py-2">{{ '%.0f'|format(w.amount|float) }}</td>
+                    <td class="py-2">{{ w.payment_method }}</td>
+                    <td class="py-2">{{ w.status }}</td>
+                    <td class="py-2">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No withdrawals</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
 <div class="tab-content hidden" id="referrals">
 
@@ -540,9 +660,17 @@
     </div>
 </div>
 
-        <div class="tab-content hidden" id="notifications"></div>
+        <div class="tab-content hidden p-6" id="notifications">
+            <h3 class="text-xl font-bold mb-4">Notifications</h3>
+            <p class="text-zinc-400 text-sm mb-4">Use “Send Notification” in the actions panel to message this user.</p>
+            <p class="text-zinc-500">Recent notifications appear in the user’s app notification list.</p>
+        </div>
 
-        <div class="tab-content hidden" id="notes"></div>
+        <div class="tab-content hidden p-6" id="notes">
+            <h3 class="text-xl font-bold mb-4">Admin Notes</h3>
+            <p class="text-zinc-400">Internal notes for this user (store offline or use Send Notification for now).</p>
+            <textarea class="w-full bg-slate-800 rounded-xl p-4 mt-4" rows="5" placeholder="Notes (not saved yet — use credit/deduct reason fields for audit)"></textarea>
+        </div>
 
     </div>
 
@@ -990,4 +1118,22 @@ function closeNotificationModal(){
 }
 </script>
 
+
+<script>
+document.querySelectorAll(".tab-btn").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var tab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab-btn").forEach(function(b){
+      b.classList.remove("active", "border-b-2", "border-indigo-500");
+    });
+    btn.classList.add("active", "border-b-2", "border-indigo-500");
+    document.querySelectorAll(".tab-content").forEach(function(c){
+      c.classList.add("hidden");
+    });
+    var panel = document.getElementById(tab);
+    if (panel) panel.classList.remove("hidden");
+  });
+});
+</script>
 {% endblock %}
+

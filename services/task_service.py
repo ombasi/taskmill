@@ -21,6 +21,47 @@ class TaskService:
 
     NEGATIVE_DAY_CHANCE = 8
     MINIMUM_START_BALANCE = 15000  # UGX required before submitting tasks
+    WITHDRAW_RESERVE = 15000  # Must remain after withdrawal
+
+    @staticmethod
+    def calculate_commission(user, product_price, is_combo=False):
+        """
+        Commission = product_price × membership% × balance_multiplier.
+        Never exceeds the product price.
+        Higher wallet balance → higher multiplier (more profit).
+        """
+        m = user.membership
+        price = max(0.0, float(product_price or 0))
+        balance = max(0.0, float(user.available_balance or 0))
+
+        if is_combo:
+            rate = float(getattr(m, "combo_commission_percent", None) or 5.0) if m else 5.0
+        else:
+            rate = float(getattr(m, "commission_percent", None) or 1.0) if m else 1.0
+
+        # Balance multiplier
+        if balance >= 500_000:
+            bal_mult = 3.0
+        elif balance >= 200_000:
+            bal_mult = 2.5
+        elif balance >= 100_000:
+            bal_mult = 2.0
+        elif balance >= 50_000:
+            bal_mult = 1.7
+        elif balance >= 25_000:
+            bal_mult = 1.4
+        elif balance >= 15_000:
+            bal_mult = 1.2
+        else:
+            bal_mult = 1.0
+
+        commission = price * (rate / 100.0) * bal_mult
+        # Hard cap: never more than product price
+        if price > 0:
+            commission = min(commission, price)
+        return round(max(commission, 0.0), 0)
+
+
 
 
     @staticmethod
@@ -164,8 +205,7 @@ class TaskService:
             return None
 
         product = random.choice(products)
-        percent = float(getattr(membership, "commission_percent", 0.5) or 0.5)
-        commission = round(float(product.price) * (percent / 100.0), 2)
+        commission = TaskService.calculate_commission(user, product.price, is_combo=False)
 
         task_in_set = (int(user.tasks_completed_today or 0) % tasks_per_set) + 1
 
@@ -189,7 +229,7 @@ class TaskService:
 
     @staticmethod
     def complete_task(task, rating=5, review=""):
-        if task.status != "assigned":
+        if task.status not in ("assigned", "frozen"):
             return False, "Task already completed or cancelled."
 
         user = task.user
@@ -202,6 +242,8 @@ class TaskService:
                 False,
                 "Deposit to clear your negative combo balance before submitting.",
             )
+        if task.status == "frozen":
+            task.status = "assigned"
 
         tasks_per_set, daily_sets, total = TaskService._limits(user)
 
@@ -284,8 +326,10 @@ class TaskService:
         """
         from models.combo import Combo
 
-        pending = Task.query.filter_by(
-            user_id=user.id, task_set=99, status="assigned"
+        pending = Task.query.filter(
+            Task.user_id == user.id,
+            Task.task_set == 99,
+            Task.status.in_(["assigned", "frozen"]),
         ).count()
         if pending > 0:
             return False
@@ -363,6 +407,15 @@ class TaskService:
                 False,
                 f"Complete {required_sets} task sets before withdrawing. "
                 f"You have finished {sets_done}.",
+            )
+
+        bal = float(user.available_balance or 0)
+        reserve = float(TaskService.WITHDRAW_RESERVE)
+        if bal <= reserve:
+            return (
+                False,
+                f"You must keep at least UGX {reserve:,.0f} in your wallet to start next day's tasks. "
+                f"Current balance UGX {bal:,.0f}.",
             )
 
         return True, "OK"
