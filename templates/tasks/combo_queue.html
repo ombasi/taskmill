@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Combo Products{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-10 space-y-8">
+
+  <div class="glass rounded-3xl p-8">
+    <p class="text-purple-400 uppercase tracking-widest text-sm">Combo Order</p>
+    <h1 class="text-4xl font-black mt-2">Your Combo Products</h1>
+    <p class="text-zinc-400 mt-3">
+      These products are part of your combo. They appear as
+      <span class="text-yellow-400">Pending</span> or
+      <span class="text-orange-400">Frozen</span> until you deposit and submit them.
+    </p>
+    <p class="mt-4 text-lg">
+      Balance:
+      <span class="{% if balance < 0 %}text-red-400{% else %}text-emerald-400{% endif %} font-bold">
+        {{ money(current_user, balance) }}
+      </span>
+    </p>
+    {% if needs_deposit %}
+    <div class="mt-6 p-4 rounded-xl bg-red-900/40 border border-red-500/40">
+      <p class="text-red-300 font-semibold">Combo is frozen — negative balance</p>
+      <p class="text-zinc-300 text-sm mt-1">Deposit to clear the negative, then return here to submit each product.</p>
+      <a href="{{ url_for('wallet.deposit') }}"
+         class="inline-block mt-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl px-6 py-3 font-semibold">
+        Deposit now
+      </a>
+    </div>
+    {% else %}
+    <p class="mt-4 text-emerald-400 text-sm">Balance cleared. Open each product and submit your review.</p>
+    {% endif %}
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    {% for t in combo_tasks %}
+    <div class="glass rounded-3xl overflow-hidden">
+      {% if t.product_image %}
+      <img src="{{ media(t.product_image) }}" alt=""
+           class="w-full h-48 object-cover"
+           onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop'">
+      {% endif %}
+      <div class="p-6">
+        <div class="flex justify-between items-start gap-2">
+          <h2 class="text-xl font-bold">{{ t.product_name }}</h2>
+          {% if t.status == 'frozen' or needs_deposit %}
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-orange-600">Frozen</span>
+          {% else %}
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-yellow-600">Pending</span>
+          {% endif %}
+        </div>
+        <p class="text-emerald-400 text-2xl font-black mt-3">
+          {{ money(current_user, t.product_price) }}
+        </p>
+        <p class="text-zinc-400 text-sm mt-1">
+          Commission on submit: {{ money(current_user, t.commission) }}
+        </p>
+        {% if needs_deposit or t.status == 'frozen' %}
+        <button disabled class="mt-5 w-full bg-slate-700 text-zinc-400 rounded-xl py-3 cursor-not-allowed">
+          Frozen — deposit first
+        </button>
+        {% else %}
+        <a href="{{ url_for('task.review', id=t.id) }}"
+           class="mt-5 block text-center w-full bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 font-semibold">
+          Review &amp; Submit
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="text-center text-zinc-500 text-sm">
+    Also listed under <a href="{{ url_for('task.history') }}" class="text-indigo-400 underline">Task History</a>
+    as Pending / Frozen / Completed.
+  </p>
+</div>
+{% endblock %}

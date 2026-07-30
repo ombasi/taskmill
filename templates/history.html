@@ -186,7 +186,9 @@
                                     {% if task.task_set == 99 %}Combo product{% else %}Product Review{% endif %}
                                 </p>
                                 <p class="text-sm mt-1">
-                                    {% if task.status == 'assigned' %}
+                                    {% if task.task_set == 99 and (task.status == 'frozen' or (balance is defined and balance < 0 and task.status == 'assigned')) %}
+                                        <span class="text-orange-400 font-semibold">Frozen</span>
+                                    {% elif task.status == 'assigned' or task.status == 'frozen' %}
                                         <span class="text-yellow-400 font-semibold">Pending</span>
                                     {% elif task.status == 'completed' %}
                                         <span class="text-green-400 font-semibold">Completed</span>

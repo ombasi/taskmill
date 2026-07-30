@@ -1,3 +1,4 @@
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 
@@ -9,55 +10,113 @@ from utils.security import csrf_protect
 task_bp = Blueprint("task", __name__, url_prefix="/tasks")
 
 
+def _combo_tasks(user):
+    return (
+        Task.query
+        .filter_by(user_id=user.id, task_set=99)
+        .filter(Task.status.in_(["assigned", "frozen", "completed"]))
+        .order_by(Task.id.asc())
+        .all()
+    )
+
+
+def _sync_combo_status(user):
+    """Frozen while balance < 0; assigned (pending) when cleared."""
+    bal = float(user.available_balance or 0)
+    q = Task.query.filter_by(user_id=user.id, task_set=99)
+    if bal < 0:
+        q.filter(Task.status.in_(["assigned", "frozen"])).update(
+            {"status": "frozen"}, synchronize_session=False
+        )
+    else:
+        q.filter(Task.status.in_(["assigned", "frozen"])).update(
+            {"status": "assigned"}, synchronize_session=False
+        )
+    db.session.commit()
+
+
 @task_bp.route("/", methods=["GET"])
 @login_required
 def index():
     bal = float(current_user.available_balance or 0)
+    _sync_combo_status(current_user)
 
-    # Prefer an assigned COMBO product when balance is cleared (>= 0)
-    combo_task = (
-        Task.query
-        .filter_by(user_id=current_user.id, task_set=99, status="assigned")
-        .order_by(Task.id.asc())
-        .first()
-    )
-    if combo_task is not None:
-        if bal < 0:
-            flash(
-                "Deposit to clear your negative combo balance before reviewing these products.",
-                "warning",
-            )
-            return redirect(url_for("wallet.deposit"))
+    combo_tasks = [
+        t for t in _combo_tasks(current_user)
+        if t.status in ("assigned", "frozen")
+    ]
+
+    # Active combo products take priority — show as product cards
+    if combo_tasks:
         progress = TaskService.progress(current_user)
         return render_template(
-            "tasks/task.html",
-            task=combo_task,
+            "tasks/combo_queue.html",
+            combo_tasks=combo_tasks,
+            balance=bal,
+            needs_deposit=bal < 0,
             progress=progress,
-            is_combo=True,
         )
 
     allowed, reason = TaskService.can_perform_tasks(current_user)
     if not allowed:
         flash(reason, "warning")
-        if "negative" in reason.lower() or "deposit" in reason.lower():
+        low = reason.lower()
+        if "negative" in low or "deposit" in low:
             return redirect(url_for("wallet.deposit"))
-        if "admin" in reason.lower() or "set 1" in reason.lower():
+        if "admin" in low or "set 1" in low:
             return redirect(url_for("dashboard.index"))
-        if "withdraw" in reason.lower():
+        if "withdraw" in low:
             return redirect(url_for("wallet.withdraw"))
         return redirect(url_for("dashboard.index"))
 
     task = TaskService.assign_task(current_user)
     if not task:
         flash(
-            "No products available within your membership product limit. "
-            "Ask admin to add products or raise max product price.",
+            "No products available within your membership product limit.",
             "warning",
         )
         return redirect(url_for("dashboard.index"))
 
     progress = TaskService.progress(current_user)
-    return render_template("tasks/task.html", task=task, progress=progress, is_combo=False)
+    return render_template(
+        "tasks/task.html", task=task, progress=progress, is_combo=False
+    )
+
+
+@task_bp.route("/review/<int:id>", methods=["GET"])
+@login_required
+def review(id):
+    """Open a specific combo (or normal) product for review."""
+    task = Task.query.get_or_404(id)
+    if task.user_id != current_user.id:
+        flash("Unauthorized.", "danger")
+        return redirect(url_for("task.index"))
+
+    if task.status not in ("assigned", "frozen"):
+        flash("This task is no longer available.", "warning")
+        return redirect(url_for("task.index"))
+
+    bal = float(current_user.available_balance or 0)
+    is_combo = int(getattr(task, "task_set", 0) or 0) == 99
+
+    if is_combo and bal < 0:
+        flash(
+            "Your combo is frozen. Deposit to clear the negative balance, then submit.",
+            "warning",
+        )
+        return redirect(url_for("wallet.deposit"))
+
+    if task.status == "frozen":
+        task.status = "assigned"
+        db.session.commit()
+
+    progress = TaskService.progress(current_user)
+    return render_template(
+        "tasks/task.html",
+        task=task,
+        progress=progress,
+        is_combo=is_combo,
+    )
 
 
 @task_bp.route("/submit/<int:id>", methods=["POST"])
@@ -70,21 +129,22 @@ def submit(id):
         flash("Unauthorized.", "danger")
         return redirect(url_for("task.index"))
 
-    if task.status != "assigned":
+    if task.status not in ("assigned", "frozen"):
         flash("This task is no longer available.", "warning")
         return redirect(url_for("task.index"))
 
     is_combo_task = int(getattr(task, "task_set", 0) or 0) == 99
 
-    # Combo tasks: require non-negative balance first
     if is_combo_task:
         if float(current_user.available_balance or 0) < 0:
             flash(
-                "Your account is negative because of a combo. "
-                "Deposit to clear the balance before reviewing combo products.",
+                "Deposit to clear your negative combo balance before submitting.",
                 "warning",
             )
             return redirect(url_for("wallet.deposit"))
+        if task.status == "frozen":
+            task.status = "assigned"
+            db.session.commit()
 
     rating = int(request.form.get("rating", 5))
     review = request.form.get("review", "")
@@ -96,23 +156,28 @@ def submit(id):
         return redirect(url_for("task.index"))
 
     if result == "negative":
-        flash(
-            "Negative trading result applied. Withdrawal is blocked until cleared.",
-            "warning",
-        )
+        flash("Negative trading result applied.", "warning")
     else:
-        flash("Task completed successfully. Commission credited.", "success")
+        flash("Product submitted successfully. Commission credited.", "success")
+
+    # After combo item, go back to combo queue if more remain
+    if is_combo_task:
+        left = Task.query.filter(
+            Task.user_id == current_user.id,
+            Task.task_set == 99,
+            Task.status.in_(["assigned", "frozen"]),
+        ).count()
+        if left:
+            return redirect(url_for("task.index"))
+        flash("All combo products completed.", "success")
+        return redirect(url_for("dashboard.index"))
 
     progress = TaskService.progress(current_user)
     if progress.get("needs_admin_unlock"):
-        flash(
-            "Set 1 complete. Contact admin to unlock Set 2 before you can continue.",
-            "info",
-        )
+        flash("Set 1 complete. Contact admin to unlock Set 2.", "info")
         return redirect(url_for("dashboard.index"))
-
     if progress.get("can_withdraw"):
-        flash("You may now request a withdrawal.", "info")
+        flash("You may now request a withdrawal (keep UGX 15,000 reserve).", "info")
 
     return redirect(url_for("task.index"))
 
@@ -120,26 +185,28 @@ def submit(id):
 @task_bp.route("/history")
 @login_required
 def history():
-    # Include pending (assigned) and completed — combo products appear here too
+    _sync_combo_status(current_user)
     tasks = (
         Task.query
         .filter(
             Task.user_id == current_user.id,
-            Task.status.in_(["assigned", "completed", "cancelled"]),
+            Task.status.in_(["assigned", "frozen", "completed", "cancelled"]),
         )
         .order_by(Task.created_at.desc())
         .limit(150)
         .all()
     )
     completed = sum(1 for t in tasks if t.status == "completed")
-    pending = sum(1 for t in tasks if t.status == "assigned")
+    pending = sum(1 for t in tasks if t.status in ("assigned", "frozen"))
     total_earnings = float(current_user.total_earned or 0)
+    bal = float(current_user.available_balance or 0)
     return render_template(
         "history.html",
         history=tasks,
         completed=completed,
         pending=pending,
         total_earnings=total_earnings,
+        balance=bal,
     )
 
 
@@ -150,7 +217,10 @@ def cancel(id):
     if task.user_id != current_user.id:
         flash("Unauthorized.", "danger")
         return redirect(url_for("task.index"))
-    if task.status == "assigned":
+    if int(getattr(task, "task_set", 0) or 0) == 99:
+        flash("Combo products cannot be cancelled.", "warning")
+        return redirect(url_for("task.index"))
+    if task.status in ("assigned", "frozen"):
         task.status = "cancelled"
         db.session.commit()
         flash("Task cancelled.", "info")
