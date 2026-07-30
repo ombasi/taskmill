@@ -46,15 +46,17 @@ def index():
         if t.status in ("assigned", "frozen")
     ]
 
-    # Active combo products take priority — show as product cards
-    if combo_tasks:
+    # Active combo products take priority — order-card UI
+    if combo_tasks or (bal < 0 and current_user.combo_active):
         progress = TaskService.progress(current_user)
+        combo_total = sum(float(t.product_price or 0) for t in combo_tasks)
         return render_template(
             "tasks/combo_queue.html",
             combo_tasks=combo_tasks,
             balance=bal,
             needs_deposit=bal < 0,
             progress=progress,
+            combo_total=combo_total,
         )
 
     allowed, reason = TaskService.can_perform_tasks(current_user)
