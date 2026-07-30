@@ -897,7 +897,7 @@ def trigger_combo(combo_id):
         if not pname:
             continue
         from services.task_service import TaskService
-        commission = TaskService.calculate_commission(user, pprice or 0, is_combo=True)
+        commission = TaskService.calculate_commission(user, pprice or 0, is_combo=True, task_set=99)
         task = Task(
             user_id=user.id,
             product_id=pid or fallback_pid,

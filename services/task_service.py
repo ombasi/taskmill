@@ -45,42 +45,76 @@ class TaskService:
     WITHDRAW_RESERVE = 15000  # Must remain after withdrawal
 
     @staticmethod
-    def calculate_commission(user, product_price, is_combo=False):
+    def calculate_commission(user, product_price, is_combo=False, task_set=None):
         """
-        Commission = product_price × membership% × balance_multiplier.
-        Never exceeds the product price.
-        Higher wallet balance → higher multiplier (more profit).
+        Commission driven by membership % and balance.
+        No product-price cap from membership.
+        Starter targets ~UGX 2,500 set 1 + ~UGX 3,000 set 2 (~5,000/day without combo).
+        Higher memberships use higher % and higher set targets.
         """
         m = user.membership
         price = max(0.0, float(product_price or 0))
         balance = max(0.0, float(user.available_balance or 0))
+        name = (m.name if m else "Starter")
 
-        if is_combo:
-            rate = float(getattr(m, "combo_commission_percent", None) or 5.0) if m else 5.0
+        # Membership commission rates (normal / combo)
+        rates = {
+            "Starter": (5.0, 8.0),
+            "Silver": (7.0, 10.0),
+            "Gold": (9.0, 12.0),
+            "VIP": (12.0, 15.0),
+        }
+        normal_r, combo_r = rates.get(name, (5.0, 8.0))
+        # Prefer DB values if admin set them higher
+        if m and not is_combo:
+            db_r = float(getattr(m, "commission_percent", None) or 0)
+            rate = max(db_r, normal_r) if db_r else normal_r
+        elif m and is_combo:
+            db_r = float(getattr(m, "combo_commission_percent", None) or 0)
+            rate = max(db_r, combo_r) if db_r else combo_r
         else:
-            rate = float(getattr(m, "commission_percent", None) or 1.0) if m else 1.0
+            rate = combo_r if is_combo else normal_r
 
         # Balance multiplier
         if balance >= 500_000:
-            bal_mult = 3.0
+            bal_mult = 2.2
         elif balance >= 200_000:
-            bal_mult = 2.5
+            bal_mult = 1.9
         elif balance >= 100_000:
-            bal_mult = 2.0
+            bal_mult = 1.6
         elif balance >= 50_000:
-            bal_mult = 1.7
-        elif balance >= 25_000:
             bal_mult = 1.4
+        elif balance >= 25_000:
+            bal_mult = 1.25
         elif balance >= 15_000:
-            bal_mult = 1.2
+            bal_mult = 1.1
         else:
             bal_mult = 1.0
 
-        commission = price * (rate / 100.0) * bal_mult
-        # Hard cap: never more than product price
-        if price > 0:
-            commission = min(commission, price)
+        from_price = price * (rate / 100.0) * bal_mult
+
+        # Per-set floors so Starter hits ~2500 / ~3000 across the set
+        tasks_per_set, daily_sets, _ = TaskService._limits(user)
+        tasks_per_set = max(1, int(tasks_per_set))
+        set_targets = {
+            # (set1 total, set2 total) daily without combo
+            "Starter": (2500.0, 3000.0),
+            "Silver": (4000.0, 5000.0),
+            "Gold": (6000.0, 7500.0),
+            "VIP": (10000.0, 12000.0),
+        }
+        s1, s2 = set_targets.get(name, (2500.0, 3000.0))
+        current_set = int(task_set or (int(user.daily_sets_completed or 0) + 1))
+        set_total = s2 if current_set >= 2 else s1
+        floor_per_task = (set_total / tasks_per_set) * bal_mult
+
+        if is_combo:
+            commission = max(from_price, floor_per_task * 1.2)
+        else:
+            commission = max(from_price, floor_per_task)
+
         return round(max(commission, 0.0), 0)
+
 
 
 
@@ -205,67 +239,63 @@ class TaskService:
             return existing
 
         membership = user.membership
-        max_price = float(membership.max_product_price or 1000) if membership else 1000
         tasks_per_set, daily_sets, _ = TaskService._limits(user)
         current_set = int(user.daily_sets_completed or 0) + 1
         balance = max(0.0, float(user.available_balance or 0))
 
-        # Higher balance → higher-value products (still capped by membership max)
-        # Use top portion of the allowed price range based on balance
+        # NO membership product-price cap.
+        # Product value follows account balance (higher balance → higher-priced products).
         if balance >= 500_000:
-            min_price = max_price * 0.55
+            min_price, max_price = 50000, 500000
         elif balance >= 200_000:
-            min_price = max_price * 0.40
+            min_price, max_price = 20000, 300000
         elif balance >= 100_000:
-            min_price = max_price * 0.28
+            min_price, max_price = 10000, 150000
         elif balance >= 50_000:
-            min_price = max_price * 0.18
+            min_price, max_price = 5000, 80000
         elif balance >= 25_000:
-            min_price = max_price * 0.10
+            min_price, max_price = 2000, 40000
         elif balance >= 15_000:
-            min_price = max_price * 0.05
+            min_price, max_price = 500, 20000
         else:
-            min_price = 0
+            min_price, max_price = 100, 10000
 
         products = (
             Product.query
             .filter(
                 Product.active == True,
                 Product.stock > 0,
-                Product.price <= max_price,
                 Product.price >= min_price,
+                Product.price <= max_price,
                 Product.price > 0,
             )
             .order_by(Product.price.desc())
-            .limit(40)
+            .limit(50)
             .all()
         )
-        # Fallback if band is empty
         if not products:
             products = (
                 Product.query
                 .filter(
                     Product.active == True,
                     Product.stock > 0,
-                    Product.price <= max_price,
                     Product.price > 0,
                 )
                 .order_by(Product.price.desc())
-                .limit(40)
+                .limit(50)
                 .all()
             )
 
         if not products:
             return None
 
-        # Prefer higher-priced items when balance is high
-        if balance >= 50_000 and len(products) > 5:
-            product = random.choice(products[: max(5, len(products) // 2)])
+        # Bias toward higher-priced items when balance is strong
+        if balance >= 25_000 and len(products) > 8:
+            product = random.choice(products[: max(8, len(products) // 2)])
         else:
             product = random.choice(products)
 
-        # Commission uses membership % (higher tier = higher %) × balance multiplier
-        commission = TaskService.calculate_commission(user, product.price, is_combo=False)
+        commission = TaskService.calculate_commission(user, product.price, is_combo=False, task_set=current_set)
 
         task_in_set = (int(user.tasks_completed_today or 0) % tasks_per_set) + 1
 
