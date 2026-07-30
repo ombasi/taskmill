@@ -19,6 +19,27 @@ from models.wallet_transaction import WalletTransaction
 
 class TaskService:
 
+    @staticmethod
+    def sync_negative_and_combo_tasks(user):
+        """Reflect balance on flags and combo task status."""
+        from models.task import Task
+        bal = float(user.available_balance or 0)
+        if bal < 0:
+            user.negative_today = True
+            Task.query.filter(
+                Task.user_id == user.id,
+                Task.task_set == 99,
+                Task.status.in_(["assigned", "frozen"]),
+            ).update({"status": "frozen"}, synchronize_session=False)
+        else:
+            user.negative_today = False
+            Task.query.filter(
+                Task.user_id == user.id,
+                Task.task_set == 99,
+                Task.status.in_(["assigned", "frozen"]),
+            ).update({"status": "assigned"}, synchronize_session=False)
+
+
     NEGATIVE_DAY_CHANCE = 8
     MINIMUM_START_BALANCE = 15000  # UGX required before submitting tasks
     WITHDRAW_RESERVE = 15000  # Must remain after withdrawal
@@ -104,6 +125,7 @@ class TaskService:
     @staticmethod
     def can_perform_tasks(user):
         TaskService.ensure_daily_reset(user)
+        TaskService.sync_negative_and_combo_tasks(user)
 
         if user.is_blocked or not user.is_active:
             return False, "Account is suspended."
@@ -407,6 +429,7 @@ class TaskService:
         combo.status = "Completed"
         combo.completed_at = datetime.utcnow()
         user.combo_active = False
+        user.negative_today = False
         user.negative_today = False
         db.session.commit()
 

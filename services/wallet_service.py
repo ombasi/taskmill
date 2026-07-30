@@ -47,16 +47,12 @@ class WalletService:
         before = float(user.available_balance)
 
         user.available_balance += amount
-        if float(user.available_balance or 0) >= 0:
-            user.negative_today = False
-            # Unfreeze combo products so user can submit on Tasks page
-            try:
-                from models.task import Task
-                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
-                    {"status": "assigned"}, synchronize_session=False
-                )
-            except Exception:
-                pass
+        try:
+            from services.task_service import TaskService
+            TaskService.sync_negative_and_combo_tasks(user)
+        except Exception:
+            if float(user.available_balance or 0) >= 0:
+                user.negative_today = False
 
         if transaction_type == "task":
             user.total_earned += amount
@@ -200,16 +196,12 @@ class WalletService:
 
         before = float(user.available_balance)
         user.available_balance += amount
-        if float(user.available_balance or 0) >= 0:
-            user.negative_today = False
-            # Unfreeze combo products so user can submit on Tasks page
-            try:
-                from models.task import Task
-                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
-                    {"status": "assigned"}, synchronize_session=False
-                )
-            except Exception:
-                pass
+        try:
+            from services.task_service import TaskService
+            TaskService.sync_negative_and_combo_tasks(user)
+        except Exception:
+            if float(user.available_balance or 0) >= 0:
+                user.negative_today = False
 
         deposit.status = "Approved"
         # support both column names if present
@@ -431,16 +423,12 @@ class WalletService:
         amount = float(withdrawal.amount)
         before = float(user.available_balance)
         user.available_balance += amount
-        if float(user.available_balance or 0) >= 0:
-            user.negative_today = False
-            # Unfreeze combo products so user can submit on Tasks page
-            try:
-                from models.task import Task
-                Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
-                    {"status": "assigned"}, synchronize_session=False
-                )
-            except Exception:
-                pass
+        try:
+            from services.task_service import TaskService
+            TaskService.sync_negative_and_combo_tasks(user)
+        except Exception:
+            if float(user.available_balance or 0) >= 0:
+                user.negative_today = False
 
         from models.wallet_transaction import WalletTransaction
         tx = WalletTransaction(

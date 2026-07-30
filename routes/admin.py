@@ -570,6 +570,11 @@ def credit_wallet(user_id):
     before = user.available_balance
 
     user.available_balance += amount
+    try:
+        from services.task_service import TaskService
+        TaskService.sync_negative_and_combo_tasks(user)
+    except Exception:
+        pass
 
     transaction = WalletTransaction(
         user_id=user.id,
@@ -867,23 +872,26 @@ def trigger_combo(combo_id):
 
     amount = float(combo.amount or 0)
     before = float(user.available_balance or 0)
-    # Force negative: always subtract full combo value
+    # Always charge full combo total (can create a negative balance)
     user.available_balance = before - amount
+    after = float(user.available_balance)
     user.combo_active = True
     user.combo_started_at = datetime.utcnow()
-    user.negative_today = True  # blocks tasks until cleared
+    # Reflect negative only when balance is actually below zero
+    user.negative_today = after < 0
 
     combo.status = "Triggered"
     combo.triggered_at = datetime.utcnow()
-
 
     items = [
         (combo.product1_id, combo.product1_name, combo.product1_price, combo.product1_image),
         (combo.product2_id, combo.product2_name, combo.product2_price, combo.product2_image),
     ]
-    # Ensure product_id is never null (DB constraint)
     from models.product import Product
     fallback_pid = db.session.query(Product.id).order_by(Product.id.asc()).limit(1).scalar() or 1
+
+    # Frozen if negative; Pending (assigned) if balance still covers the combo
+    combo_task_status = "frozen" if after < 0 else "assigned"
 
     for i, (pid, pname, pprice, pimg) in enumerate(items, start=1):
         if not pname:
@@ -897,7 +905,7 @@ def trigger_combo(combo_id):
             product_image=pimg,
             product_price=float(pprice or 0),
             commission=commission,
-            status="frozen",  # Frozen until user deposits and clears negative
+            status=combo_task_status,
             task_number=i,
             task_set=99,
         )
@@ -1259,15 +1267,12 @@ def approve_deposit(deposit_id):
     )
     db.session.add(transaction)
 
-    if float(user.available_balance or 0) >= 0:
-        user.negative_today = False
-        try:
-            from models.task import Task
-            Task.query.filter_by(user_id=user.id, task_set=99, status="frozen").update(
-                {"status": "assigned"}, synchronize_session=False
-            )
-        except Exception:
-            pass
+    try:
+        from services.task_service import TaskService
+        TaskService.sync_negative_and_combo_tasks(user)
+    except Exception:
+        if float(user.available_balance or 0) >= 0:
+            user.negative_today = False
 
     notification = Notification(
         user_id=user.id,

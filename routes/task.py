@@ -21,17 +21,8 @@ def _combo_tasks(user):
 
 
 def _sync_combo_status(user):
-    """Frozen while balance < 0; assigned (pending) when cleared."""
-    bal = float(user.available_balance or 0)
-    q = Task.query.filter_by(user_id=user.id, task_set=99)
-    if bal < 0:
-        q.filter(Task.status.in_(["assigned", "frozen"])).update(
-            {"status": "frozen"}, synchronize_session=False
-        )
-    else:
-        q.filter(Task.status.in_(["assigned", "frozen"])).update(
-            {"status": "assigned"}, synchronize_session=False
-        )
+    """Frozen while balance < 0; assigned (Pending) when balance >= 0."""
+    TaskService.sync_negative_and_combo_tasks(user)
     db.session.commit()
 
 
