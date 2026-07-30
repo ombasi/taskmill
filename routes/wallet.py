@@ -98,24 +98,25 @@ def deposit():
         filename = None
 
         if proof and proof.filename:
+            original = proof.filename.strip()
+            parts = original.rsplit(".", 1)
+            if len(parts) == 2 and parts[1].isalnum() and len(parts[1]) <= 8:
+                ext = parts[1].lower()
+            else:
+                # No extension or odd name (e.g. "receipt") — default to png
+                ext = "png"
 
-            ext = proof.filename.rsplit(".", 1)[1].lower()
+            allowed = {"png", "jpg", "jpeg", "gif", "webp", "pdf", "bmp"}
+            if ext not in allowed:
+                flash("Proof must be an image (png/jpg/webp) or PDF.", "danger")
+                return redirect(url_for("wallet.deposit"))
 
-            filename = (
-                str(uuid.uuid4()) + "." + ext
-            )
-
+            filename = f"{uuid.uuid4().hex}.{ext}"
             upload_folder = os.path.join(
-                current_app.static_folder,
-                "uploads",
-                "deposits"
+                current_app.static_folder, "uploads", "deposits"
             )
-
             os.makedirs(upload_folder, exist_ok=True)
-
-            proof.save(
-                os.path.join(upload_folder, filename)
-            )
+            proof.save(os.path.join(upload_folder, filename))
 
         deposit = Deposit(
             user_id=current_user.id,
