@@ -733,36 +733,39 @@ def create_combo():
 @login_required
 @admin_required
 def assign_combo(user_id):
-    """Admin picks 2 products. Total price capped by membership (Starter max 35,000)."""
+    """
+    Assign ONE high-value product as combo.
+    On trigger: full product price is deducted (can go negative).
+    User deposits, then submits that single product.
+    """
     from models.product import Product
+    import random
 
     user = User.query.get_or_404(user_id)
-    product1_id = request.form.get("product1_id", type=int)
-    product2_id = request.form.get("product2_id", type=int)
+    product_id = request.form.get("product1_id", type=int) or request.form.get("product_id", type=int)
+    use_random = request.form.get("random_high") == "1"
     trigger_task = request.form.get("trigger_task", type=int) or 1
     notes = (request.form.get("notes") or "").strip()
 
-    if not product1_id or not product2_id:
-        flash("Select two products for the combo.", "danger")
-        return redirect(url_for("admin.view_user", user_id=user.id))
-
-    if product1_id == product2_id:
-        flash("Please choose two different products.", "danger")
-        return redirect(url_for("admin.view_user", user_id=user.id))
-
-    p1 = Product.query.get_or_404(product1_id)
-    p2 = Product.query.get_or_404(product2_id)
-    combo_value = float(p1.price or 0) + float(p2.price or 0)
-    max_combo = _combo_max_for_user(user)
-
-    if combo_value > max_combo:
-        flash(
-            f"Combo total UGX {combo_value:,.0f} exceeds this user's limit "
-            f"(UGX {max_combo:,.0f} for {user.membership.name if user.membership else 'Starter'}). "
-            "Pick cheaper products.",
-            "danger",
+    if use_random or not product_id:
+        # Random high-priced product (top 20% by price)
+        products = (
+            Product.query
+            .filter(Product.active == True, Product.price > 0, Product.stock > 0)
+            .order_by(Product.price.desc())
+            .limit(80)
+            .all()
         )
-        return redirect(url_for("admin.view_user", user_id=user.id))
+        if not products:
+            flash("No products available for combo.", "danger")
+            return redirect(url_for("admin.view_user", user_id=user.id))
+        # Prefer higher priced half
+        pool = products[: max(10, len(products) // 2)]
+        p1 = random.choice(pool)
+    else:
+        p1 = Product.query.get_or_404(product_id)
+
+    combo_value = float(p1.price or 0)
 
     combo = Combo(
         user_id=user.id,
@@ -770,25 +773,25 @@ def assign_combo(user_id):
         trigger_task=trigger_task,
         amount=combo_value,
         combo_type="fixed",
-        tasks_required=2,
+        tasks_required=1,
         status="Pending",
         active=True,
-        notes=notes or f"Combo: {p1.name} + {p2.name}",
+        notes=notes or f"Single combo product: {p1.name}",
         product1_id=p1.id,
-        product2_id=p2.id,
+        product2_id=None,
         product1_name=p1.name,
-        product2_name=p2.name,
-        product1_price=float(p1.price or 0),
-        product2_price=float(p2.price or 0),
+        product2_name=None,
+        product1_price=combo_value,
+        product2_price=0,
         product1_image=p1.image,
-        product2_image=p2.image,
+        product2_image=None,
     )
     db.session.add(combo)
     db.session.commit()
 
     flash(
-        f"Combo assigned: {p1.name} + {p2.name} "
-        f"(UGX {combo_value:,.0f} / max {max_combo:,.0f}). Trigger after task #{trigger_task}.",
+        f"Combo assigned: {p1.name} (UGX {combo_value:,.0f}). "
+        f"Trigger after task #{trigger_task} (or trigger manually).",
         "success",
     )
     return redirect(url_for("admin.view_user", user_id=user.id))
@@ -883,41 +886,39 @@ def trigger_combo(combo_id):
     combo.status = "Triggered"
     combo.triggered_at = datetime.utcnow()
 
-    items = [
-        (combo.product1_id, combo.product1_name, combo.product1_price, combo.product1_image),
-        (combo.product2_id, combo.product2_name, combo.product2_price, combo.product2_image),
-    ]
     from models.product import Product
     fallback_pid = db.session.query(Product.id).order_by(Product.id.asc()).limit(1).scalar() or 1
 
-    # Frozen if negative; Pending (assigned) if balance still covers the combo
+    # Single high-value product only
+    pname = combo.product1_name or "Combo Product"
+    pprice = float(combo.product1_price or combo.amount or 0)
+    pimg = combo.product1_image
+    pid = combo.product1_id or fallback_pid
+
     combo_task_status = "frozen" if after < 0 else "assigned"
 
-    for i, (pid, pname, pprice, pimg) in enumerate(items, start=1):
-        if not pname:
-            continue
-        from services.task_service import TaskService
-        commission = TaskService.calculate_commission(user, pprice or 0, is_combo=True, task_set=99)
-        task = Task(
-            user_id=user.id,
-            product_id=pid or fallback_pid,
-            product_name=f"[COMBO] {pname}",
-            product_image=pimg,
-            product_price=float(pprice or 0),
-            commission=commission,
-            status=combo_task_status,
-            task_number=i,
-            task_set=99,
-        )
-        db.session.add(task)
+    from services.task_service import TaskService
+    commission = TaskService.calculate_commission(user, pprice, is_combo=True, task_set=99)
+    task = Task(
+        user_id=user.id,
+        product_id=pid,
+        product_name=f"[COMBO] {pname}",
+        product_image=pimg,
+        product_price=pprice,
+        commission=commission,
+        status=combo_task_status,
+        task_number=1,
+        task_set=99,
+    )
+    db.session.add(task)
 
     db.session.add(WalletTransaction(
         user_id=user.id,
         amount=-amount,
         transaction_type="combo_debit",
         description=(
-            f"Combo charge: {combo.product1_name} + {combo.product2_name}. "
-            "Deposit to clear negative balance."
+            f"Combo charge: {pname} (UGX {amount:,.0f}). "
+            "Deposit to clear negative balance, then submit this product."
         ),
         balance_before=before,
         balance_after=float(user.available_balance),
@@ -929,9 +930,9 @@ def trigger_combo(combo_id):
         NotificationService.send(
             user,
             "Combo Order – Balance Negative",
-            f"A combo of UGX {amount:,.0f} was applied. Your balance is now "
+            f"A high-value combo product (UGX {amount:,.0f}) was applied. Balance is now "
             f"UGX {float(user.available_balance):,.0f}. Deposit to clear the negative, "
-            f"then review: {combo.product1_name} and {combo.product2_name}.",
+            f"then open Tasks and submit: {combo.product1_name}.",
         )
     except Exception:
         pass

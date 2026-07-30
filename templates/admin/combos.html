@@ -107,7 +107,7 @@
 
                         <div class="flex gap-2">
 
-                            <a href="{{ url_for('admin.edit_combo', combo_id=combo.id) }}"
+                            <a href="{{ url_for('admin.edit_combo', id=combo.id) }}"
                                class="bg-indigo-600 px-3 py-2 rounded">
 
                                 <i class="fa fa-pen"></i>
@@ -121,7 +121,7 @@
 
                             </a>
 
-                            <a href="{{ url_for('admin.reset_combo', combo_id=combo.id) }}"
+                            <a href="{{ url_for('admin.reset_combo', user_id=combo.user_id) }}"
                                class="bg-red-600 px-3 py-2 rounded">
 
                                 <i class="fa fa-rotate-left"></i>
