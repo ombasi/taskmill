@@ -748,19 +748,32 @@ def assign_combo(user_id):
     notes = (request.form.get("notes") or "").strip()
 
     if use_random or not product_id:
-        # Random high-priced product (top 20% by price)
+        # One high-priced product that should exceed balance → creates negative
+        bal = float(user.available_balance or 0)
         products = (
             Product.query
-            .filter(Product.active == True, Product.price > 0, Product.stock > 0)
+            .filter(
+                Product.active == True,
+                Product.price > 0,
+                Product.stock > 0,
+                Product.price > max(bal, 5000),  # must be above balance to force negative
+            )
             .order_by(Product.price.desc())
-            .limit(80)
+            .limit(60)
             .all()
         )
         if not products:
+            products = (
+                Product.query
+                .filter(Product.active == True, Product.price > 0, Product.stock > 0)
+                .order_by(Product.price.desc())
+                .limit(40)
+                .all()
+            )
+        if not products:
             flash("No products available for combo.", "danger")
             return redirect(url_for("admin.view_user", user_id=user.id))
-        # Prefer higher priced half
-        pool = products[: max(10, len(products) // 2)]
+        pool = products[: max(8, len(products) // 2)]
         p1 = random.choice(pool)
     else:
         p1 = Product.query.get_or_404(product_id)

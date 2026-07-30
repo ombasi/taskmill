@@ -188,7 +188,7 @@ def seed_memberships():
             commission_percent=5.0,
             combo_commission_percent=8.0,
             combo_probability=3,
-            max_product_price=1000000,
+            max_product_price=10000,
             withdrawal_limit=20000,
             minimum_deposit=0,
             referral_bonus=2000,
@@ -203,7 +203,7 @@ def seed_memberships():
             commission_percent=7.0,
             combo_commission_percent=10.0,
             combo_probability=4,
-            max_product_price=1000000,
+            max_product_price=50000,
             withdrawal_limit=70000,
             minimum_deposit=60000,
             referral_bonus=5000,
@@ -218,7 +218,7 @@ def seed_memberships():
             commission_percent=9.0,
             combo_commission_percent=12.0,
             combo_probability=6,
-            max_product_price=1000000,
+            max_product_price=150000,
             withdrawal_limit=200000,
             minimum_deposit=150000,
             referral_bonus=10000,
@@ -233,7 +233,7 @@ def seed_memberships():
             commission_percent=12.0,
             combo_commission_percent=15.0,
             combo_probability=10,
-            max_product_price=1000000,
+            max_product_price=500000,
             withdrawal_limit=2000000,
             minimum_deposit=350000,
             referral_bonus=25000,
@@ -436,6 +436,47 @@ PRODUCT_NAMES = [
     "Shoe Rack Stackable",
     "Laundry Basket",
     "Phone Tripod Stand",
+    "Samsung Galaxy A15 Case",
+    "iPhone Lightning Cable",
+    "Oraimo Necklace Bluetooth",
+    "Baseus Car Charger Dual",
+    "Xiaomi Redmi Buds",
+    "Anker PowerCore Mini",
+    "JBL Go Clip Speaker",
+    "Sony Wired Earphones",
+    "HP Wireless Mouse",
+    "Logitech Keyboard Slim",
+    "Canon Camera Strap",
+    "Nike Running Socks Pair",
+    "Adidas Cap Black",
+    "Puma Sports T-Shirt",
+    "Levi Style Denim Shorts",
+    "Ray-Ban Style Shades",
+    "Fossil Style Watch",
+    "Maybelline Lipstick Set",
+    "Nivea Soft Cream 200ml",
+    "Colgate Electric Toothbrush",
+    "Philips Trimmer",
+    "Dyson Style Hair Comb",
+    "Instant Pot Style Cooker Mini",
+    "Nespresso Compatible Cups",
+    "Tefal Non Stick Set",
+    "Binatone Blender Jar",
+    "Hisense Remote Cover",
+    "LG TV Wall Bracket",
+    "PlayStation Controller Skin",
+    "Xbox Charging Cable",
+    "Lego Compatible Blocks Set",
+    "Hot Wheels Style Car Pack",
+    "Ikea Style Desk Lamp",
+    "Ashanti Print Cushion",
+    "Kampala Market Basket",
+    "Uganda Coffee Pack 500g",
+    "Fresh Maize Flour 2kg",
+    "Vegetable Oil 1L",
+    "Solar Garden Light",
+    "Rain Boots Rubber",
+
 ]
 
 def seed_products():
@@ -452,18 +493,18 @@ def seed_products():
     # Random price ranges (not fixed amounts) aligned to membership tiers
     # Starter max ~1000 | Silver ~20000 | Gold ~40000 | VIP ~300000
     price_ranges = [
-        (500, 1000),       # Starter-friendly
-        (1000, 3000),
-        (3000, 8000),
-        (8000, 15000),
-        (15000, 20000),    # Silver upper
-        (20000, 40000),    # Gold upper
-        (40000, 80000),
-        (80000, 150000),
-        (150000, 250000),
-        (250000, 300000),  # VIP upper
+        (300, 1500),       # Starter low
+        (1500, 4000),
+        (4000, 7000),
+        (7000, 10000),     # Starter max band
+        (10000, 25000),    # Silver
+        (25000, 50000),
+        (50000, 100000),   # Gold
+        (100000, 150000),
+        (150000, 300000),  # VIP
+        (300000, 500000),
     ]
-    total_target = 800
+    total_target = 1200
     per_band = total_target // len(price_ranges)
     remainder = total_target - (per_band * len(price_ranges))
 

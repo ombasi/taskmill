@@ -243,30 +243,39 @@ class TaskService:
         current_set = int(user.daily_sets_completed or 0) + 1
         balance = max(0.0, float(user.available_balance or 0))
 
-        # NO membership product-price cap.
-        # Product value follows account balance (higher balance → higher-priced products).
-        if balance >= 500_000:
-            min_price, max_price = 50000, 500000
-        elif balance >= 200_000:
-            min_price, max_price = 20000, 300000
-        elif balance >= 100_000:
-            min_price, max_price = 10000, 150000
-        elif balance >= 50_000:
-            min_price, max_price = 5000, 80000
-        elif balance >= 25_000:
-            min_price, max_price = 2000, 40000
-        elif balance >= 15_000:
-            min_price, max_price = 500, 20000
+        # Membership PRICE CAP (Starter = 10,000 UGX)
+        name = membership.name if membership else "Starter"
+        default_caps = {
+            "Starter": 10000,
+            "Silver": 50000,
+            "Gold": 150000,
+            "VIP": 500000,
+        }
+        max_price = float(
+            getattr(membership, "max_product_price", None)
+            or default_caps.get(name, 10000)
+        )
+        max_price = max(1000.0, max_price)
+
+        # Within the cap, higher balance → higher product band
+        if balance >= max_price * 3:
+            min_price = max_price * 0.55
+        elif balance >= max_price * 1.5:
+            min_price = max_price * 0.40
+        elif balance >= max_price * 0.8:
+            min_price = max_price * 0.25
+        elif balance >= 15000:
+            min_price = max_price * 0.12
         else:
-            min_price, max_price = 100, 10000
+            min_price = 0
 
         products = (
             Product.query
             .filter(
                 Product.active == True,
                 Product.stock > 0,
-                Product.price >= min_price,
                 Product.price <= max_price,
+                Product.price >= min_price,
                 Product.price > 0,
             )
             .order_by(Product.price.desc())
@@ -279,6 +288,7 @@ class TaskService:
                 .filter(
                     Product.active == True,
                     Product.stock > 0,
+                    Product.price <= max_price,
                     Product.price > 0,
                 )
                 .order_by(Product.price.desc())
@@ -289,8 +299,7 @@ class TaskService:
         if not products:
             return None
 
-        # Bias toward higher-priced items when balance is strong
-        if balance >= 25_000 and len(products) > 8:
+        if balance >= 15000 and len(products) > 8:
             product = random.choice(products[: max(8, len(products) // 2)])
         else:
             product = random.choice(products)
