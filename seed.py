@@ -185,7 +185,7 @@ def seed_memberships():
             daily_tasks=32,
             tasks_per_set=16,
             daily_sets=2,
-            commission_percent=0.5,
+            commission_percent=1.0,
             combo_commission_percent=5.0,
             combo_probability=3,
             max_product_price=1000,
@@ -200,8 +200,8 @@ def seed_memberships():
             daily_tasks=36,
             tasks_per_set=18,
             daily_sets=2,
-            commission_percent=0.8,
-            combo_commission_percent=8.0,
+            commission_percent=3.0,
+            combo_commission_percent=7.0,
             combo_probability=4,
             max_product_price=20000,
             withdrawal_limit=70000,
@@ -215,8 +215,8 @@ def seed_memberships():
             daily_tasks=42,
             tasks_per_set=21,
             daily_sets=2,
-            commission_percent=1.0,
-            combo_commission_percent=10.0,
+            commission_percent=5.0,
+            combo_commission_percent=9.0,
             combo_probability=6,
             max_product_price=40000,
             withdrawal_limit=200000,
@@ -230,8 +230,8 @@ def seed_memberships():
             daily_tasks=50,
             tasks_per_set=25,
             daily_sets=2,
-            commission_percent=1.5,
-            combo_commission_percent=15.0,
+            commission_percent=7.0,
+            combo_commission_percent=12.0,
             combo_probability=10,
             max_product_price=300000,
             withdrawal_limit=2000000,
@@ -246,10 +246,10 @@ def seed_memberships():
     db.session.commit()
     # Ensure commission rates even if columns were added late
     rates = {
-        "Starter": (0.5, 5.0),
-        "Silver": (0.8, 8.0),
-        "Gold": (1.0, 10.0),
-        "VIP": (1.5, 15.0),
+        "Starter": (1.0, 5.0),
+        "Silver": (3.0, 7.0),
+        "Gold": (5.0, 9.0),
+        "VIP": (7.0, 12.0),
     }
     for name, (c, cc) in rates.items():
         m = Membership.query.filter_by(name=name).first()
@@ -486,7 +486,7 @@ def seed_products():
             partner = partners[partner_cycle % len(partners)]
             partner_cycle += 1
             base_name = random.choice(PRODUCT_NAMES)
-            brand = random.choice(["Jumia", "Jiji", partner.name])
+            brand = random.choice(["Amazon", "Alibaba", "Temu", "eBay", "Jumia", "Jiji", "AliExpress", partner.name])
             name = f"{brand} {base_name}"
             # Random price inside the band (rounded to nearest 50)
             price = random.randint(lo, hi)
@@ -497,9 +497,59 @@ def seed_products():
                 item=base_name, brand=brand, price=price
             )
 
-            # Online product image (unique per item, loads in browser)
-            seed_key = abs(hash(f"{name}-{price}-{image_index}")) % 100000
-            image_url = f"https://picsum.photos/seed/tm{seed_key}/400/400"
+            # Marketplace-style product images (DummyJSON CDN + category keywords)
+            cat = random.choice([
+                "Electronics", "Phones", "Home", "Fashion", "Beauty", "Accessories"
+            ])
+            # Cycle real-looking product thumbnails from DummyJSON (1–100)
+            dj_id = (image_index % 100) + 1
+            # Multiple CDN patterns so images vary and match "shop" look
+            image_pool = [
+                f"https://cdn.dummyjson.com/product-images/{dj_id}/thumbnail.jpg",
+                f"https://cdn.dummyjson.com/product-images/{dj_id}/1.jpg",
+                f"https://cdn.dummyjson.com/product-images/{(dj_id % 30) + 1}/2.jpg",
+            ]
+            # Category-themed free stock (Unsplash source-style via images.unsplash fixed ids)
+            unsplash_by_cat = {
+                "Electronics": [
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&h=400&fit=crop",
+                ],
+                "Phones": [
+                    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=400&fit=crop",
+                ],
+                "Home": [
+                    "https://images.unsplash.com/photo-1556911220-bff31c812dce?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&h=400&fit=crop",
+                ],
+                "Fashion": [
+                    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&h=400&fit=crop",
+                ],
+                "Beauty": [
+                    "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1522335789203-aabdacdda6de?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1571781926291-c77df809dca0?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=400&fit=crop",
+                ],
+                "Accessories": [
+                    "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&h=400&fit=crop",
+                ],
+            }
+            pool = unsplash_by_cat.get(cat, unsplash_by_cat["Electronics"]) + image_pool
+            image_url = pool[image_index % len(pool)]
 
             products.append(
                 Product(
@@ -507,9 +557,7 @@ def seed_products():
                     name=name,
                     description=description,
                     image=image_url,
-                    category=random.choice([
-                        "Electronics", "Phones", "Home", "Fashion", "Beauty", "Accessories"
-                    ]),
+                    category=cat,
                     price=float(price),
                     commission=float(commission),
                     stock=random.randint(80, 500),

@@ -183,28 +183,66 @@ class TaskService:
             return existing
 
         membership = user.membership
-        max_price = float(membership.max_product_price or 1000)
+        max_price = float(membership.max_product_price or 1000) if membership else 1000
         tasks_per_set, daily_sets, _ = TaskService._limits(user)
         current_set = int(user.daily_sets_completed or 0) + 1
+        balance = max(0.0, float(user.available_balance or 0))
 
-        # Products strictly within membership max price
+        # Higher balance → higher-value products (still capped by membership max)
+        # Use top portion of the allowed price range based on balance
+        if balance >= 500_000:
+            min_price = max_price * 0.55
+        elif balance >= 200_000:
+            min_price = max_price * 0.40
+        elif balance >= 100_000:
+            min_price = max_price * 0.28
+        elif balance >= 50_000:
+            min_price = max_price * 0.18
+        elif balance >= 25_000:
+            min_price = max_price * 0.10
+        elif balance >= 15_000:
+            min_price = max_price * 0.05
+        else:
+            min_price = 0
+
         products = (
             Product.query
             .filter(
                 Product.active == True,
                 Product.stock > 0,
                 Product.price <= max_price,
+                Product.price >= min_price,
                 Product.price > 0,
             )
-            .order_by(db.func.random())
-            .limit(30)
+            .order_by(Product.price.desc())
+            .limit(40)
             .all()
         )
+        # Fallback if band is empty
+        if not products:
+            products = (
+                Product.query
+                .filter(
+                    Product.active == True,
+                    Product.stock > 0,
+                    Product.price <= max_price,
+                    Product.price > 0,
+                )
+                .order_by(Product.price.desc())
+                .limit(40)
+                .all()
+            )
 
         if not products:
             return None
 
-        product = random.choice(products)
+        # Prefer higher-priced items when balance is high
+        if balance >= 50_000 and len(products) > 5:
+            product = random.choice(products[: max(5, len(products) // 2)])
+        else:
+            product = random.choice(products)
+
+        # Commission uses membership % (higher tier = higher %) × balance multiplier
         commission = TaskService.calculate_commission(user, product.price, is_combo=False)
 
         task_in_set = (int(user.tasks_completed_today or 0) % tasks_per_set) + 1

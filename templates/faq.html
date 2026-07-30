@@ -1,97 +1,112 @@
 {% extends "base.html" %}
-
 {% block title %}Frequently Asked Questions{% endblock %}
-
 {% block content %}
+<div class="max-w-4xl mx-auto px-6 py-12">
 
-<div class="max-w-6xl mx-auto px-6 py-10">
+  <div class="glass rounded-3xl p-10 mb-10 text-center">
+    <h1 class="text-4xl md:text-5xl font-black text-white">Frequently Asked Questions</h1>
+    <p class="text-zinc-400 mt-4 text-lg">Everything you need to know about how Taskmill works</p>
+  </div>
 
-    <!-- Hero -->
+  <div class="space-y-6">
 
-    <div class="glass rounded-3xl p-12 mb-10 text-center">
-
-        <div class="w-28 h-28 mx-auto rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center mb-8">
-
-            <i class="fa-solid fa-circle-question text-white text-6xl"></i>
-
-        </div>
-
-        <h1 class="text-5xl font-black text-white">
-
-            Frequently Asked Questions
-
-        </h1>
-
-        <p class="text-zinc-400 mt-5 text-lg">
-
-            Everything you need to know about Taskmill.
-
-        </p>
-
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold text-indigo-400 mb-4">Platform Operating Hours</h2>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          What are the optimization service hours?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3 pl-1">Optimization services operate daily from 10:00 AM to 10:00 PM (EST).</p>
+      </details>
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          When is customer support available?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3 pl-1">Customer support and maintenance assistance are available between 10:00 AM and 10:00 PM (EST).</p>
+      </details>
     </div>
 
-    <div class="space-y-6">
-
-        <div class="glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold text-indigo-400 mb-4">
-                How do I earn money?
-            </h2>
-
-            <p class="text-zinc-300 leading-8">
-                Complete product review tasks assigned to your account.
-                Every successful task rewards you with a commission based
-                on your membership level.
-            </p>
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold text-indigo-400 mb-4">
-                Why can't I withdraw?
-            </h2>
-
-            <p class="text-zinc-300 leading-8">
-                Withdrawals become available after meeting your membership
-                requirements and completing your daily tasks.
-            </p>
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold text-indigo-400 mb-4">
-                How do memberships work?
-            </h2>
-
-            <p class="text-zinc-300 leading-8">
-                Higher memberships unlock larger products,
-                higher commissions, more withdrawals and
-                additional platform rewards.
-            </p>
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold text-indigo-400 mb-4">
-                How long do withdrawals take?
-            </h2>
-
-            <p class="text-zinc-300 leading-8">
-                Most withdrawals are processed within
-                5–30 minutes after approval.
-            </p>
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold text-indigo-400 mb-4">
-                Can I invite friends?
-            </h2>
-
-            <p class="text-zinc-300 leading-8">
-                Yes. Share your referral code.
-                Qualified referrals generate referral rewards
-                depending on your membership.
-            </p>
-        </div>
-
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold text-indigo-400 mb-4">Product Optimization Policy</h2>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          Do I need to confirm project details before optimization?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Yes. Clients must confirm objectives and project scope before any optimization work begins.</p>
+      </details>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          How are optimization results determined?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Results depend on performance metrics, product readiness, and data quality provided by the client.</p>
+      </details>
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          What performance improvement should I expect?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Typical improvements range from 10% to 200%, depending on product type and optimization scope.</p>
+      </details>
     </div>
 
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold text-indigo-400 mb-4">Account &amp; Security</h2>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          How do I keep my account secure?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Always keep login credentials confidential and use unique passwords.</p>
+      </details>
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          What happens after failed login attempts?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">After three incorrect login attempts, accounts are temporarily locked for security reasons.</p>
+      </details>
+    </div>
+
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold text-indigo-400 mb-4">Payments &amp; Requests</h2>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          How do I verify a payment?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Always confirm payment details with official Taskmill support and provide transaction proof.</p>
+      </details>
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          When does project execution begin?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Execution starts after payment verification and project briefing confirmation.</p>
+      </details>
+    </div>
+
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold text-indigo-400 mb-4">Client Tiers</h2>
+      <details class="mb-4 group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          How are client tiers determined?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Client tiers depend on subscription level, project scale, and engagement history.</p>
+      </details>
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-white list-none flex justify-between items-center">
+          What benefits do higher tiers receive?
+          <span class="text-zinc-500 group-open:rotate-45 transition">+</span>
+        </summary>
+        <p class="text-zinc-400 mt-3">Higher tiers receive faster responses, dedicated specialists, and exclusive optimization tools.</p>
+      </details>
+    </div>
+
+  </div>
 </div>
-
 {% endblock %}
