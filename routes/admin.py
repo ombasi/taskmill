@@ -1247,28 +1247,28 @@ def approve_deposit(deposit_id):
     deposit.approved_by = current_user.id
     deposit.approved_at = datetime.utcnow()
 
-    # Record transaction
+    before = float(user.available_balance) - float(deposit.amount)
+    # (balance already credited above)
     transaction = WalletTransaction(
         user_id=user.id,
-        amount=deposit.amount,
-        transaction_type="Deposit",
+        amount=float(deposit.amount),
+        transaction_type="deposit",
         description=f"{deposit.payment_method} Deposit",
-        status="Completed"
+        balance_before=before,
+        balance_after=float(user.available_balance),
+        reference=getattr(deposit, "transaction_id", None),
     )
-
     db.session.add(transaction)
+
+    if float(user.available_balance or 0) >= 0:
+        user.negative_today = False
+
     notification = Notification(
-
-    user_id=user.id,
-
-    title="Deposit Approved",
-
-    message=f"Your deposit of {deposit.amount:.2f} has been approved and added to your wallet."
-
+        user_id=user.id,
+        title="Deposit Approved",
+        message=f"Your deposit of UGX {float(deposit.amount):,.0f} has been approved and added to your wallet.",
     )
-
     db.session.add(notification)
-
     db.session.commit()
 
     flash("Deposit approved successfully.", "success")
