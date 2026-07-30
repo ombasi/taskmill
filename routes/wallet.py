@@ -118,19 +118,16 @@ def deposit():
             )
 
         deposit = Deposit(
-
             user_id=current_user.id,
-
             amount=amount,
-
+            currency=getattr(current_user, "currency", None) or "UGX",
             payment_method=payment_method,
-
+            provider=provider or payment_method or "Other",
+            wallet_address=request.form.get("wallet_address") or request.form.get("account") or "",
             transaction_id=transaction_id,
-
             proof_image=filename,
-
-            status="Pending"
-
+            notes=notes,
+            status="Pending",
         )
 
         db.session.add(deposit)
