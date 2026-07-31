@@ -238,6 +238,12 @@ class User(db.Model, UserMixin):
         db.String(100)
     )
 
+    # Withdraw security PIN (4-6 digits, hashed)
+    withdraw_pin_hash = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     # =====================================================
     # ACCOUNT STATUS
     # =====================================================
@@ -339,6 +345,17 @@ class User(db.Model, UserMixin):
     # =====================================================
     # PASSWORD HELPERS
     # =====================================================
+
+    def set_withdraw_pin(self, pin):
+        self.withdraw_pin_hash = generate_password_hash(str(pin))
+
+    def check_withdraw_pin(self, pin):
+        if not self.withdraw_pin_hash:
+            return False
+        return check_password_hash(self.withdraw_pin_hash, str(pin))
+
+    def has_withdraw_pin(self):
+        return bool(self.withdraw_pin_hash)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

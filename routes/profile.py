@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.task import Task
 from models.notification import Notification
@@ -72,3 +72,22 @@ def change_password():
         return redirect(url_for("dashboard.index"))
 
     return render_template("profile/change_password.html")
+
+
+@profile_bp.route("/withdraw-pin", methods=["GET", "POST"])
+@login_required
+def set_withdraw_pin():
+    if request.method == "POST":
+        pin = (request.form.get("pin") or "").strip()
+        confirm = (request.form.get("confirm_pin") or "").strip()
+        if not pin.isdigit() or len(pin) < 4 or len(pin) > 6:
+            flash("PIN must be 4–6 digits.", "danger")
+            return redirect(url_for("profile.set_withdraw_pin"))
+        if pin != confirm:
+            flash("PINs do not match.", "danger")
+            return redirect(url_for("profile.set_withdraw_pin"))
+        current_user.set_withdraw_pin(pin)
+        db.session.commit()
+        flash("Withdraw PIN saved.", "success")
+        return redirect(url_for("wallet.withdraw"))
+    return render_template("profile/withdraw_pin.html")

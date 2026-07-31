@@ -287,6 +287,12 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
                     class="bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 px-4 font-semibold">
                 Change Membership
             </button>
+            <form method="POST" action="{{ url_for('admin.reset_withdraw_pin', user_id=user.id) }}"
+                  onsubmit="return confirm('Reset withdraw PIN to 1234?');">
+                <button type="submit" class="w-full bg-amber-700 hover:bg-amber-600 px-4 py-3 rounded-xl text-left">
+                    Reset Withdraw PIN
+                </button>
+            </form>
             <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}">
                 <button type="submit"
                         onclick="return confirm('Reset password to 12345678?')"

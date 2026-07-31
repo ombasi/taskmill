@@ -169,6 +169,14 @@ def withdraw():
         except ValueError:
             amount = 0
 
+        pin = (request.form.get("withdraw_pin") or "").strip()
+        if not current_user.has_withdraw_pin():
+            flash("Set a withdraw PIN in Profile before withdrawing.", "warning")
+            return redirect(url_for("profile.set_withdraw_pin"))
+        if not current_user.check_withdraw_pin(pin):
+            flash("Incorrect withdraw PIN.", "danger")
+            return redirect(url_for("wallet.withdraw"))
+
         withdrawal = WalletService.create_withdrawal(
             current_user,
             amount,

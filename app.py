@@ -55,16 +55,61 @@ def create_app():
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
         db.create_all()
+        # Safe add-column for existing DBs (SQLite + Postgres)
+        try:
+            from sqlalchemy import text, inspect
+            insp = inspect(db.engine)
+            cols = [c["name"] for c in insp.get_columns("users")]
+            if "withdraw_pin_hash" not in cols:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"))
+                db.session.commit()
+        except Exception as e:
+            print("column ensure:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+        # Add columns that create_all will not alter on existing Postgres tables
+        try:
+            from sqlalchemy import text
+            alters = [
+                "ALTER TABLE memberships ADD COLUMN IF NOT EXISTS combo_commission_percent FLOAT DEFAULT 5.0",
+                "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attachment VARCHAR(255)",
+                "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS set2_unlocked BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE",
+            ]
+            for sql in alters:
+                try:
+                    db.session.execute(text(sql))
+                except Exception as col_err:
+                    # SQLite may not support IF NOT EXISTS the same way
+                    try:
+                        simple = sql.replace(" IF NOT EXISTS", "")
+                        db.session.execute(text(simple))
+                    except Exception:
+                        pass
+            db.session.commit()
+        except Exception as e:
+            print("Column migrate note:", e)
+            db.session.rollback()
+
         try:
             from models.user import User
-            if User.query.filter_by(is_admin=True).first() is None:
-                print("No admin found — running safe seed...")
+            from models.membership import Membership
+            need_seed = (
+                User.query.filter_by(is_admin=True).first() is None
+                or Membership.query.first() is None
+            )
+            if need_seed:
+                print("Baseline data missing — running safe seed...")
                 from seed import run_safe_seed
                 run_safe_seed()
             else:
-                print("Admin exists — skip auto-seed.")
+                print("Admin + memberships exist — skip auto-seed.")
         except Exception as e:
             print("Auto-seed skipped:", e)
+            db.session.rollback()
 
     # Home
     @app.route("/")

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Withdraw PIN{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto py-10">
+  <div class="glass rounded-3xl p-8">
+    <h1 class="text-3xl font-bold mb-2">Withdraw PIN</h1>
+    <p class="text-zinc-400 mb-6 text-sm">
+      Set a 4–6 digit PIN required for every withdrawal.
+    </p>
+    <form method="POST" class="space-y-5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div>
+        <label class="block mb-2">New PIN</label>
+        <input type="password" name="pin" inputmode="numeric" pattern="[0-9]{4,6}"
+               maxlength="6" required class="w-full rounded-xl bg-slate-800 p-4 border border-slate-700">
+      </div>
+      <div>
+        <label class="block mb-2">Confirm PIN</label>
+        <input type="password" name="confirm_pin" inputmode="numeric" pattern="[0-9]{4,6}"
+               maxlength="6" required class="w-full rounded-xl bg-slate-800 p-4 border border-slate-700">
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 font-semibold">
+        Save PIN
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

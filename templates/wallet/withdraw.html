@@ -64,6 +64,20 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="mb-5">
+                <label class="block mb-2">Withdraw PIN</label>
+                <input type="password" name="withdraw_pin" inputmode="numeric" pattern="[0-9]{4,6}"
+                       maxlength="6" required placeholder="4–6 digit PIN"
+                       class="w-full rounded-xl bg-slate-800 border border-slate-700 p-4">
+                <p class="text-xs text-zinc-500 mt-1">
+                    {% if current_user.has_withdraw_pin() %}
+                    Enter your withdraw PIN.
+                    {% else %}
+                    You must <a href="{{ url_for('profile.set_withdraw_pin') }}" class="text-indigo-400 underline">set a PIN</a> first.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="mb-5">
 
                 <label class="block mb-2">
                     Amount
