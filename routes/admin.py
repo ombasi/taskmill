@@ -75,15 +75,15 @@ def admin_required(f):
 # ==========================================================
 
 def _combo_max_for_user(user):
-    """Max total combo value by membership (UGX)."""
+    """Max combo product price by membership (UGX). High enough for real combo hits."""
     name = (user.membership.name if user.membership else "Starter").lower()
     caps = {
-        "starter": 35000,
-        "silver": 70000,
-        "gold": 150000,
-        "vip": 350000,
+        "starter": 150000,
+        "silver": 350000,
+        "gold": 600000,
+        "vip": 1000000,
     }
-    return caps.get(name, 35000)
+    return caps.get(name, 150000)
 
 
 @admin_bp.route("/")
@@ -393,15 +393,29 @@ def view_user(user_id):
     from models.membership import Membership
     from models.product import Product
 
-    # Products for combo picker – each item under membership combo cap
+    # High-value products for single-product combo picker
     max_combo = _combo_max_for_user(user)
+    bal = float(user.available_balance or 0)
     combo_products = (
         Product.query
-        .filter(Product.active == True, Product.price > 0, Product.price <= max_combo)
+        .filter(
+            Product.active == True,
+            Product.price > 0,
+            Product.price <= max_combo,
+            Product.price >= min(bal * 0.5, max_combo * 0.1) if bal > 0 else 0,
+        )
         .order_by(Product.price.desc())
-        .limit(300)
+        .limit(400)
         .all()
     )
+    if len(combo_products) < 20:
+        combo_products = (
+            Product.query
+            .filter(Product.active == True, Product.price > 0, Product.price <= max_combo)
+            .order_by(Product.price.desc())
+            .limit(400)
+            .all()
+        )
 
     return render_template(
         "admin/user_details.html",
@@ -1017,15 +1031,26 @@ def send_notification(user_id):
 @admin_required
 def products():
     page = request.args.get("page", 1, type=int)
-    products = Product.query.order_by(
-        Product.id.desc()
-    ).paginate(
-        page=page,
-        per_page=15
+    search = (request.args.get("search") or "").strip()
+    q = Product.query
+    if search:
+        like = f"%{search}%"
+        q = q.filter(
+            db.or_(
+                Product.name.ilike(like),
+                Product.category.ilike(like),
+                Product.description.ilike(like),
+            )
+        )
+    products = q.order_by(Product.price.desc()).paginate(
+        page=page, per_page=50, error_out=False
     )
+    total_all = Product.query.count()
     return render_template(
         "admin/products.html",
-        products=products
+        products=products,
+        total_all=total_all,
+        search=search,
     )
 
 

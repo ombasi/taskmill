@@ -19,6 +19,8 @@
 
             <p class="text-zinc-400 mt-2">
                 Manage Taskmill products.
+                <span class="text-white font-semibold">{{ total_all|default(products.total) }}</span> total
+                {% if products.pages > 1 %}· page {{ products.page }}/{{ products.pages }}{% endif %}
             </p>
 
         </div>
@@ -204,7 +206,7 @@
 
         {% if products.has_prev %}
 
-        <a href="{{ url_for('admin.products',page=products.prev_num) }}"
+        <a href="{{ url_for('admin.products', page=products.prev_num, search=search or request.args.get('search','')) }}"
            class="bg-slate-800 px-5 py-3 rounded-xl">
 
             Previous
@@ -221,7 +223,7 @@
 
         {% if products.has_next %}
 
-        <a href="{{ url_for('admin.products',page=products.next_num) }}"
+        <a href="{{ url_for('admin.products', page=products.next_num, search=search or request.args.get('search','')) }}"
            class="bg-slate-800 px-5 py-3 rounded-xl">
 
             Next
