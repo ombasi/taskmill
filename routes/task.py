@@ -151,7 +151,7 @@ def submit(id):
     if result == "negative":
         flash("Negative trading result applied.", "warning")
     else:
-        flash("Product submitted successfully. Commission credited.", "success")
+        flash("Submitted. Product price + commission credited to your wallet.", "success")
 
     # After combo item, go back to combo queue if more remain
     if is_combo_task:
@@ -214,7 +214,21 @@ def cancel(id):
         flash("Combo products cannot be cancelled.", "warning")
         return redirect(url_for("task.index"))
     if task.status in ("assigned", "frozen"):
+        # Refund held product price
+        price = float(task.product_price or 0)
+        if price > 0:
+            before = float(current_user.available_balance or 0)
+            current_user.available_balance = before + price
+            from models.wallet_transaction import WalletTransaction
+            db.session.add(WalletTransaction(
+                user_id=current_user.id,
+                amount=price,
+                transaction_type="task_hold_release",
+                description=f"Hold released – {task.product_name}",
+                balance_before=before,
+                balance_after=float(current_user.available_balance),
+            ))
         task.status = "cancelled"
         db.session.commit()
-        flash("Task cancelled.", "info")
+        flash("Task cancelled. Product hold returned to wallet.", "info")
     return redirect(url_for("dashboard.index"))

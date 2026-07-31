@@ -224,11 +224,15 @@ class TaskService:
 
     @staticmethod
     def assign_task(user):
+        """
+        Assign a product and immediately deduct its price from the wallet.
+        On submit, price + commission are refunded.
+        """
         allowed, reason = TaskService.can_perform_tasks(user)
         if not allowed:
             return None
 
-        # Reuse existing normal task only (combo tasks are handled separately)
+        # Reuse existing open normal task (price already deducted)
         existing = (
             Task.query
             .filter_by(user_id=user.id, status="assigned")
@@ -241,9 +245,8 @@ class TaskService:
         membership = user.membership
         tasks_per_set, daily_sets, _ = TaskService._limits(user)
         current_set = int(user.daily_sets_completed or 0) + 1
-        balance = max(0.0, float(user.available_balance or 0))
+        balance = float(user.available_balance or 0)
 
-        # Membership PRICE CAP (Starter = 10,000 UGX)
         name = membership.name if membership else "Starter"
         default_caps = {
             "Starter": 10000,
@@ -256,16 +259,16 @@ class TaskService:
             or default_caps.get(name, 10000)
         )
         max_price = max(1000.0, max_price)
+        # Cannot assign a product more expensive than current balance
+        max_affordable = min(max_price, max(0.0, balance))
 
-        # Within the cap, higher balance → higher product band
-        if balance >= max_price * 3:
-            min_price = max_price * 0.55
-        elif balance >= max_price * 1.5:
-            min_price = max_price * 0.40
-        elif balance >= max_price * 0.8:
-            min_price = max_price * 0.25
-        elif balance >= 15000:
-            min_price = max_price * 0.12
+        if max_affordable <= 0:
+            return None
+
+        if balance >= max_price * 0.8:
+            min_price = max_affordable * 0.35
+        elif balance >= max_price * 0.4:
+            min_price = max_affordable * 0.20
         else:
             min_price = 0
 
@@ -274,9 +277,9 @@ class TaskService:
             .filter(
                 Product.active == True,
                 Product.stock > 0,
-                Product.price <= max_price,
-                Product.price >= min_price,
                 Product.price > 0,
+                Product.price <= max_affordable,
+                Product.price >= min_price,
             )
             .order_by(Product.price.desc())
             .limit(50)
@@ -288,8 +291,8 @@ class TaskService:
                 .filter(
                     Product.active == True,
                     Product.stock > 0,
-                    Product.price <= max_price,
                     Product.price > 0,
+                    Product.price <= max_affordable,
                 )
                 .order_by(Product.price.desc())
                 .limit(50)
@@ -299,21 +302,27 @@ class TaskService:
         if not products:
             return None
 
-        if balance >= 15000 and len(products) > 8:
-            product = random.choice(products[: max(8, len(products) // 2)])
-        else:
-            product = random.choice(products)
+        product = random.choice(products)
+        price = float(product.price or 0)
+        if price <= 0 or price > balance:
+            return None
 
-        commission = TaskService.calculate_commission(user, product.price, is_combo=False, task_set=current_set)
-
+        commission = TaskService.calculate_commission(
+            user, price, is_combo=False, task_set=current_set
+        )
         task_in_set = (int(user.tasks_completed_today or 0) % tasks_per_set) + 1
+
+        # Deduct product price now
+        before = balance
+        user.available_balance = before - price
+        TaskService.sync_negative_and_combo_tasks(user)
 
         task = Task(
             user_id=user.id,
             product_id=product.id,
             product_name=product.name,
             product_image=product.image,
-            product_price=product.price,
+            product_price=price,
             commission=commission,
             status="assigned",
             task_number=task_in_set,
@@ -323,8 +332,17 @@ class TaskService:
             product.stock = max(0, product.stock - 1)
 
         db.session.add(task)
+        db.session.add(WalletTransaction(
+            user_id=user.id,
+            amount=-price,
+            transaction_type="task_hold",
+            description=f"Product hold – {product.name}",
+            balance_before=before,
+            balance_after=float(user.available_balance),
+        ))
         db.session.commit()
         return task
+
 
     @staticmethod
     def complete_task(task, rating=5, review=""):
@@ -362,31 +380,38 @@ class TaskService:
         task.completed_at = datetime.utcnow()
 
         commission = float(task.commission or 0)
+        product_price = float(task.product_price or 0)
 
+        # Refund product price + commission (price was held on assign / combo trigger)
         if is_negative:
+            # Still return principal; apply a small loss from commission only
             loss = round(commission * random.uniform(0.3, 0.7), 0)
-            loss = min(loss, max(0.0, float(user.available_balance)))
-            if loss > 0:
-                before = float(user.available_balance)
-                user.available_balance -= loss
-                db.session.add(WalletTransaction(
-                    user_id=user.id,
-                    amount=-loss,
-                    transaction_type="negative_day",
-                    description=f"Trading loss on task #{task.id}",
-                    balance_before=before,
-                    balance_after=float(user.available_balance),
-                ))
-        else:
-            # Pay commission for this product (combo or normal)
+            refund = product_price + max(0.0, commission - loss)
             before = float(user.available_balance)
-            user.available_balance += commission
+            user.available_balance = before + refund
+            db.session.add(WalletTransaction(
+                user_id=user.id,
+                amount=refund,
+                transaction_type="task_refund",
+                description=f"Refund (negative day) – {task.product_name}",
+                balance_before=before,
+                balance_after=float(user.available_balance),
+            ))
+            if loss > 0:
+                user.total_earned = (user.total_earned or 0) + max(0.0, commission - loss)
+        else:
+            refund = product_price + commission
+            before = float(user.available_balance)
+            user.available_balance = before + refund
             user.total_earned = (user.total_earned or 0) + commission
             db.session.add(WalletTransaction(
                 user_id=user.id,
-                amount=commission,
-                transaction_type="combo_commission" if is_combo else "task_commission",
-                description=f"Commission – {task.product_name}",
+                amount=refund,
+                transaction_type="combo_settle" if is_combo else "task_settle",
+                description=(
+                    f"Refund + commission – {task.product_name} "
+                    f"(price {product_price:,.0f} + commission {commission:,.0f})"
+                ),
                 balance_before=before,
                 balance_after=float(user.available_balance),
             ))
@@ -419,9 +444,9 @@ class TaskService:
     @staticmethod
     def _finalize_combo_if_done(user):
         """
-        After both combo product reviews are completed:
-        refund the full combo charge so the user recovers the money that
-        created the negative, on top of commissions already paid.
+        After the single combo product is submitted:
+        principal + commission already credited in complete_task.
+        Close combo record and clear flags.
         """
         from models.combo import Combo
 
@@ -436,7 +461,7 @@ class TaskService:
         completed = Task.query.filter_by(
             user_id=user.id, task_set=99, status="completed"
         ).count()
-        if completed < 2:
+        if completed < 1:
             return False
 
         combo = (
@@ -448,28 +473,11 @@ class TaskService:
         if not combo:
             return False
 
-        refund = float(combo.amount or 0)
-        if refund > 0:
-            before = float(user.available_balance or 0)
-            user.available_balance = before + refund
-            user.total_earned = (user.total_earned or 0) + refund
-            db.session.add(WalletTransaction(
-                user_id=user.id,
-                amount=refund,
-                transaction_type="combo_refund",
-                description=(
-                    f"Combo completed – refund of charge for "
-                    f"{combo.product1_name} + {combo.product2_name}"
-                ),
-                balance_before=before,
-                balance_after=float(user.available_balance),
-            ))
-
         combo.status = "Completed"
         combo.completed_at = datetime.utcnow()
         user.combo_active = False
-        user.negative_today = False
-        user.negative_today = False
+        user.combo_completed = True
+        TaskService.sync_negative_and_combo_tasks(user)
         db.session.commit()
 
         try:
@@ -477,7 +485,7 @@ class TaskService:
             NotificationService.send(
                 user,
                 "Combo Completed",
-                f"Combo finished. UGX {refund:,.0f} refunded plus your product commissions.",
+                "Combo product submitted. Price + commission are in your wallet.",
             )
         except Exception:
             pass
