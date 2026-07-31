@@ -1,4 +1,4 @@
-"""Re-tag every product with matching category + image from its name."""
+"""Re-tag every product with fuzzy-matched category + image from its name."""
 from app import create_app
 from extensions import db
 from models.product import Product
@@ -14,6 +14,6 @@ with app.app_context():
         p.image = img
         by_cat[cat] = by_cat.get(cat, 0) + 1
     db.session.commit()
-    print(f"Updated {len(products)} products.")
+    print(f"Updated {len(products)} products (fuzzy match).")
     for c, n in sorted(by_cat.items(), key=lambda x: -x[1]):
         print(f"  {c}: {n}")

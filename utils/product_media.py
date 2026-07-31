@@ -1,12 +1,18 @@
 """
 Map product names → category + matching image URLs.
-Keeps phones looking like phones, shoes like shoes, etc.
+Uses fuzzy / token matching so "iPhone", "iphne", "Apple Phone 14"
+still resolve to Phones — not shoes.
 """
 
-# keyword groups: (keywords_tuple, category, image_urls)
+from difflib import SequenceMatcher
+
+# (keywords, category, image_urls)
+# Longer / more specific keywords are preferred.
 CATALOG = [
     (
-        ("iphone", "samsung galaxy", "smartphone", "android phone", "mobile phone", "tecno", "infinix", "redmi", "pixel phone"),
+        ("iphone", "samsung galaxy", "smartphone", "android phone", "mobile phone",
+         "tecno spark", "tecno camon", "infinix", "redmi", "pixel phone", "galaxy a",
+         "phone 12", "phone 13", "phone 14", "phone 15"),
         "Phones",
         [
             "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&h=500&fit=crop",
@@ -16,7 +22,9 @@ CATALOG = [
         ],
     ),
     (
-        ("phone case", "soft case", "screen protector", "tempered glass", "phone holder", "selfie ring", "charger cable", "lightning cable", "type-c", "usb-c cable", "car charger", "power bank", "earbud", "earphone", "airpod", "neckband"),
+        ("phone case", "soft case", "screen protector", "tempered glass", "phone holder",
+         "selfie ring", "charger cable", "lightning cable", "type-c", "usb-c cable",
+         "car charger", "power bank", "powerbank", "oraimo", "baseus"),
         "Phones",
         [
             "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=500&h=500&fit=crop",
@@ -26,7 +34,16 @@ CATALOG = [
         ],
     ),
     (
-        ("laptop", "macbook", "notebook computer", "chromebook"),
+        ("earbud", "earphone", "airpod", "airpods", "neckband", "tws", "wired earphone"),
+        "Electronics",
+        [
+            "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&h=500&fit=crop",
+            "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop",
+            "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500&h=500&fit=crop",
+        ],
+    ),
+    (
+        ("laptop", "macbook", "notebook", "chromebook", "ultrabook"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop",
@@ -35,16 +52,15 @@ CATALOG = [
         ],
     ),
     (
-        ("headphone", "headset", "earbud", "earphone"),
+        ("headphone", "headset", "gaming headset"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-            "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop",
             "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500&h=500&fit=crop",
         ],
     ),
     (
-        ("speaker", "soundbar", "jbl", "bluetooth speaker"),
+        ("speaker", "soundbar", "bluetooth speaker", "jbl go", "jbl clip"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&h=500&fit=crop",
@@ -52,7 +68,7 @@ CATALOG = [
         ],
     ),
     (
-        ("watch", "smartwatch", "smart watch"),
+        ("smartwatch", "smart watch", "wrist watch", "analog watch", "fossil watch", "watch band"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
@@ -61,7 +77,7 @@ CATALOG = [
         ],
     ),
     (
-        ("tv", "television", "monitor", "led tv"),
+        ("television", "led tv", "smart tv", "monitor screen", "tv 32", "tv 43"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1593359677879-a4b92e8c1c91?w=500&h=500&fit=crop",
@@ -69,7 +85,7 @@ CATALOG = [
         ],
     ),
     (
-        ("camera", "webcam", "gopro", "drone"),
+        ("camera", "webcam", "gopro", "action camera", "drone"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=500&h=500&fit=crop",
@@ -77,16 +93,32 @@ CATALOG = [
         ],
     ),
     (
-        ("keyboard", "mouse", "usb hub", "ssd", "flash drive", "memory card", "router", "hdmi"),
+        ("keyboard", "wireless mouse", "usb mouse", "usb hub", "external ssd",
+         "flash drive", "memory card", "wifi router", "hdmi cable"),
         "Electronics",
         [
             "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop",
             "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
-            "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=500&h=500&fit=crop",
         ],
     ),
     (
-        ("shoe", "sneaker", "boot", "cleat", "sandal", "running shoe"),
+        ("tablet", "ipad"),
+        "Electronics",
+        [
+            "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500&h=500&fit=crop",
+            "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=500&h=500&fit=crop",
+        ],
+    ),
+    (
+        ("playstation", "xbox", "console", "game controller", "ps5", "ps4"),
+        "Electronics",
+        [
+            "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500&h=500&fit=crop",
+            "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=500&h=500&fit=crop",
+        ],
+    ),
+    (
+        ("running shoe", "sneakers", "cleat", "boot", "sandal", "trainer", "shoe "),
         "Fashion",
         [
             "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
@@ -96,7 +128,7 @@ CATALOG = [
         ],
     ),
     (
-        ("bag", "handbag", "backpack", "purse", "luggage"),
+        ("handbag", "backpack", "purse", "luggage", "school bag", "travel bag"),
         "Fashion",
         [
             "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=500&fit=crop",
@@ -104,7 +136,8 @@ CATALOG = [
         ],
     ),
     (
-        ("shirt", "t-shirt", "dress", "jacket", "jean", "trouser", "hoodie", "cap", "hat", "belt", "sock"),
+        ("t-shirt", "tshirt", "hoodie", "denim", "jacket", "trouser", "jeans",
+         "dress", "ankara", "sports cap", " cap", "baseball cap", "leather belt", "socks", "adidas", "nike", "puma"),
         "Fashion",
         [
             "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500&h=500&fit=crop",
@@ -113,7 +146,7 @@ CATALOG = [
         ],
     ),
     (
-        ("sunglass", "ray-ban", "shades"),
+        ("sunglasses", "sunglass", "shades", "ray-ban", "rayban"),
         "Fashion",
         [
             "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
@@ -121,17 +154,17 @@ CATALOG = [
         ],
     ),
     (
-        ("lipstick", "makeup", "cosmetic", "skincare", "serum", "lotion", "cream", "perfume", "nivea", "maybelline", "beauty"),
+        ("lipstick", "makeup", "cosmetic", "skincare", "serum", "body lotion",
+         "face cream", "perfume", "nivea", "maybelline", "beauty set"),
         "Beauty",
         [
             "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=500&fit=crop",
             "https://images.unsplash.com/photo-1522335789203-aabdacdda6de?w=500&h=500&fit=crop",
             "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&h=500&fit=crop",
-            "https://images.unsplash.com/photo-1571781926291-c77df809dca0?w=500&h=500&fit=crop",
         ],
     ),
     (
-        ("hair dryer", "trimmer", "toothbrush"),
+        ("hair dryer", "hairdryer", "trimmer", "toothbrush", "shaver"),
         "Beauty",
         [
             "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop",
@@ -139,7 +172,8 @@ CATALOG = [
         ],
     ),
     (
-        ("kettle", "blender", "air fryer", "microwave", "cooker", "frying pan", "knife", "kitchen"),
+        ("kettle", "blender", "air fryer", "microwave", "cooker", "frying pan",
+         "knife set", "kitchen"),
         "Home",
         [
             "https://images.unsplash.com/photo-1556911220-bff31c812dce?w=500&h=500&fit=crop",
@@ -148,7 +182,8 @@ CATALOG = [
         ],
     ),
     (
-        ("sofa", "chair", "desk", "furniture", "table", "bed", "lamp", "clock"),
+        ("sofa", "office chair", "study desk", "furniture", "coffee table",
+         "bed frame", "desk lamp", "wall clock"),
         "Home",
         [
             "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&h=500&fit=crop",
@@ -157,24 +192,16 @@ CATALOG = [
         ],
     ),
     (
-        ("fridge", "refrigerator", "washing machine", "vacuum", "fan", "generator", "solar"),
+        ("refrigerator", "fridge", "washing machine", "vacuum cleaner",
+         "standing fan", "generator", "solar panel"),
         "Home",
         [
             "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=500&h=500&fit=crop",
-            "https://images.unsplash.com/photo-1558317374-c4c8c4f5f5f5?w=500&h=500&fit=crop",
             "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=500&h=500&fit=crop",
         ],
     ),
     (
-        ("playstation", "xbox", "console", "controller", "game"),
-        "Electronics",
-        [
-            "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500&h=500&fit=crop",
-            "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=500&h=500&fit=crop",
-        ],
-    ),
-    (
-        ("yoga", "football", "ball", "sport"),
+        ("yoga mat", "football", "soccer ball", "sport bottle"),
         "Accessories",
         [
             "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&h=500&fit=crop",
@@ -182,7 +209,8 @@ CATALOG = [
         ],
     ),
     (
-        ("bottle", "umbrella", "tripod", "torch", "bulb", "extension", "cable"),
+        ("water bottle", "umbrella", "tripod", "torch", "led bulb",
+         "extension cable", "power strip"),
         "Accessories",
         [
             "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop",
@@ -199,20 +227,90 @@ DEFAULT = (
     ],
 )
 
+# Tokens to ignore when scoring
+STOP = {
+    "amazon", "jumia", "jiji", "temu", "ebay", "aliexpress", "kilimall",
+    "shopify", "the", "and", "for", "with", "from", "pack", "set", "new",
+    "official", "style", "compatible", "pcs", "pc", "ugx",
+}
+
+
+def _tokens(text: str):
+    raw = "".join(c.lower() if c.isalnum() else " " for c in (text or ""))
+    return [t for t in raw.split() if t and t not in STOP and len(t) > 1]
+
+
+def _ratio(a: str, b: str) -> float:
+    if not a or not b:
+        return 0.0
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def _score_keyword(name_tokens, name_text: str, keyword: str) -> float:
+    """
+    Score how well a keyword matches the product name.
+    Combines: exact substring, token overlap, fuzzy token similarity.
+    """
+    kw = keyword.lower().strip()
+    if not kw:
+        return 0.0
+
+    # Strong: full phrase inside name
+    if kw in name_text:
+        return 1.0 + len(kw) * 0.02
+
+    kw_tokens = _tokens(kw)
+    if not kw_tokens or not name_tokens:
+        return 0.0
+
+    token_scores = []
+    strong_hits = 0
+    for kt in kw_tokens:
+        best = 0.0
+        for nt in name_tokens:
+            if kt == nt:
+                best = 1.0
+            elif len(kt) >= 4 and len(nt) >= 4 and (kt in nt or nt in kt):
+                best = max(best, 0.9)
+            elif len(kt) >= 4 and len(nt) >= 4:
+                r = _ratio(kt, nt)
+                if r >= 0.84:
+                    best = max(best, r)
+        if best >= 0.84:
+            strong_hits += 1
+        token_scores.append(best)
+
+    if not token_scores or strong_hits == 0:
+        return 0.0
+
+    avg = sum(token_scores) / len(token_scores)
+    if avg < 0.8:
+        return 0.0
+    return avg + len(kw) * 0.005
+
 
 def match_product(name: str, index: int = 0):
-    """Return (category, image_url) for a product name."""
+    """
+    Return (category, image_url) using fuzzy name matching.
+    """
     text = (name or "").lower()
-    # Prefer longer/more specific keyword matches first within each group
-    best = None
-    best_len = 0
+    name_tokens = _tokens(name)
+
+    best_score = 0.0
+    best_cat = None
+    best_urls = None
+
     for keywords, category, urls in CATALOG:
         for kw in keywords:
-            if kw in text and len(kw) > best_len:
-                best = (category, urls)
-                best_len = len(kw)
-    if best:
-        category, urls = best
-        return category, urls[index % len(urls)]
-    cat, urls = DEFAULT
-    return cat, urls[index % len(urls)]
+            score = _score_keyword(name_tokens, text, kw)
+            if score > best_score:
+                best_score = score
+                best_cat = category
+                best_urls = urls
+
+    # Minimum confidence — otherwise default (avoids random wrong category)
+    if best_cat is None or best_score < 0.8:
+        cat, urls = DEFAULT
+        return cat, urls[index % len(urls)]
+
+    return best_cat, best_urls[index % len(best_urls)]
