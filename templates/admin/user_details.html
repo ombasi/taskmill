@@ -87,7 +87,21 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
 
                         <p><strong>Referral Code:</strong> {{ user.referral_code }}</p>
 
-                        <p><strong>IP Address:</strong> {{ user.ip_address or (login_history[0].ip_address if login_history else "—") }}</p>
+                        <p><strong>IP Address:</strong>
+      {% if last_ip and last_ip != '—' %}
+        {{ last_ip }}
+      {% elif user.ip_address %}
+        {{ user.ip_address }}
+      {% elif login_history %}
+        {% set ns = namespace(ip='—') %}
+        {% for row in login_history %}
+          {% if ns.ip == '—' and row.ip_address %}{% set ns.ip = row.ip_address %}{% endif %}
+        {% endfor %}
+        {{ ns.ip }}
+      {% else %}
+        —
+      {% endif %}
+    </p>
 
                         <p><strong>Joined:</strong>
                             {{ user.created_at.strftime('%d %b %Y') }}

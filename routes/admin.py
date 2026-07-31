@@ -385,7 +385,7 @@ def view_user(user_id):
     login_history = (
         LoginHistory.query
         .filter_by(user_id=user.id)
-        .order_by(LoginHistory.login_time.desc())
+        .order_by(LoginHistory.login_time.desc().nullslast(), LoginHistory.id.desc())
         .limit(20)
         .all()
     )
@@ -428,6 +428,11 @@ def view_user(user_id):
         memberships=Membership.query.order_by(Membership.price.asc()).all(),
         combo_products=combo_products,
         login_history=login_history,
+        last_ip=(
+            user.ip_address
+            or (login_history[0].ip_address if login_history and login_history[0].ip_address else None)
+            or "—"
+        ),
     )
 
 # ==========================================================

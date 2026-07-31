@@ -60,10 +60,7 @@ def login():
 
         login_user(user, remember=remember)
 
-        ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
-        if ip and "," in ip:
-            ip = ip.split(",")[0].strip()
-        AuthService.login_success(user, ip)
+        AuthService.login_success(user, AuthService.get_client_ip())
 
         # Fix users who registered without membership
         if not user.membership_id:
@@ -141,26 +138,19 @@ def register():
             return render_template("register.html")
 
         user = AuthService.register(
-
             username=username,
-
             full_name=fullname,
-
             email=email,
-
             phone=phone,
-
             password=password,
-
             membership=membership,
-
             country=country,
-
-            referral_code=referral
-
+            referral_code=referral,
+            ip_address=AuthService.get_client_ip(),
         )
 
         login_user(user)
+        AuthService.login_success(user, AuthService.get_client_ip())
 
         flash("Registration successful.", "success")
 
