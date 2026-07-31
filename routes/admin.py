@@ -873,88 +873,17 @@ def edit_combo(id):
 @login_required
 @admin_required
 def trigger_combo(combo_id):
-    """
-    Apply combo as a NEGATIVE on the user balance and assign 2 product tasks.
-    User must deposit to clear the negative before continuing normal work.
-    """
-    from models.task import Task
-
+    """Manual trigger — same logic as auto-trigger at configured task number."""
     combo = Combo.query.get_or_404(combo_id)
     user = combo.user
-
-    if combo.status not in ("Pending",):
-        flash("Combo already triggered or closed.", "warning")
-        return redirect(url_for("admin.view_user", user_id=user.id))
-
-    amount = float(combo.amount or 0)
-    before = float(user.available_balance or 0)
-    # Always charge full combo total (can create a negative balance)
-    user.available_balance = before - amount
-    after = float(user.available_balance)
-    user.combo_active = True
-    user.combo_started_at = datetime.utcnow()
-    # Reflect negative only when balance is actually below zero
-    user.negative_today = after < 0
-
-    combo.status = "Triggered"
-    combo.triggered_at = datetime.utcnow()
-
-    from models.product import Product
-    fallback_pid = db.session.query(Product.id).order_by(Product.id.asc()).limit(1).scalar() or 1
-
-    # Single high-value product only
-    pname = combo.product1_name or "Combo Product"
-    pprice = float(combo.product1_price or combo.amount or 0)
-    pimg = combo.product1_image
-    pid = combo.product1_id or fallback_pid
-
-    combo_task_status = "frozen" if after < 0 else "assigned"
-
-    from services.task_service import TaskService
-    commission = TaskService.calculate_commission(user, pprice, is_combo=True, task_set=99)
-    task = Task(
-        user_id=user.id,
-        product_id=pid,
-        product_name=f"[COMBO] {pname}",
-        product_image=pimg,
-        product_price=pprice,
-        commission=commission,
-        status=combo_task_status,
-        task_number=1,
-        task_set=99,
-    )
-    db.session.add(task)
-
-    db.session.add(WalletTransaction(
-        user_id=user.id,
-        amount=-amount,
-        transaction_type="combo_debit",
-        description=(
-            f"Combo charge: {pname} (UGX {amount:,.0f}). "
-            "Deposit to clear negative balance, then submit this product."
-        ),
-        balance_before=before,
-        balance_after=float(user.available_balance),
-    ))
-    db.session.commit()
-
-    try:
-        from services.notification_service import NotificationService
-        NotificationService.send(
-            user,
-            "Combo Order – Balance Negative",
-            f"A high-value combo product (UGX {amount:,.0f}) was applied. Balance is now "
-            f"UGX {float(user.available_balance):,.0f}. Deposit to clear the negative, "
-            f"then open Tasks and submit: {combo.product1_name}.",
-        )
-    except Exception:
-        pass
-
-    flash(
-        f"Combo triggered. User balance is now UGX {float(user.available_balance):,.0f} (negative until they deposit).",
-        "success",
-    )
+    from services.combo_service import ComboService
+    ok, msg = ComboService.apply_trigger(combo)
+    if not ok:
+        flash(msg, "warning")
+    else:
+        flash(msg, "success")
     return redirect(url_for("admin.view_user", user_id=user.id))
+
 
 @admin_bp.route("/combos/<int:id>/delete", methods=["POST"])
 @login_required
