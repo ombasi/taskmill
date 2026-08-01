@@ -94,7 +94,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
         {{ user.ip_address }}
       {% elif login_history %}
         {% set ns = namespace(ip='—') %}
-        {% for row in login_history %}
+        {% for row in login_history|default([]) %}
           {% if ns.ip == '—' and row.ip_address %}{% set ns.ip = row.ip_address %}{% endif %}
         {% endfor %}
         {{ ns.ip }}
@@ -104,7 +104,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
     </p>
 
                         <p><strong>Joined:</strong>
-                            {{ user.created_at.strftime('%d %b %Y') }}
+                            {% if user.created_at %}{{ user.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}
                         </p>
 
                         <p><strong>Last Login:</strong>
@@ -596,7 +596,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
                     </td>
 
                     <td>
-                        {{ referral.created_at.strftime("%d %b %Y") }}
+                        {% if referral.created_at %}{{ referral.created_at.strftime("%d %b %Y") }}{% else %}—{% endif %}
                     </td>
 
                     <td>
@@ -663,7 +663,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
                 </tr>
             </thead>
             <tbody>
-            {% for row in login_history %}
+            {% for row in login_history|default([]) %}
                 <tr class="border-t border-slate-700">
                     <td class="py-2">{{ row.ip_address or "—" }}</td>
                     <td class="py-2">
@@ -993,7 +993,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
                 <label class="block mb-2 font-semibold">High-value product (one only)</label>
                 <select name="product1_id" class="w-full bg-slate-800 rounded-xl p-3">
                     <option value="">— Select product —</option>
-                    {% for p in combo_products %}
+                    {% for p in combo_products|default([]) %}
                     <option value="{{ p.id }}">
                         {{ p.name }} — UGX {{ '{:,.0f}'.format(p.price|float) }}
                     </option>

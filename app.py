@@ -59,12 +59,19 @@ def create_app():
         try:
             from sqlalchemy import text, inspect
             insp = inspect(db.engine)
-            cols = [c["name"] for c in insp.get_columns("users")]
-            if "withdraw_pin_hash" not in cols:
-                db.session.execute(text("ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"))
-                db.session.commit()
+            tables = insp.get_table_names()
+            if "users" in tables:
+                cols = [c["name"] for c in insp.get_columns("users")]
+                if "withdraw_pin_hash" not in cols:
+                    db.session.execute(text(
+                        "ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"
+                    ))
+                    db.session.commit()
+                    print("Added users.withdraw_pin_hash")
+            # create missing tables (login_history, etc.)
+            db.create_all()
         except Exception as e:
-            print("column ensure:", e)
+            print("schema ensure:", e)
             try:
                 db.session.rollback()
             except Exception:

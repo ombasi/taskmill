@@ -381,89 +381,129 @@ def delete_payment_setting(id):
 @login_required
 @admin_required
 def view_user(user_id):
-
+    """Admin user detail — hardened for Render (missing tables/nulls)."""
     user = User.query.get_or_404(user_id)
 
-    tasks = Task.query.filter_by(
-        user_id=user.id
-    ).order_by(
-        Task.created_at.desc()
-    ).limit(20).all()
+    def _safe_list(query_fn, default=None):
+        try:
+            return query_fn()
+        except Exception as e:
+            print("view_user query error:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            return default if default is not None else []
 
-    deposits = Deposit.query.filter_by(
-        user_id=user.id
-    ).order_by(
-        Deposit.created_at.desc()
-    ).limit(20).all()
+    tasks = _safe_list(lambda: (
+        Task.query.filter_by(user_id=user.id)
+        .order_by(Task.created_at.desc())
+        .limit(50).all()
+    ))
+    deposits = _safe_list(lambda: (
+        Deposit.query.filter_by(user_id=user.id)
+        .order_by(Deposit.created_at.desc())
+        .limit(30).all()
+    ))
+    withdrawals = _safe_list(lambda: (
+        Withdrawal.query.filter_by(user_id=user.id)
+        .order_by(Withdrawal.created_at.desc())
+        .limit(30).all()
+    ))
+    wallet_transactions = _safe_list(lambda: (
+        WalletTransaction.query.filter_by(user_id=user.id)
+        .order_by(WalletTransaction.created_at.desc())
+        .limit(40).all()
+    ))
+    referrals = _safe_list(lambda: (
+        User.query.filter_by(referred_by_id=user.id).all()
+    ))
 
-    withdrawals = Withdrawal.query.filter_by(
-        user_id=user.id
-    ).order_by(
-        Withdrawal.created_at.desc()
-    ).limit(20).all()
-
-    wallet_transactions = WalletTransaction.query.filter_by(
-        user_id=user.id
-    ).order_by(
-        WalletTransaction.created_at.desc()
-    ).limit(30).all()
-
-    referrals = User.query.filter_by(
-        referred_by_id=user.id
-    ).all()
-
-    from models.login_history import LoginHistory
-    login_history = (
-        LoginHistory.query
-        .filter_by(user_id=user.id)
-        .order_by(LoginHistory.login_time.desc().nullslast(), LoginHistory.id.desc())
-        .limit(20)
-        .all()
-    )
+    login_history = []
+    try:
+        from models.login_history import LoginHistory
+        login_history = (
+            LoginHistory.query
+            .filter_by(user_id=user.id)
+            .order_by(LoginHistory.id.desc())
+            .limit(20)
+            .all()
+        )
+    except Exception as e:
+        print("login_history error:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
 
     from models.membership import Membership
     from models.product import Product
 
-    # High-value products for single-product combo picker
-    max_combo = _combo_max_for_user(user)
-    bal = float(user.available_balance or 0)
-    combo_products = (
-        Product.query
-        .filter(
-            Product.active == True,
-            Product.price > 0,
-            Product.price <= max_combo,
-            Product.price >= min(bal * 0.5, max_combo * 0.1) if bal > 0 else 0,
-        )
-        .order_by(Product.price.desc())
-        .limit(400)
-        .all()
-    )
-    if len(combo_products) < 20:
+    memberships = _safe_list(lambda: (
+        Membership.query.order_by(Membership.price.asc()).all()
+    ))
+
+    combo_products = []
+    try:
+        max_combo = float(_combo_max_for_user(user) or 150000)
+        bal = float(user.available_balance or 0)
+        min_price = 0.0
+        if bal > 0:
+            min_price = min(bal * 0.5, max_combo * 0.1)
         combo_products = (
             Product.query
-            .filter(Product.active == True, Product.price > 0, Product.price <= max_combo)
+            .filter(
+                Product.active.is_(True),
+                Product.price > 0,
+                Product.price <= max_combo,
+                Product.price >= min_price,
+            )
             .order_by(Product.price.desc())
-            .limit(400)
+            .limit(200)
             .all()
         )
+        if len(combo_products) < 10:
+            combo_products = (
+                Product.query
+                .filter(
+                    Product.active.is_(True),
+                    Product.price > 0,
+                    Product.price <= max_combo,
+                )
+                .order_by(Product.price.desc())
+                .limit(200)
+                .all()
+            )
+    except Exception as e:
+        print("combo_products error:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        combo_products = _safe_list(lambda: (
+            Product.query.filter(Product.price > 0)
+            .order_by(Product.price.desc()).limit(100).all()
+        ))
+
+    last_ip = getattr(user, "ip_address", None) or "—"
+    if last_ip == "—" and login_history:
+        for row in login_history:
+            if getattr(row, "ip_address", None):
+                last_ip = row.ip_address
+                break
 
     return render_template(
         "admin/user_details.html",
         user=user,
-        tasks=tasks,
-        deposits=deposits,
-        withdrawals=withdrawals,
-        wallet_transactions=wallet_transactions,
-        referrals=referrals,
-        memberships=Membership.query.order_by(Membership.price.asc()).all(),
-        combo_products=combo_products,
-        login_history=login_history,
-        last_ip=(
-            user.ip_address
-            or (login_history[0].ip_address if login_history and login_history[0].ip_address else None)
-            or "—"
-        ),
+        tasks=tasks or [],
+        deposits=deposits or [],
+        withdrawals=withdrawals or [],
+        wallet_transactions=wallet_transactions or [],
+        referrals=referrals or [],
+        memberships=memberships or [],
+        combo_products=combo_products or [],
+        login_history=login_history or [],
+        last_ip=last_ip or "—",
     )
 
 # ==========================================================
