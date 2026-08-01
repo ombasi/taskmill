@@ -161,3 +161,12 @@ def set_withdraw_pin():
         flash("Withdraw PIN saved.", "success")
         return redirect(url_for("wallet.withdraw"))
     return render_template("profile/withdraw_pin.html")
+
+
+@profile_bp.route("/notifications/read-all", methods=["POST"])
+@login_required
+def mark_all_read():
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
+    db.session.commit()
+    flash("All notifications marked as read.", "success")
+    return redirect(url_for("profile.notifications"))

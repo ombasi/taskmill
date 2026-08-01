@@ -1,214 +1,65 @@
 {% extends "base.html" %}
-
-{% block title %}Earn More{% endblock %}
-
+{% block title %}Referrals{% endblock %}
 {% block content %}
-
-<div class="max-w-7xl mx-auto px-6 py-10">
-
-    <!-- Hero -->
-
-    <div class="glass rounded-3xl p-12 mb-10">
-
-        <div class="flex flex-col lg:flex-row justify-between items-center">
-
-            <div>
-
-                <p class="uppercase tracking-[6px] text-indigo-400 text-sm">
-
-                    Referral Program
-
-                </p>
-
-                <h1 class="text-5xl font-black text-white mt-4">
-
-                    Invite Friends.<br>
-
-                    Earn More.
-
-                </h1>
-
-                <p class="text-zinc-400 text-lg mt-6 max-w-xl">
-
-                    Share your referral code and receive rewards whenever
-                    someone joins Taskmill through your invitation.
-
-                </p>
-
-            </div>
-
-            <div class="hidden lg:flex w-40 h-40 rounded-3xl bg-gradient-to-r from-indigo-600 to-purple-600 items-center justify-center">
-
-                <i class="fa-solid fa-user-plus text-white text-7xl"></i>
-
-            </div>
-
+<div class="max-w-5xl mx-auto space-y-8">
+  <div class="glass rounded-3xl p-8">
+    <h1 class="text-4xl font-black">Invite & Earn</h1>
+    <p class="text-zinc-400 mt-2">Earn <strong class="text-emerald-400">25%</strong> of every approved deposit made by people you refer.</p>
+    <div class="mt-6 grid md:grid-cols-2 gap-6">
+      <div class="bg-slate-800/60 rounded-2xl p-6">
+        <p class="text-sm text-zinc-400">Your referral code</p>
+        <p class="text-3xl font-black tracking-widest mt-2" id="refCode">{{ current_user.referral_code }}</p>
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('refCode').innerText); showToast && showToast('Code copied','success')"
+          class="mt-4 bg-indigo-600 px-4 py-2 rounded-xl text-sm">Copy code</button>
+      </div>
+      <div class="bg-slate-800/60 rounded-2xl p-6">
+        <p class="text-sm text-zinc-400">Share link</p>
+        {% set link = request.host_url ~ 'register?ref=' ~ current_user.referral_code %}
+        <p class="text-sm break-all mt-2 text-indigo-300" id="refLink">{{ link }}</p>
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('refLink').innerText); showToast && showToast('Link copied','success')"
+            class="bg-indigo-600 px-4 py-2 rounded-xl text-sm">Copy link</button>
+          <a class="bg-slate-700 px-4 py-2 rounded-xl text-sm" target="_blank"
+             href="https://wa.me/?text={{ ('Join Taskmill with my code '+current_user.referral_code+' '+link)|urlencode }}">WhatsApp</a>
         </div>
-
+        <div class="mt-4 flex justify-center">
+          <img alt="QR" class="rounded-xl bg-white p-2 w-40 h-40"
+               src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{ link|urlencode }}">
+        </div>
+      </div>
     </div>
-
-    <!-- Stats -->
-
-    <div class="grid md:grid-cols-3 gap-6 mb-10">
-
-        <div class="glass rounded-3xl p-8">
-
-            <p class="text-zinc-400">
-
-                Referral Code
-
-            </p>
-
-            <h2 class="text-3xl font-black text-indigo-400 mt-4">
-
-                {{ current_user.referral_code }}
-
-            </h2>
-
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-
-            <p class="text-zinc-400">
-
-                Total Referrals
-
-            </p>
-
-            <h2 class="text-5xl font-black text-white mt-4">
-
-                {{ total_referrals }}
-
-            </h2>
-
-        </div>
-
-        <div class="glass rounded-3xl p-8">
-
-            <p class="text-zinc-400">
-
-                Referral Earnings
-
-            </p>
-
-            <h2 class="text-4xl font-black text-emerald-400 mt-4">
-
-                {{ money(current_user, referral_income) }}
-
-            </h2>
-
-        </div>
-
+    <div class="grid grid-cols-2 gap-4 mt-6">
+      <div class="glass rounded-2xl p-5">
+        <p class="text-zinc-400 text-sm">Referrals</p>
+        <p class="text-3xl font-bold mt-1">{{ total_referrals }}</p>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <p class="text-zinc-400 text-sm">Referral income</p>
+        <p class="text-3xl font-bold text-emerald-400 mt-1">{{ money(current_user, current_user.referral_income or referral_income or 0) }}</p>
+      </div>
     </div>
+  </div>
 
-    <!-- Referral Link -->
-
-    <div class="glass rounded-3xl p-10 mb-10">
-
-        <h2 class="text-3xl font-bold text-white mb-8">
-
-            Your Referral Link
-
-        </h2>
-
-        <div class="flex flex-col md:flex-row gap-4">
-
-            <input
-                id="refLink"
-                readonly
-                value="{{ request.host_url }}register?ref={{ current_user.referral_code }}"
-                class="flex-1 rounded-2xl bg-zinc-900 border border-white/10 px-6 py-5 text-zinc-300">
-
-            <button
-                onclick="copyReferralLink()"
-                class="px-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-bold">
-
-                Copy Link
-
-            </button>
-
-        </div>
-
+  <div class="glass rounded-3xl p-8">
+    <h2 class="text-2xl font-bold mb-4">Your referrals</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-zinc-400 text-left">
+          <tr><th class="py-2">User</th><th>Joined</th><th>Membership</th></tr>
+        </thead>
+        <tbody>
+        {% for r in referrals %}
+          <tr class="border-t border-white/5">
+            <td class="py-3">{{ r.username }}</td>
+            <td>{% if r.created_at %}{{ r.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}</td>
+            <td>{{ r.membership.name if r.membership else '—' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="3" class="py-8 text-center text-zinc-500">No referrals yet — share your link.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
-
-    <!-- Benefits -->
-
-    <div class="grid md:grid-cols-3 gap-6">
-
-        <div class="glass rounded-3xl p-8 text-center">
-
-            <i class="fa-solid fa-share-nodes text-5xl text-indigo-400 mb-6"></i>
-
-            <h3 class="text-2xl font-bold text-white mb-4">
-
-                Share
-
-            </h3>
-
-            <p class="text-zinc-400">
-
-                Share your referral link with friends.
-
-            </p>
-
-        </div>
-
-        <div class="glass rounded-3xl p-8 text-center">
-
-            <i class="fa-solid fa-user-check text-5xl text-emerald-400 mb-6"></i>
-
-            <h3 class="text-2xl font-bold text-white mb-4">
-
-                They Register
-
-            </h3>
-
-            <p class="text-zinc-400">
-
-                They create an account using your referral code.
-
-            </p>
-
-        </div>
-
-        <div class="glass rounded-3xl p-8 text-center">
-
-            <i class="fa-solid fa-coins text-5xl text-yellow-400 mb-6"></i>
-
-            <h3 class="text-2xl font-bold text-white mb-4">
-
-                Earn Rewards
-
-            </h3>
-
-            <p class="text-zinc-400">
-
-                Receive referral commissions automatically.
-
-            </p>
-
-        </div>
-
-    </div>
-
+  </div>
 </div>
-
-<script>
-
-function copyReferralLink(){
-
-    let input=document.getElementById("refLink");
-
-    input.select();
-
-    input.setSelectionRange(0,99999);
-
-    navigator.clipboard.writeText(input.value);
-
-    alert("Referral link copied!");
-
-}
-
-</script>
-
 {% endblock %}

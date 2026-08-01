@@ -69,7 +69,6 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 from models.deposit import Deposit
-from utils.payment_methods import PAYMENT_METHODS
 
 
 @wallet_bp.route("/deposit", methods=["GET", "POST"])
@@ -144,8 +143,11 @@ def deposit():
             url_for("wallet.deposit")
         )
 
+    from utils.payment_methods import methods_for_country
+    pay_methods = methods_for_country(getattr(current_user, "country", None))
     return render_template(
         "wallet/deposit.html",
+        payment_methods=pay_methods,
         payment_settings=payment_settings
     )
 

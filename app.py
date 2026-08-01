@@ -14,6 +14,8 @@ from routes.admin import admin_bp
 from models.notification import Notification
 from routes.combo import combo_bp
 from routes.chat import chat_bp
+from routes.api import api_bp
+from routes.jobs import jobs_bp
 from models.payment_setting import PaymentSetting
 
 
@@ -21,6 +23,19 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Optional error tracking — set SENTRY_DSN in env
+    try:
+        import os
+        dsn = os.getenv("SENTRY_DSN")
+        if dsn:
+            import sentry_sdk
+            from sentry_sdk.integrations.flask import FlaskIntegration
+            sentry_sdk.init(dsn=dsn, integrations=[FlaskIntegration()], traces_sample_rate=0.1)
+            print("Sentry enabled")
+    except Exception as e:
+        print("Sentry skip:", e)
+
 
     # Extensions
     db.init_app(app)
@@ -46,6 +61,8 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(combo_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(jobs_bp)
 
     # Ensure folders exist (Windows-safe)
     import os

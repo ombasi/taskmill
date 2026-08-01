@@ -228,42 +228,43 @@ def dashboard():
 @login_required
 @admin_required
 def users():
-    page = request.args.get(
-        "page",
-        1,
-        type=int
-    )
-    search = request.args.get(
-        "search",
-        ""
-    )
+    page = request.args.get("page", 1, type=int)
+    q = (request.args.get("q") or "").strip()
+    filter_neg = request.args.get("negative") == "1"
+    filter_membership = request.args.get("membership_id", type=int)
+
     query = User.query
-    if search:
+    if q:
+        like = f"%{q}%"
         query = query.filter(
-            db.or_(
-                User.username.ilike(
-                    f"%{search}%"
-                ),
-                User.full_name.ilike(
-                    f"%{search}%"
-                ),
-                User.email.ilike(
-                    f"%{search}%"
-                )
+            or_(
+                User.username.ilike(like),
+                User.email.ilike(like),
+                User.phone.ilike(like),
+                User.referral_code.ilike(like),
+                User.ip_address.ilike(like),
+                User.full_name.ilike(like),
             )
         )
-    users = query.order_by(
-        User.created_at.desc()
-    ).paginate(
-        page=page,
-        per_page=20,
-        error_out=False
+    if filter_neg:
+        query = query.filter(User.available_balance < 0)
+    if filter_membership:
+        query = query.filter(User.membership_id == filter_membership)
+
+    users = query.order_by(User.created_at.desc()).paginate(
+        page=page, per_page=30, error_out=False
     )
+    memberships = Membership.query.order_by(Membership.price.asc()).all()
     return render_template(
         "admin/users.html",
         users=users,
-        search=search
+        q=q,
+        filter_neg=filter_neg,
+        filter_membership=filter_membership,
+        memberships=memberships,
     )
+
+
 @admin_bp.route("/payment-settings")
 @login_required
 @admin_required
@@ -2282,3 +2283,103 @@ def wallets():
         search=search
     )
 
+
+
+# ==========================================================
+# BULK DEPOSIT APPROVE
+# ==========================================================
+@admin_bp.route("/deposits/bulk-approve", methods=["POST"])
+@login_required
+@admin_required
+def bulk_approve_deposits():
+    ids = request.form.getlist("deposit_ids")
+    ok = 0
+    for did in ids:
+        try:
+            deposit = Deposit.query.get(int(did))
+        except Exception:
+            continue
+        if not deposit or deposit.status != "Pending":
+            continue
+        try:
+            # Inline approve core
+            user = deposit.user
+            before = float(user.available_balance or 0)
+            amount = float(deposit.amount or 0)
+            user.available_balance = before + amount
+            deposit.status = "Approved"
+            deposit.approved_by = current_user.id
+            deposit.approved_at = datetime.utcnow()
+            db.session.add(WalletTransaction(
+                user_id=user.id,
+                amount=amount,
+                transaction_type="deposit",
+                description=f"{deposit.payment_method or 'Deposit'} approved",
+                balance_before=before,
+                balance_after=float(user.available_balance),
+            ))
+            try:
+                from services.notification_service import NotificationService
+                NotificationService.send(user, "Deposit Approved", f"UGX {amount:,.0f} credited.")
+            except Exception:
+                pass
+            # Referral 25% on deposit
+            if user.referred_by_id:
+                ref = User.query.get(user.referred_by_id)
+                if ref:
+                    bonus = round(amount * 0.25, 0)
+                    rb = float(ref.available_balance or 0)
+                    ref.available_balance = rb + bonus
+                    ref.referral_income = (ref.referral_income or 0) + bonus
+                    db.session.add(WalletTransaction(
+                        user_id=ref.id,
+                        amount=bonus,
+                        transaction_type="referral_bonus",
+                        description=f"25% of deposit by {user.username}",
+                        balance_before=rb,
+                        balance_after=float(ref.available_balance),
+                    ))
+            ok += 1
+        except Exception as e:
+            print("bulk approve", did, e)
+            db.session.rollback()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    flash(f"Approved {ok} deposit(s).", "success")
+    return redirect(url_for("admin.deposits", status="Pending"))
+
+
+@admin_bp.route("/reports/daily")
+@login_required
+@admin_required
+def daily_ops_report():
+    today = datetime.utcnow().date()
+    new_users = User.query.filter(func.date(User.created_at) == today).count()
+    dep_pending = Deposit.query.filter_by(status="Pending").count()
+    dep_approved = Deposit.query.filter(
+        Deposit.status == "Approved", func.date(Deposit.approved_at) == today
+    ).count()
+    dep_sum = db.session.query(func.coalesce(func.sum(Deposit.amount), 0)).filter(
+        Deposit.status == "Approved", func.date(Deposit.approved_at) == today
+    ).scalar()
+    wd_pending = Withdrawal.query.filter_by(status="Pending").count()
+    wd_paid = Withdrawal.query.filter(
+        Withdrawal.status.in_(["Approved", "Paid"]),
+        func.date(Withdrawal.created_at) == today,
+    ).count()
+    combos = Combo.query.filter(func.date(Combo.created_at) == today).count()
+    negative = User.query.filter(User.available_balance < 0).count()
+    return render_template(
+        "admin/daily_report.html",
+        today=today,
+        new_users=new_users,
+        dep_pending=dep_pending,
+        dep_approved=dep_approved,
+        dep_sum=float(dep_sum or 0),
+        wd_pending=wd_pending,
+        wd_paid=wd_paid,
+        combos=combos,
+        negative=negative,
+    )
