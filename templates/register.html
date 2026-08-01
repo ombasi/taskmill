@@ -219,7 +219,25 @@
                         </select>
 
                     </div>
-                                        <!-- REFERRAL -->
+                                        
+                    <!-- SEX & DOB -->
+                    <div>
+                        <label class="block text-zinc-300 mb-3 font-semibold">Sex</label>
+                        <select name="sex" required class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+                            <option value="" disabled selected>Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-zinc-300 mb-3 font-semibold">Date of birth</label>
+                        <input type="date" name="date_of_birth" required max="{{ max_dob }}"
+                               class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
+                        <p class="text-xs text-zinc-500 mt-2">You must be at least 20 years old</p>
+                    </div>
+
+                    <!-- REFERRAL -->
 
                     <div class="md:col-span-2">
 
@@ -340,7 +358,16 @@
                 <!-- BUTTON -->
 
                 <button
-                    type="submit"
+                    
+                    <div class="md:col-span-2 flex items-start gap-3 mt-2">
+                        <input type="checkbox" name="accept_terms" value="1" required id="reg_terms" class="mt-1">
+                        <label for="reg_terms" class="text-sm text-zinc-300">
+                            I am 20+ years old and I agree to the
+                            <a href="{{ url_for('dashboard.terms') }}" target="_blank" class="text-indigo-400 underline">Terms &amp; Conditions</a>.
+                        </label>
+                    </div>
+
+                        type="submit"
                     class="w-full mt-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] transition shadow-2xl shadow-indigo-600/30">
 
                     Create My Account

@@ -6,6 +6,25 @@ from extensions import db
 
 from services.auth_service import AuthService
 
+from datetime import datetime, date as date_cls
+
+def _parse_dob(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+def _age(dob):
+    today = date_cls.today()
+    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+def _max_dob():
+    today = date_cls.today()
+    try:
+        return date_cls(today.year - 20, today.month, today.day).isoformat()
+    except ValueError:
+        return date_cls(today.year - 20, today.month, 28).isoformat()
+
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -110,6 +129,9 @@ def register():
         phone = request.form.get("phone", "").strip()
 
         country = request.form.get("country", "").strip()
+        sex = (request.form.get("sex") or "").strip()
+        dob_raw = request.form.get("date_of_birth") or ""
+        accept_terms = request.form.get("accept_terms") == "1"
 
         membership = request.form.get("membership")
 
@@ -120,22 +142,34 @@ def register():
         referral = request.form.get("referral_code", "").strip()
 
         if password != confirm:
-
             flash("Passwords do not match.", "danger")
+            return render_template("register.html", max_dob=_max_dob())
 
-            return render_template("register.html")
+        if not country:
+            flash("Please select your country.", "danger")
+            return render_template("register.html", max_dob=_max_dob())
+        if sex not in ("Male", "Female", "Other"):
+            flash("Please select your sex.", "danger")
+            return render_template("register.html", max_dob=_max_dob())
+        if not accept_terms:
+            flash("You must accept the Terms & Conditions.", "danger")
+            return render_template("register.html", max_dob=_max_dob())
+        dob = _parse_dob(dob_raw)
+        if not dob or _age(dob) < 20:
+            flash("You must be at least 20 years old to register.", "danger")
+            return render_template("register.html", max_dob=_max_dob())
 
         if User.query.filter_by(username=username).first():
 
             flash("Username already exists.", "danger")
 
-            return render_template("register.html")
+            return render_template("register.html", max_dob=_max_dob())
 
         if User.query.filter_by(email=email).first():
 
             flash("Email already exists.", "danger")
 
-            return render_template("register.html")
+            return render_template("register.html", max_dob=_max_dob())
 
         user = AuthService.register(
             username=username,
@@ -149,6 +183,12 @@ def register():
             ip_address=AuthService.get_client_ip(),
         )
 
+        user.sex = sex
+        user.date_of_birth = dob
+        user.accepted_terms_at = datetime.utcnow()
+        from extensions import db as _db
+        _db.session.commit()
+
         login_user(user)
         AuthService.login_success(user, AuthService.get_client_ip())
 
@@ -156,7 +196,7 @@ def register():
 
         return redirect(url_for("dashboard.index"))
 
-    return render_template("register.html")
+    return render_template("register.html", max_dob=_max_dob())
 
 
 # ==========================================

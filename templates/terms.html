@@ -1,44 +1,75 @@
 {% extends "base.html" %}
-
+{% block title %}Terms & Conditions{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-6 py-12">
-    <h1 class="text-4xl font-bold mb-10 text-center">Terms and Conditions</h1>
-    
-    <div class="prose max-w-none">
-        <h2>1. Introduction</h2>
-        <p>Welcome to Taskmill. By using our platform, you agree to these Terms and Conditions.</p>
+<div class="max-w-3xl mx-auto space-y-8 py-6">
+  <div class="text-center">
+    <h1 class="text-4xl font-black">Terms &amp; Conditions</h1>
+    <p class="text-zinc-400 mt-2">Last updated: August 2026 · Taskmill</p>
+  </div>
 
-        <h2>2. User Responsibilities</h2>
-        <ul>
-            <li>You must provide honest and genuine product reviews.</li>
-            <li>You must maintain a minimum balance of UGX 50,000 to access tasks.</li>
-            <li>Multiple accounts are strictly prohibited.</li>
-            <li>Any form of abuse or fraudulent activity will result in permanent ban.</li>
-        </ul>
+  <div class="glass rounded-3xl p-8 space-y-6 text-zinc-300 leading-relaxed text-sm md:text-base">
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">1. Eligibility</h2>
+      <p>You must be at least <strong class="text-white">20 years old</strong> to create an account and use Taskmill. By registering, you confirm that the name, sex, date of birth, and country you provide are accurate.</p>
+    </section>
 
-        <h2>3. Earnings and Withdrawals</h2>
-        <ul>
-            <li>Commissions are added to your wallet immediately after task completion.</li>
-            <li>Minimum balance of UGX 50,000 must be maintained at all times.</li>
-            <li>Withdrawal limits depend on your membership level.</li>
-        </ul>
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">2. Account</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>One account per person. Multiple accounts may be suspended.</li>
+        <li>Your <strong>username cannot be changed</strong> after signup.</li>
+        <li>Keep your password and withdraw PIN confidential.</li>
+        <li>You are responsible for activity under your account.</li>
+      </ul>
+    </section>
 
-        <h2>4. Membership & Referrals</h2>
-        <ul>
-            <li>Referral code is required for new registrations.</li>
-            <li>Referral activation is subject to admin approval.</li>
-            <li>Higher membership levels unlock better commissions and benefits.</li>
-        </ul>
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">3. Tasks &amp; wallet</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>When a product is assigned, its price may be held from your balance.</li>
+        <li>After you submit a valid review, the product price plus commission is credited back.</li>
+        <li>Combo products may create a temporary negative balance until you deposit and complete the review.</li>
+        <li>You should maintain at least <strong>UGX 15,000</strong> to start tasks and when withdrawing (reserve for the next day).</li>
+      </ul>
+    </section>
 
-        <h2>5. Account Termination</h2>
-        <p>Taskmill reserves the right to suspend or terminate accounts for violations of these terms.</p>
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">4. Deposits &amp; withdrawals</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Deposits are credited after admin verification.</li>
+        <li>Withdrawals require a withdraw PIN and are subject to daily task / membership rules.</li>
+        <li>Processing times depend on payment rails and review queues.</li>
+      </ul>
+    </section>
 
-        <div class="mt-12 p-8 bg-base-200 rounded-3xl text-center">
-            <p class="text-sm text-base-content/70">
-                Last updated: June 22, 2026<br>
-                By using Taskmill, you acknowledge that you have read and understood these terms.
-            </p>
-        </div>
-    </div>
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">5. Referrals</h2>
+      <p>Referral rewards (including percentage bonuses on referred users’ approved deposits) are subject to anti-fraud checks and may be adjusted or withheld in case of abuse.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">6. Prohibited conduct</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Fake reviews, bots, or automated task completion</li>
+        <li>Self-referrals or fake deposit schemes</li>
+        <li>Abuse of support, chargebacks, or payment fraud</li>
+      </ul>
+      <p class="mt-2">Violations may result in balance freezes, forfeiture, or permanent ban.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">7. Changes</h2>
+      <p>We may update these terms. Continued use of Taskmill after changes means you accept the updated terms. Material changes may be announced in-app.</p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-white mb-2">8. Contact</h2>
+      <p>For support, use in-app Chat or the Support page.</p>
+    </section>
+  </div>
+
+  <div class="text-center">
+    <a href="{{ url_for('auth.register') }}" class="text-indigo-400 hover:underline">Back to signup</a>
+  </div>
 </div>
 {% endblock %}

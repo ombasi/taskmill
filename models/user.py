@@ -244,6 +244,10 @@ class User(db.Model, UserMixin):
         nullable=True
     )
 
+    sex = db.Column(db.String(20), nullable=True)  # Male / Female / Other
+    date_of_birth = db.Column(db.Date, nullable=True)
+    accepted_terms_at = db.Column(db.DateTime, nullable=True)
+
     # =====================================================
     # ACCOUNT STATUS
     # =====================================================

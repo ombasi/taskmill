@@ -79,6 +79,15 @@ def create_app():
             tables = insp.get_table_names()
             if "users" in tables:
                 cols = [c["name"] for c in insp.get_columns("users")]
+                if "sex" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN sex VARCHAR(20)"))
+                    db.session.commit()
+                if "date_of_birth" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN date_of_birth DATE"))
+                    db.session.commit()
+                if "accepted_terms_at" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN accepted_terms_at TIMESTAMP"))
+                    db.session.commit()
                 if "withdraw_pin_hash" not in cols:
                     db.session.execute(text(
                         "ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"

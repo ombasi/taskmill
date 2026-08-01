@@ -1,3 +1,4 @@
+from datetime import datetime, date
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.task import Task
@@ -23,6 +24,29 @@ def _ensure_membership(user):
         db.session.rollback()
 
 
+def _parse_dob(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _age(dob: date) -> int:
+    today = date.today()
+    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+
+def _max_dob_str():
+    """Latest DOB allowed for age >= 20."""
+    today = date.today()
+    try:
+        return date(today.year - 20, today.month, today.day).isoformat()
+    except ValueError:
+        return date(today.year - 20, today.month, 28).isoformat()
+
+
 @profile_bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
@@ -30,21 +54,27 @@ def index():
 
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
-        username = (request.form.get("username") or "").strip()
         email = (request.form.get("email") or "").strip().lower()
         phone = (request.form.get("phone") or "").strip()
-        password = request.form.get("password") or ""
-        confirm = request.form.get("confirm_password") or ""
+        sex = (request.form.get("sex") or "").strip()
+        dob = _parse_dob(request.form.get("date_of_birth"))
+        accept = request.form.get("accept_terms") == "1"
 
-        if full_name:
-            current_user.full_name = full_name
-
-        if username and username != current_user.username:
-            from models.user import User
-            if User.query.filter(User.username == username, User.id != current_user.id).first():
-                flash("Username already taken.", "danger")
-                return redirect(url_for("profile.index"))
-            current_user.username = username
+        if not full_name:
+            flash("Full name is required.", "danger")
+            return redirect(url_for("profile.index"))
+        if sex not in ("Male", "Female", "Other"):
+            flash("Please select your sex.", "danger")
+            return redirect(url_for("profile.index"))
+        if not dob:
+            flash("Valid date of birth is required.", "danger")
+            return redirect(url_for("profile.index"))
+        if _age(dob) < 20:
+            flash("You must be at least 20 years old to use Taskmill.", "danger")
+            return redirect(url_for("profile.index"))
+        if not accept:
+            flash("You must accept the Terms & Conditions.", "danger")
+            return redirect(url_for("profile.index"))
 
         if email and email != (current_user.email or "").lower():
             from models.user import User
@@ -53,29 +83,23 @@ def index():
                 return redirect(url_for("profile.index"))
             current_user.email = email
 
+        current_user.full_name = full_name
         current_user.phone = phone or current_user.phone
-
-        if password:
-            if password != confirm:
-                flash("Passwords do not match.", "danger")
-                return redirect(url_for("profile.index"))
-            if len(password) < 6:
-                flash("Password must be at least 6 characters.", "danger")
-                return redirect(url_for("profile.index"))
-            current_user.set_password(password)
+        current_user.sex = sex
+        current_user.date_of_birth = dob
+        if not current_user.accepted_terms_at:
+            current_user.accepted_terms_at = datetime.utcnow()
 
         try:
             db.session.commit()
             flash("Profile updated.", "success")
         except Exception:
             db.session.rollback()
-            flash("Could not update profile. Try again.", "danger")
+            flash("Could not update profile.", "danger")
         return redirect(url_for("profile.index"))
 
     try:
-        completed = Task.query.filter_by(
-            user_id=current_user.id, status="completed"
-        ).count()
+        completed = Task.query.filter_by(user_id=current_user.id, status="completed").count()
         total = Task.query.filter_by(user_id=current_user.id).count()
     except Exception:
         completed, total = 0, 0
@@ -84,6 +108,7 @@ def index():
         "profile.html",
         completed=completed,
         total=total,
+        max_dob=_max_dob_str(),
     )
 
 
@@ -95,17 +120,22 @@ def notifications():
         .order_by(Notification.created_at.desc())
         .all()
     )
-    for notification in notifications:
-        notification.is_read = True
+    for n in notifications:
+        n.is_read = True
     try:
         db.session.commit()
     except Exception:
         db.session.rollback()
+    return render_template("profile/notifications.html", notifications=notifications)
 
-    return render_template(
-        "profile/notifications.html",
-        notifications=notifications,
-    )
+
+@profile_bp.route("/notifications/read-all", methods=["POST"])
+@login_required
+def mark_all_read():
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
+    db.session.commit()
+    flash("All notifications marked as read.", "success")
+    return redirect(url_for("profile.notifications"))
 
 
 @profile_bp.route("/change-password", methods=["GET", "POST"])
@@ -115,29 +145,23 @@ def change_password():
         current = request.form.get("current_password") or ""
         new = request.form.get("new_password") or ""
         confirm = request.form.get("confirm_password") or ""
-
         if not current_user.check_password(current):
             flash("Current password is incorrect.", "danger")
             return render_template("profile/change_password.html")
-
         if len(new) < 6:
             flash("New password must be at least 6 characters.", "danger")
             return render_template("profile/change_password.html")
-
         if new != confirm:
             flash("New passwords do not match.", "danger")
             return render_template("profile/change_password.html")
-
         current_user.set_password(new)
         if hasattr(current_user, "must_change_password"):
             current_user.must_change_password = False
         db.session.commit()
         flash("Password updated successfully.", "success")
-
         if current_user.is_admin:
             return redirect(url_for("admin.dashboard"))
         return redirect(url_for("dashboard.index"))
-
     return render_template("profile/change_password.html")
 
 
@@ -153,20 +177,8 @@ def set_withdraw_pin():
         if pin != confirm:
             flash("PINs do not match.", "danger")
             return redirect(url_for("profile.set_withdraw_pin"))
-        if not hasattr(current_user, "set_withdraw_pin"):
-            flash("Withdraw PIN is not available yet. Restart the app after update.", "danger")
-            return redirect(url_for("profile.index"))
         current_user.set_withdraw_pin(pin)
         db.session.commit()
         flash("Withdraw PIN saved.", "success")
         return redirect(url_for("wallet.withdraw"))
     return render_template("profile/withdraw_pin.html")
-
-
-@profile_bp.route("/notifications/read-all", methods=["POST"])
-@login_required
-def mark_all_read():
-    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({"is_read": True})
-    db.session.commit()
-    flash("All notifications marked as read.", "success")
-    return redirect(url_for("profile.notifications"))
