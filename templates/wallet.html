@@ -42,6 +42,30 @@
 
     </div>
 
+    
+    <!-- Wallet flow explainer -->
+    <div class="glass rounded-3xl p-6 mb-8 border border-indigo-500/20">
+      <p class="text-sm font-semibold text-indigo-300 mb-3">How your wallet works</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div class="bg-slate-800/60 rounded-xl p-3">
+          <p class="text-zinc-400 text-xs">1. Product assigned</p>
+          <p class="font-semibold text-red-300 mt-1">Price held</p>
+        </div>
+        <div class="bg-slate-800/60 rounded-xl p-3">
+          <p class="text-zinc-400 text-xs">2. You submit review</p>
+          <p class="font-semibold text-emerald-300 mt-1">Price + commission back</p>
+        </div>
+        <div class="bg-slate-800/60 rounded-xl p-3">
+          <p class="text-zinc-400 text-xs">3. Deposit approved</p>
+          <p class="font-semibold text-sky-300 mt-1">Balance credited</p>
+        </div>
+        <div class="bg-slate-800/60 rounded-xl p-3">
+          <p class="text-zinc-400 text-xs">4. Withdraw</p>
+          <p class="font-semibold text-amber-300 mt-1">Keep UGX 15,000 reserve</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= SUMMARY ================= -->
 
     <div class="grid lg:grid-cols-4 gap-6 mb-8">
@@ -389,7 +413,22 @@
 
                         <td class="py-5">
 
-                            {{ tx.transaction_type }}
+                            {% set tt = (tx.transaction_type or '')|lower %}
+                            {% if 'hold' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-lock text-amber-400"></i> Product hold</span>
+                            {% elif 'settle' in tt or 'refund' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-rotate-left text-emerald-400"></i> Refund + commission</span>
+                            {% elif 'deposit' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-arrow-down text-sky-400"></i> Deposit</span>
+                            {% elif 'withdraw' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-arrow-up text-red-400"></i> Withdrawal</span>
+                            {% elif 'combo' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-layer-group text-violet-400"></i> {{ tx.transaction_type }}</span>
+                            {% elif 'referral' in tt %}
+                              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-user-plus text-pink-400"></i> Referral bonus</span>
+                            {% else %}
+                              {{ tx.transaction_type }}
+                            {% endif %}
 
                         </td>
 

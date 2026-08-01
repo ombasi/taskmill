@@ -58,6 +58,86 @@
 </div>
 
 
+
+<!-- Command Center -->
+<div class="glass rounded-3xl p-6 mb-8 border border-indigo-500/30">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <h2 class="text-2xl font-bold">Command Center</h2>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300">{{ pending_deposits }} deposits</span>
+      <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-300">{{ pending_withdrawals }} withdrawals</span>
+      <span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300">{{ negative_users|length if negative_users is defined else 0 }} negative</span>
+    </div>
+  </div>
+  <div class="grid xl:grid-cols-2 gap-6">
+    <div>
+      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-arrow-down text-emerald-400"></i> Pending deposits</h3>
+      <div class="space-y-2 max-h-64 overflow-y-auto">
+        {% for d in pending_deposit_list|default([]) %}
+        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
+          <div>
+            <p class="font-medium">{{ d.user.username if d.user else d.user_id }}</p>
+            <p class="text-zinc-400 text-xs">{{ money(current_user, d.amount) }} · {{ d.payment_method }}</p>
+          </div>
+          <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-indigo-400 text-xs hover:underline">Review</a>
+        </div>
+        {% else %}
+        <p class="text-zinc-500 text-sm">No pending deposits</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-arrow-up text-red-400"></i> Pending withdrawals</h3>
+      <div class="space-y-2 max-h-64 overflow-y-auto">
+        {% for w in pending_withdrawal_list|default([]) %}
+        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
+          <div>
+            <p class="font-medium">{{ w.user.username if w.user else w.user_id }}</p>
+            <p class="text-zinc-400 text-xs">{{ money(current_user, w.amount) }} · {{ w.payment_method }}</p>
+          </div>
+          <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="text-indigo-400 text-xs hover:underline">Review</a>
+        </div>
+        {% else %}
+        <p class="text-zinc-500 text-sm">No pending withdrawals</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-orange-400"></i> Negative balances</h3>
+      <div class="space-y-2 max-h-64 overflow-y-auto">
+        {% for u in negative_users|default([]) %}
+        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
+          <div>
+            <p class="font-medium">{{ u.username }}</p>
+            <p class="text-red-400 text-xs">{{ money(current_user, u.available_balance) }}</p>
+          </div>
+          <a href="{{ url_for('admin.view_user', user_id=u.id) }}" class="text-indigo-400 text-xs hover:underline">Open</a>
+        </div>
+        {% else %}
+        <p class="text-zinc-500 text-sm">No negative accounts</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-layer-group text-violet-400"></i> Open combos</h3>
+      <div class="space-y-2 max-h-64 overflow-y-auto">
+        {% for c in open_combos|default([]) %}
+        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
+          <div>
+            <p class="font-medium">{{ c.user.username if c.user else c.user_id }} · {{ c.status }}</p>
+            <p class="text-zinc-400 text-xs">{{ c.product1_name or 'Combo' }} · {{ money(current_user, c.amount) }}</p>
+          </div>
+          <a href="{{ url_for('admin.view_user', user_id=c.user_id) }}" class="text-indigo-400 text-xs hover:underline">User</a>
+        </div>
+        {% else %}
+        <p class="text-zinc-500 text-sm">No open combos</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Charts -->
 
 <div class="grid xl:grid-cols-2 gap-8 mb-8">

@@ -170,11 +170,42 @@ def dashboard():
             ),
             "type": "User"
         })
+
+    # Command center queues
+    pending_deposit_list = (
+        Deposit.query.filter_by(status="Pending")
+        .order_by(Deposit.created_at.desc())
+        .limit(8)
+        .all()
+    )
+    pending_withdrawal_list = (
+        Withdrawal.query.filter_by(status="Pending")
+        .order_by(Withdrawal.created_at.desc())
+        .limit(8)
+        .all()
+    )
+    negative_users = (
+        User.query.filter(User.available_balance < 0)
+        .order_by(User.available_balance.asc())
+        .limit(8)
+        .all()
+    )
+    open_combos = (
+        Combo.query.filter(Combo.status.in_(["Pending", "Triggered"]))
+        .order_by(Combo.created_at.desc())
+        .limit(8)
+        .all()
+    )
+
     return render_template(
         "admin/dashboard.html",
         total_users=total_users,
         active_users=active_users,
         blocked_users=blocked_users,
+        pending_deposit_list=pending_deposit_list,
+        pending_withdrawal_list=pending_withdrawal_list,
+        negative_users=negative_users,
+        open_combos=open_combos,
         total_products=total_products,
         active_tasks=active_tasks,
         completed_tasks=completed_tasks,
