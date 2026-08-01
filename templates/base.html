@@ -60,13 +60,13 @@ card:"#18181b"
 
 <nav class="mx-auto max-w-7xl mt-4 px-5">
 
-<div class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl px-8 py-5 flex justify-between items-center shadow-2xl">
+<div class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl px-4 md:px-8 py-3 md:py-5 flex justify-between items-center shadow-2xl gap-3">
 
 <!-- Logo -->
 
 <a href="{{ url_for('dashboard.index') }}" class="flex items-center gap-4">
 
-<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+<div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0">
 
 <i class="fa-solid fa-cube text-2xl"></i>
 
@@ -74,7 +74,7 @@ card:"#18181b"
 
 <div>
 
-<h1 class="text-2xl font-black tracking-wide">
+<h1 class="text-lg md:text-2xl font-black tracking-wide">
 
 TASKMILL
 
@@ -131,7 +131,7 @@ Membership
 <a href="{{ url_for('dashboard.faq') }}" class="hover:text-indigo-400 transition">FAQ</a>
 <a href="{{ url_for('dashboard.about') }}" class="hover:text-indigo-400 transition">About</a>
 
-<a href="/profile" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('profile.index') }}" class="hover:text-indigo-400 transition">
 
 Profile
 
@@ -148,34 +148,31 @@ Logout
 
 {% endif %}
 
-<!-- Mobile -->
-
-<button
-id="menuButton"
-class="lg:hidden w-12 h-12 rounded-xl bg-white/10">
-
-<i class="fa-solid fa-bars"></i>
-
-</button>
+<!-- Right actions: bell + menu -->
+{% if current_user.is_authenticated %}
+<div class="flex items-center gap-2 md:gap-3">
+  <a href="{{ url_for('profile.notifications') }}"
+     class="relative w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
+     title="Notifications">
+    <i class="fa-solid fa-bell text-lg"></i>
+    {% if unread_notifications|default(0) > 0 %}
+    <span class="absolute -top-1 -right-1 min-w-[1.15rem] h-5 px-1 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold">
+      {{ unread_notifications }}
+    </span>
+    {% endif %}
+  </a>
+  <button type="button" id="menuButton" class="lg:hidden w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+</div>
+{% else %}
+<div class="flex items-center gap-2">
+  <a href="{{ url_for('auth.login') }}" class="text-sm px-4 py-2 rounded-xl hover:bg-white/10">Login</a>
+  <a href="{{ url_for('auth.register') }}" class="text-sm px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Sign up</a>
+</div>
+{% endif %}
 
 </div>
-
-<a href="{{ url_for('profile.notifications') }}" class="relative">
-
-    <i class="fa-solid fa-bell text-xl"></i>
-
-{% if unread_notifications|default(0) > 0 %}
-    <span
-        class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center">
-
-        {{ unread_notifications }}
-
-    </span>
-
-    {% endif %}
-
-</a>
-
 </nav>
 
 <!-- Mobile Drawer -->
@@ -201,7 +198,7 @@ class="hidden mx-5 mt-4 backdrop-blur-xl bg-zinc-900/90 border border-white/10 r
 <a href="{{ url_for('chat.inbox') }}">Chat</a>
 <a href="{{ url_for('dashboard.contact') }}">Support</a>
 
-<a href="/profile">Profile</a>
+<a href="{{ url_for('profile.index') }}">Profile</a>
 
 <a href="{{ url_for('auth.logout') }}"
 class="text-red-400">
@@ -358,14 +355,11 @@ Support
 </h3>
 
 <div class="space-y-3 text-zinc-400">
-
-<p>support@taskmill.com</p>
-
-<p>Live Chat</p>
-
-<a href="{{ url_for('dashboard.faq') }}" class="hover:text-indigo-400">FAQs</a>
-<a href="{{ url_for('dashboard.about') }}" class="hover:text-indigo-400">About</a>
-
+<a href="{{ url_for('dashboard.contact') }}" class="block hover:text-indigo-400">Contact support</a>
+<a href="{{ url_for('chat.inbox') if current_user.is_authenticated else url_for('auth.login') }}" class="block hover:text-indigo-400">Live chat</a>
+<a href="{{ url_for('dashboard.faq') }}" class="block hover:text-indigo-400">FAQs</a>
+<a href="{{ url_for('dashboard.about') }}" class="block hover:text-indigo-400">About</a>
+<a href="{{ url_for('dashboard.terms') }}" class="block hover:text-indigo-400">Terms &amp; Conditions</a>
 </div>
 
 </div>
@@ -376,20 +370,15 @@ Support
 
 <p>
 
-© 2025 Taskmill. All rights reserved.
+© 2026 Taskmill. All rights reserved.
 
 </p>
 
-<div class="flex gap-6 mt-5 md:mt-0">
-
-<i class="fab fa-facebook"></i>
-
-<i class="fab fa-instagram"></i>
-
-<i class="fab fa-x-twitter"></i>
-
-<i class="fab fa-telegram"></i>
-
+<div class="flex gap-6 mt-5 md:mt-0 text-lg">
+<a href="https://facebook.com" target="_blank" rel="noopener" class="hover:text-indigo-400" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+<a href="https://instagram.com" target="_blank" rel="noopener" class="hover:text-indigo-400" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+<a href="https://x.com" target="_blank" rel="noopener" class="hover:text-indigo-400" aria-label="X"><i class="fab fa-x-twitter"></i></a>
+<a href="https://t.me" target="_blank" rel="noopener" class="hover:text-indigo-400" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
 </div>
 
 </div>
