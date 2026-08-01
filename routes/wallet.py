@@ -236,3 +236,83 @@ def refresh_combo():
         url_for("task.combo")
 
     )
+
+@wallet_bp.route("/receipt/<string:kind>/<int:item_id>")
+@login_required
+def receipt(kind, item_id):
+    """
+    Show a receipt.
+    kind: deposit | withdrawal | tx
+    After admin approval records may be deleted — use kind=tx with WalletTransaction id.
+    """
+    from models.deposit import Deposit
+    from models.wallet_transaction import WalletTransaction
+    try:
+        from models.withdraw import Withdrawal
+    except Exception:
+        from models.withdrawal import Withdrawal
+
+    item = None
+    title = "Receipt"
+    meta = {}
+
+    if kind == "tx":
+        item = WalletTransaction.query.get_or_404(item_id)
+        if item.user_id != current_user.id and not current_user.is_admin:
+            flash("Not allowed.", "danger")
+            return redirect(url_for("wallet.index"))
+        title = "Transaction Receipt"
+        meta = {
+            "amount": item.amount,
+            "status": "Completed",
+            "method": item.transaction_type,
+            "date": item.created_at,
+            "description": item.description,
+            "reference": f"TX-{item.id}",
+        }
+    elif kind == "deposit":
+        item = Deposit.query.get(item_id)
+        if not item:
+            # Fall back: find wallet tx for this deposit amount recently
+            flash("This deposit was processed and archived. Open it from Wallet history.", "info")
+            return redirect(url_for("wallet.index"))
+        if item.user_id != current_user.id and not current_user.is_admin:
+            flash("Not allowed.", "danger")
+            return redirect(url_for("wallet.index"))
+        title = "Deposit Receipt"
+        meta = {
+            "amount": item.amount,
+            "status": item.status,
+            "method": item.payment_method,
+            "date": item.created_at,
+            "description": getattr(item, "transaction_id", None) or "",
+            "reference": f"DEP-{item.id}",
+        }
+    elif kind == "withdrawal":
+        item = Withdrawal.query.get(item_id)
+        if not item:
+            flash("This withdrawal was processed and archived. Open it from Wallet history.", "info")
+            return redirect(url_for("wallet.index"))
+        if item.user_id != current_user.id and not current_user.is_admin:
+            flash("Not allowed.", "danger")
+            return redirect(url_for("wallet.index"))
+        title = "Withdrawal Receipt"
+        meta = {
+            "amount": item.amount,
+            "status": item.status,
+            "method": item.payment_method,
+            "date": item.created_at,
+            "description": getattr(item, "account_number", None) or "",
+            "reference": f"WD-{item.id}",
+        }
+    else:
+        flash("Unknown receipt type.", "danger")
+        return redirect(url_for("wallet.index"))
+
+    return render_template(
+        "wallet/receipt.html",
+        item=item,
+        kind=kind,
+        title=title,
+        meta=meta,
+    )

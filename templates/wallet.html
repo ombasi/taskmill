@@ -465,11 +465,11 @@
 
                         <td class="text-center">
 
-                            <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">
-
-                                Completed
-
-                            </span>
+                            <div class="flex flex-col items-center gap-1">
+                            <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm">Completed</span>
+                            <a href="{{ url_for('wallet.receipt', kind='tx', item_id=tx.id) }}"
+                               class="text-xs text-indigo-400 hover:underline">Receipt</a>
+                            </div>
 
                         </td>
 

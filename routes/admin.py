@@ -1292,78 +1292,81 @@ def deposits():
 @login_required
 @admin_required
 def approve_deposit(deposit_id):
-
     deposit = Deposit.query.get_or_404(deposit_id)
-
     if deposit.status == "Approved":
-
         flash("Deposit already approved.", "warning")
-
         return redirect(url_for("admin.deposits"))
 
     user = User.query.get(deposit.user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for("admin.deposits"))
 
-    # Credit wallet
-    user.available_balance += deposit.amount
+    amount = float(deposit.amount or 0)
+    before = float(user.available_balance or 0)
+    user.available_balance = before + amount
 
-    # Update deposit
-    deposit.status = "Approved"
-    deposit.approved_by = current_user.id
-    deposit.approved_at = datetime.utcnow()
-
-    before = float(user.available_balance) - float(deposit.amount)
-    # (balance already credited above)
-    transaction = WalletTransaction(
+    # Permanent history stays in wallet_transactions
+    tx = WalletTransaction(
         user_id=user.id,
-        amount=float(deposit.amount),
+        amount=amount,
         transaction_type="deposit",
-        description=f"{deposit.payment_method} Deposit",
+        description=(
+            f"Deposit approved · {deposit.payment_method or 'Pay'} · "
+            f"Ref {deposit.transaction_id or deposit.id}"
+        ),
         balance_before=before,
         balance_after=float(user.available_balance),
-        reference=getattr(deposit, "transaction_id", None),
     )
-    db.session.add(transaction)
+    db.session.add(tx)
+
+    # Referral 25%
+    if user.referred_by_id:
+        ref = User.query.get(user.referred_by_id)
+        if ref and amount > 0:
+            bonus = round(amount * 0.25, 0)
+            rb = float(ref.available_balance or 0)
+            ref.available_balance = rb + bonus
+            ref.referral_income = (ref.referral_income or 0) + bonus
+            db.session.add(WalletTransaction(
+                user_id=ref.id,
+                amount=bonus,
+                transaction_type="referral_bonus",
+                description=f"25% of deposit by {user.username}",
+                balance_before=rb,
+                balance_after=float(ref.available_balance),
+            ))
 
     try:
-        from services.task_service import TaskService
-        TaskService.sync_negative_and_combo_tasks(user)
-    except Exception:
-        if float(user.available_balance or 0) >= 0:
-            user.negative_today = False
-
-    notification = Notification(
-        user_id=user.id,
-        title="Deposit Approved",
-        message=f"Your deposit of UGX {float(deposit.amount):,.0f} has been approved and added to your wallet.",
-    )
-    db.session.add(notification)
-
-    # 25% referral bonus to referrer on this deposit
-    try:
-        if getattr(user, "referred_by_id", None):
-            referrer = User.query.get(user.referred_by_id)
-            if referrer:
-                bonus = round(float(deposit.amount) * 0.25, 0)
-                if bonus > 0:
-                    rb = float(referrer.available_balance or 0)
-                    referrer.available_balance = rb + bonus
-                    referrer.total_earned = float(referrer.total_earned or 0) + bonus
-                    db.session.add(WalletTransaction(
-                        user_id=referrer.id,
-                        amount=bonus,
-                        transaction_type="referral_bonus",
-                        description=f"25% referral bonus from {user.username} deposit",
-                        balance_before=rb,
-                        balance_after=float(referrer.available_balance),
-                    ))
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            user,
+            "Deposit Approved",
+            f"UGX {amount:,.0f} credited. Receipt in Wallet history.",
+        )
     except Exception:
         pass
 
+    # Delete proof file to save storage
+    try:
+        if deposit.proof_image:
+            import os
+            from flask import current_app
+            path = os.path.join(
+                current_app.static_folder, "uploads", "deposits", str(deposit.proof_image)
+            )
+            if os.path.isfile(path):
+                os.remove(path)
+    except Exception as e:
+        print("proof delete:", e)
+
+    # Remove deposit row after processing (history is in wallet_transactions)
+    db.session.delete(deposit)
     db.session.commit()
 
-    flash("Deposit approved successfully.", "success")
-
+    flash("Deposit approved, credited, and archived (removed from deposits list).", "success")
     return redirect(url_for("admin.deposits"))
+
 
 @admin_bp.route("/deposit/<int:deposit_id>/reject")
 @login_required
@@ -1436,7 +1439,14 @@ def approve_withdrawal(withdrawal_id):
         return redirect(url_for("admin.withdrawals"))
     ok = WalletService.approve_withdrawal(withdrawal, current_user)
     if ok:
-        flash("Withdrawal approved.", "success")
+        # Archive: remove withdrawal row (ledger remains in wallet_transactions)
+        try:
+            db.session.delete(withdrawal)
+            db.session.commit()
+            flash("Withdrawal approved and archived (removed from list).", "success")
+        except Exception as e:
+            print("wd delete", e)
+            flash("Withdrawal approved.", "success")
     else:
         flash("Could not approve withdrawal.", "danger")
     return redirect(url_for("admin.withdrawals"))
@@ -2307,17 +2317,26 @@ def bulk_approve_deposits():
             before = float(user.available_balance or 0)
             amount = float(deposit.amount or 0)
             user.available_balance = before + amount
-            deposit.status = "Approved"
-            deposit.approved_by = current_user.id
-            deposit.approved_at = datetime.utcnow()
             db.session.add(WalletTransaction(
                 user_id=user.id,
                 amount=amount,
                 transaction_type="deposit",
-                description=f"{deposit.payment_method or 'Deposit'} approved",
+                description=f"{deposit.payment_method or 'Deposit'} approved · Ref {deposit.transaction_id or deposit.id}",
                 balance_before=before,
                 balance_after=float(user.available_balance),
             ))
+            # delete proof
+            try:
+                if deposit.proof_image:
+                    import os
+                    path = os.path.join(
+                        current_app.static_folder, "uploads", "deposits", str(deposit.proof_image)
+                    )
+                    if os.path.isfile(path):
+                        os.remove(path)
+            except Exception:
+                pass
+            db.session.delete(deposit)
             try:
                 from services.notification_service import NotificationService
                 NotificationService.send(user, "Deposit Approved", f"UGX {amount:,.0f} credited.")
