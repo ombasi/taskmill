@@ -338,40 +338,20 @@
                 </div>
 
                 <!-- TERMS -->
-
                 <div class="mt-8 flex items-start gap-3">
-
-                    <input
-                        type="checkbox"
-                        required
-                        class="mt-1 w-5 h-5 accent-indigo-600">
-
-                    <label class="text-zinc-400 leading-7">
-
-                        I agree to the Terms & Conditions and understand
-                        Taskmill's earning policy.
-
+                    <input type="checkbox" name="accept_terms" value="1" required id="reg_terms"
+                           class="mt-1 w-5 h-5 accent-indigo-600">
+                    <label for="reg_terms" class="text-zinc-400 leading-7">
+                        I am 20+ years old and I agree to the
+                        <a href="{{ url_for('dashboard.terms') }}" target="_blank" class="text-indigo-400 underline">Terms &amp; Conditions</a>
+                        and understand Taskmill's earning policy.
                     </label>
-
                 </div>
 
                 <!-- BUTTON -->
-
-                <button
-                    
-                    <div class="md:col-span-2 flex items-start gap-3 mt-2">
-                        <input type="checkbox" name="accept_terms" value="1" required id="reg_terms" class="mt-1">
-                        <label for="reg_terms" class="text-sm text-zinc-300">
-                            I am 20+ years old and I agree to the
-                            <a href="{{ url_for('dashboard.terms') }}" target="_blank" class="text-indigo-400 underline">Terms &amp; Conditions</a>.
-                        </label>
-                    </div>
-
-                        type="submit"
+                <button type="submit"
                     class="w-full mt-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] transition shadow-2xl shadow-indigo-600/30">
-
                     Create My Account
-
                 </button>
 
             </form>
