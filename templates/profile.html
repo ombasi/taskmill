@@ -10,7 +10,7 @@
 
             <div class="relative">
 
-                <img src="{{ url_for('static', filename='images/default-avatar.png') }}"
+                <img src="https://ui-avatars.com/api/?name={{ (current_user.full_name or current_user.username or 'U')|urlencode }}&background=6366f1&color=fff&size=128"
                      class="w-40 h-40 rounded-full object-cover border-4 border-indigo-500 shadow-xl">
 
                 <button
@@ -35,7 +35,7 @@
                 <div class="flex flex-wrap gap-4 mt-6">
 
                     <div class="px-5 py-3 rounded-2xl bg-indigo-500/20 text-indigo-300">
-                        {{ current_user.membership.name }}
+                        {{ current_user.membership.name if current_user.membership else "Starter" }}
                     </div>
 
                     <div class="px-5 py-3 rounded-2xl bg-emerald-500/20 text-emerald-300">
@@ -83,7 +83,7 @@
                     </p>
 
                     <h3 class="text-xl">
-                        {{ current_user.created_at.strftime('%d %b %Y') }}
+                        {{ current_user.created_at.strftime('%d %b %Y') if current_user.created_at else '—' }}
                     </h3>
                 </div>
 

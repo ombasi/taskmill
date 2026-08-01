@@ -6,50 +6,116 @@ from extensions import db
 
 profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
 
-@profile_bp.route("/")
+
+def _ensure_membership(user):
+    if user.membership_id and getattr(user, "membership", None):
+        return
+    try:
+        from models.membership import Membership
+        starter = (
+            Membership.query.filter_by(name="Starter").first()
+            or Membership.query.order_by(Membership.price.asc()).first()
+        )
+        if starter:
+            user.membership_id = starter.id
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+@profile_bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
-    completed = Task.query.filter_by(
-    user_id=current_user.id,
-    status="completed"
-).count()
-    total = Task.query.filter_by(user_id=current_user.id).count()
-    
-    return render_template("profile.html", 
-                         completed=completed, 
-                         total=total)
+    _ensure_membership(current_user)
+
+    if request.method == "POST":
+        full_name = (request.form.get("full_name") or "").strip()
+        username = (request.form.get("username") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
+        phone = (request.form.get("phone") or "").strip()
+        password = request.form.get("password") or ""
+        confirm = request.form.get("confirm_password") or ""
+
+        if full_name:
+            current_user.full_name = full_name
+
+        if username and username != current_user.username:
+            from models.user import User
+            if User.query.filter(User.username == username, User.id != current_user.id).first():
+                flash("Username already taken.", "danger")
+                return redirect(url_for("profile.index"))
+            current_user.username = username
+
+        if email and email != (current_user.email or "").lower():
+            from models.user import User
+            if User.query.filter(User.email == email, User.id != current_user.id).first():
+                flash("Email already in use.", "danger")
+                return redirect(url_for("profile.index"))
+            current_user.email = email
+
+        current_user.phone = phone or current_user.phone
+
+        if password:
+            if password != confirm:
+                flash("Passwords do not match.", "danger")
+                return redirect(url_for("profile.index"))
+            if len(password) < 6:
+                flash("Password must be at least 6 characters.", "danger")
+                return redirect(url_for("profile.index"))
+            current_user.set_password(password)
+
+        try:
+            db.session.commit()
+            flash("Profile updated.", "success")
+        except Exception:
+            db.session.rollback()
+            flash("Could not update profile. Try again.", "danger")
+        return redirect(url_for("profile.index"))
+
+    try:
+        completed = Task.query.filter_by(
+            user_id=current_user.id, status="completed"
+        ).count()
+        total = Task.query.filter_by(user_id=current_user.id).count()
+    except Exception:
+        completed, total = 0, 0
+
+    return render_template(
+        "profile.html",
+        completed=completed,
+        total=total,
+    )
+
 
 @profile_bp.route("/notifications")
 @login_required
 def notifications():
-
-    notifications = Notification.query.filter_by(
-        user_id=current_user.id
-    ).order_by(
-        Notification.created_at.desc()
-    ).all()
-
+    notifications = (
+        Notification.query.filter_by(user_id=current_user.id)
+        .order_by(Notification.created_at.desc())
+        .all()
+    )
     for notification in notifications:
         notification.is_read = True
-
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
     return render_template(
         "profile/notifications.html",
-        notifications=notifications
+        notifications=notifications,
     )
 
 
 @profile_bp.route("/change-password", methods=["GET", "POST"])
 @login_required
 def change_password():
-    from flask import request, redirect, url_for, flash
     if request.method == "POST":
         current = request.form.get("current_password") or ""
         new = request.form.get("new_password") or ""
         confirm = request.form.get("confirm_password") or ""
 
-        # After admin reset, current password is the temp one
         if not current_user.check_password(current):
             flash("Current password is incorrect.", "danger")
             return render_template("profile/change_password.html")
@@ -63,7 +129,8 @@ def change_password():
             return render_template("profile/change_password.html")
 
         current_user.set_password(new)
-        current_user.must_change_password = False
+        if hasattr(current_user, "must_change_password"):
+            current_user.must_change_password = False
         db.session.commit()
         flash("Password updated successfully.", "success")
 
@@ -86,6 +153,9 @@ def set_withdraw_pin():
         if pin != confirm:
             flash("PINs do not match.", "danger")
             return redirect(url_for("profile.set_withdraw_pin"))
+        if not hasattr(current_user, "set_withdraw_pin"):
+            flash("Withdraw PIN is not available yet. Restart the app after update.", "danger")
+            return redirect(url_for("profile.index"))
         current_user.set_withdraw_pin(pin)
         db.session.commit()
         flash("Withdraw PIN saved.", "success")
