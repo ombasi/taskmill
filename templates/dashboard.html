@@ -11,277 +11,165 @@
   {% set pct = ((done / need) * 100)|int if need else 0 %}
 {% endif %}
 {% set first = (current_user.full_name or current_user.username or "there").split(" ")[0] %}
+{% set needs_pin = True %}
+{% if current_user.has_withdraw_pin is defined %}
+  {% set needs_pin = not current_user.has_withdraw_pin() %}
+{% elif current_user.withdraw_pin_hash is defined and current_user.withdraw_pin_hash %}
+  {% set needs_pin = False %}
+{% endif %}
+{% set low_bal = (bal|float) < 15000 %}
 
-<div class="max-w-7xl mx-auto space-y-3 md:space-y-6 pb-4 md:pb-8">
+{# ===== MOBILE: fit above bottom nav (no long scroll) ===== #}
+<div class="md:hidden -mx-1 space-y-2 pb-2">
+  <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-600/25 to-zinc-900 p-3">
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <p class="text-[10px] text-indigo-300 uppercase tracking-wider">Hello</p>
+        <h1 class="text-lg font-black truncate">{{ first }} · <span class="text-indigo-300">{{ mname }}</span></h1>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-[10px] text-zinc-500">Balance</p>
+        <p class="text-base font-black text-emerald-400">{{ money(current_user, bal) }}</p>
+      </div>
+    </div>
+    <div class="mt-2 flex items-center gap-2">
+      <div class="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500" style="width:{{ [pct,100]|min }}%"></div>
+      </div>
+      <span class="text-[11px] text-zinc-400 whitespace-nowrap">{{ done }}/{{ need }}</span>
+    </div>
+  </div>
 
-  {# ===== Hero ===== #}
-  <section class="relative overflow-hidden rounded-2xl md:rounded-[28px] border border-white/10 bg-gradient-to-br from-indigo-600/30 via-zinc-900 to-purple-900/40 p-4 md:p-10">
-    <div class="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl"></div>
-    <div class="absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-purple-500/15 blur-3xl"></div>
+  <div class="grid grid-cols-2 gap-2">
+    <a href="{{ url_for('task.index') }}" class="rounded-xl bg-indigo-600 py-3 text-center text-sm font-bold">
+      <i class="fa-solid fa-play mr-1"></i> Tasks
+    </a>
+    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl border border-white/15 bg-white/5 py-3 text-center text-sm font-semibold">
+      Deposit
+    </a>
+  </div>
 
+  <div class="grid grid-cols-4 gap-1.5 text-center">
+    <div class="rounded-xl bg-zinc-900/80 border border-white/5 p-2">
+      <p class="text-[9px] text-zinc-500">Earned</p>
+      <p class="text-[11px] font-bold text-emerald-400 truncate">{{ money(current_user, total_earned|default(current_user.total_earned or 0)) }}</p>
+    </div>
+    <div class="rounded-xl bg-zinc-900/80 border border-white/5 p-2">
+      <p class="text-[9px] text-zinc-500">Pending</p>
+      <p class="text-[11px] font-bold text-amber-300 truncate">{{ money(current_user, current_user.pending_balance or 0) }}</p>
+    </div>
+    <div class="rounded-xl bg-zinc-900/80 border border-white/5 p-2">
+      <p class="text-[9px] text-zinc-500">Refs</p>
+      <p class="text-[11px] font-bold">{{ referral_count|default(current_user.referral_count or 0) }}</p>
+    </div>
+    <div class="rounded-xl bg-zinc-900/80 border border-white/5 p-2">
+      <p class="text-[9px] text-zinc-500">Rate</p>
+      <p class="text-[11px] font-bold">{{ membership_commission|default(5) }}%</p>
+    </div>
+  </div>
+
+  {% if needs_pin or low_bal %}
+  <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 flex items-center justify-between gap-2 text-xs">
+    <span class="text-amber-200">
+      {% if needs_pin %}Set withdraw PIN{% elif low_bal %}Fund wallet (15k+){% endif %}
+    </span>
+    <a href="{% if needs_pin %}{{ url_for('profile.set_withdraw_pin') }}{% else %}{{ url_for('wallet.deposit') }}{% endif %}"
+       class="bg-amber-500/30 text-amber-100 px-2.5 py-1 rounded-lg font-semibold shrink-0">Fix</a>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-3 gap-1.5">
+    <a href="{{ url_for('wallet.withdraw') }}" class="rounded-xl bg-zinc-900 border border-white/10 py-2.5 text-center text-[11px] font-medium">Withdraw</a>
+    <a href="{{ url_for('wallet.index') }}" class="rounded-xl bg-zinc-900 border border-white/10 py-2.5 text-center text-[11px] font-medium">Wallet</a>
+    <a href="{{ url_for('wallet.referrals') }}" class="rounded-xl bg-zinc-900 border border-white/10 py-2.5 text-center text-[11px] font-medium">Refer</a>
+  </div>
+</div>
+
+{# ===== DESKTOP / tablet ===== #}
+<div class="hidden md:block max-w-7xl mx-auto space-y-6 pb-8">
+  <section class="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-indigo-600/30 via-zinc-900 to-purple-900/40 p-10">
     <div class="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
       <div class="max-w-xl">
         <p class="text-indigo-300 text-xs font-semibold tracking-[0.2em] uppercase">Taskmill</p>
-        <h1 class="mt-1 md:mt-2 text-2xl md:text-5xl font-black tracking-tight">
+        <h1 class="mt-2 text-5xl font-black tracking-tight">
           Hello, <span class="bg-gradient-to-r from-indigo-300 to-purple-300 bg-clip-text text-transparent">{{ first }}</span>
         </h1>
-        <p class="mt-3 text-zinc-400 text-sm md:text-base">
-          Review products, earn commission, and grow your wallet. Membership:
-          <span class="text-white font-semibold">{{ mname }}</span>
-        </p>
-        <div class="mt-4 md:mt-6 flex flex-wrap gap-2 md:gap-3">
-          <a href="{{ url_for('task.index') }}"
-             class="inline-flex items-center gap-2 rounded-xl md:rounded-2xl bg-white text-zinc-900 px-4 py-2.5 md:px-5 md:py-3 text-sm font-bold hover:bg-indigo-50 transition">
-            <i class="fa-solid fa-play"></i> Start tasks
-          </a>
-          <a href="{{ url_for('wallet.deposit') }}"
-             class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10 transition">
-            <i class="fa-solid fa-plus"></i> Deposit
-          </a>
-          <a href="{{ url_for('wallet.withdraw') }}"
-             class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold hover:bg-white/10 transition">
-            <i class="fa-solid fa-arrow-up"></i> Withdraw
-          </a>
+        <p class="mt-3 text-zinc-400">Membership: <span class="text-white font-semibold">{{ mname }}</span></p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="{{ url_for('task.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white text-zinc-900 px-5 py-3 text-sm font-bold">Start tasks</a>
+          <a href="{{ url_for('wallet.deposit') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold">Deposit</a>
+          <a href="{{ url_for('wallet.withdraw') }}" class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold">Withdraw</a>
         </div>
       </div>
-
       <div class="rounded-3xl border border-white/10 bg-black/30 backdrop-blur-xl p-6 min-w-[260px]">
         <p class="text-zinc-400 text-xs uppercase tracking-wider">Available balance</p>
-        <p class="mt-2 text-3xl md:text-4xl font-black text-emerald-400">{{ money(current_user, bal) }}</p>
+        <p class="mt-2 text-4xl font-black text-emerald-400">{{ money(current_user, bal) }}</p>
         <div class="mt-4 grid grid-cols-2 gap-3 text-xs">
           <div class="rounded-xl bg-white/5 p-3">
             <p class="text-zinc-500">Pending</p>
             <p class="font-semibold text-amber-300 mt-1">{{ money(current_user, current_user.pending_balance or 0) }}</p>
           </div>
           <div class="rounded-xl bg-white/5 p-3">
-            <p class="text-zinc-500">Combo</p>
-            <p class="font-semibold text-violet-300 mt-1">{{ money(current_user, frozen_balance|default(current_user.combo_balance or 0)) }}</p>
+            <p class="text-zinc-500">Today</p>
+            <p class="font-semibold mt-1">{{ done }}/{{ need }}</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  {# ===== Onboarding (if needed) ===== #}
-  {% set needs_pin = True %}
-  {% if current_user.has_withdraw_pin is defined %}
-    {% set needs_pin = not current_user.has_withdraw_pin() %}
-  {% elif current_user.withdraw_pin_hash is defined and current_user.withdraw_pin_hash %}
-    {% set needs_pin = False %}
-  {% endif %}
-  {% set low_bal = (bal|float) < 15000 %}
-  {% if needs_pin or low_bal %}
-  <section class="rounded-3xl border border-amber-500/25 bg-amber-500/5 p-5 md:p-6">
-    <div class="flex items-start justify-between gap-3 mb-4">
-      <div>
-        <p class="text-amber-300 text-xs font-bold uppercase tracking-wider">Getting started</p>
-        <h2 class="text-lg font-bold mt-1">Finish setup to earn smoothly</h2>
-      </div>
+  <section class="grid grid-cols-4 gap-4">
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
+      <p class="text-zinc-500 text-xs">Today’s tasks</p>
+      <p class="mt-3 text-2xl font-black">{{ done }}<span class="text-zinc-500 text-base"> / {{ need }}</span></p>
+      <div class="mt-3 h-1.5 rounded-full bg-zinc-800"><div class="h-full rounded-full bg-indigo-500" style="width:{{ [pct,100]|min }}%"></div></div>
     </div>
-    <div class="grid md:grid-cols-3 gap-3">
-      <div class="flex items-center gap-3 rounded-2xl bg-zinc-900/80 p-4 border border-white/5">
-        <span class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold {% if not needs_pin %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-300{% endif %}">
-          {% if not needs_pin %}<i class="fa-solid fa-check"></i>{% else %}1{% endif %}
-        </span>
-        <div class="flex-1 min-w-0">
-          <p class="font-medium text-sm">Withdraw PIN</p>
-          <p class="text-xs text-zinc-500">Required to cash out</p>
-        </div>
-        {% if needs_pin %}
-        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="text-xs bg-indigo-600 px-3 py-1.5 rounded-lg shrink-0">Set</a>
-        {% endif %}
-      </div>
-      <div class="flex items-center gap-3 rounded-2xl bg-zinc-900/80 p-4 border border-white/5">
-        <span class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold {% if not low_bal %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-300{% endif %}">
-          {% if not low_bal %}<i class="fa-solid fa-check"></i>{% else %}2{% endif %}
-        </span>
-        <div class="flex-1 min-w-0">
-          <p class="font-medium text-sm">Fund wallet</p>
-          <p class="text-xs text-zinc-500">Keep UGX 15,000+</p>
-        </div>
-        {% if low_bal %}
-        <a href="{{ url_for('wallet.deposit') }}" class="text-xs bg-indigo-600 px-3 py-1.5 rounded-lg shrink-0">Deposit</a>
-        {% endif %}
-      </div>
-      <div class="flex items-center gap-3 rounded-2xl bg-zinc-900/80 p-4 border border-white/5">
-        <span class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold bg-slate-700 text-zinc-300">3</span>
-        <div class="flex-1 min-w-0">
-          <p class="font-medium text-sm">Complete tasks</p>
-          <p class="text-xs text-zinc-500">Set progress resets daily</p>
-        </div>
-        <a href="{{ url_for('task.index') }}" class="text-xs bg-slate-700 px-3 py-1.5 rounded-lg shrink-0">Go</a>
-      </div>
-    </div>
-  </section>
-  {% endif %}
-
-  {# ===== Stats row ===== #}
-  <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-    <div class="rounded-2xl md:rounded-3xl border border-white/10 bg-zinc-900/60 p-3 md:p-5">
-      <div class="flex items-center justify-between">
-        <p class="text-zinc-500 text-xs">Today’s tasks</p>
-        <i class="fa-solid fa-list-check text-indigo-400"></i>
-      </div>
-      <p class="mt-2 md:mt-3 text-lg md:text-2xl font-black">{{ done }}<span class="text-zinc-500 text-base font-medium"> / {{ need }}</span></p>
-      <div class="mt-3 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-        <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" style="width: {{ [pct, 100]|min }}%"></div>
-      </div>
-    </div>
-    <div class="rounded-2xl md:rounded-3xl border border-white/10 bg-zinc-900/60 p-3 md:p-5">
-      <div class="flex items-center justify-between">
-        <p class="text-zinc-500 text-xs">Total earned</p>
-        <i class="fa-solid fa-chart-line text-emerald-400"></i>
-      </div>
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
+      <p class="text-zinc-500 text-xs">Total earned</p>
       <p class="mt-3 text-2xl font-black text-emerald-400">{{ money(current_user, total_earned|default(current_user.total_earned or 0)) }}</p>
-      <p class="text-xs text-zinc-500 mt-2">Lifetime {{ avg_per_task|default(0) }} avg / task</p>
     </div>
-    <div class="rounded-2xl md:rounded-3xl border border-white/10 bg-zinc-900/60 p-3 md:p-5">
-      <div class="flex items-center justify-between">
-        <p class="text-zinc-500 text-xs">Withdrawn</p>
-        <i class="fa-solid fa-arrow-up-from-bracket text-rose-400"></i>
-      </div>
-      <p class="mt-2 md:mt-3 text-lg md:text-2xl font-black">{{ money(current_user, total_withdrawn|default(current_user.total_withdrawn or 0)) }}</p>
-      <p class="text-xs text-zinc-500 mt-2">Keep 15k reserve</p>
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
+      <p class="text-zinc-500 text-xs">Withdrawn</p>
+      <p class="mt-3 text-2xl font-black">{{ money(current_user, total_withdrawn|default(current_user.total_withdrawn or 0)) }}</p>
     </div>
-    <div class="rounded-2xl md:rounded-3xl border border-white/10 bg-zinc-900/60 p-3 md:p-5">
-      <div class="flex items-center justify-between">
-        <p class="text-zinc-500 text-xs">Membership</p>
-        <i class="fa-solid fa-crown text-amber-400"></i>
-      </div>
-      <p class="mt-2 md:mt-3 text-lg md:text-2xl font-black">{{ mname }}</p>
-      <p class="text-xs text-zinc-500 mt-2">{{ membership_commission|default(5) }}% task commission</p>
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
+      <p class="text-zinc-500 text-xs">Membership</p>
+      <p class="mt-3 text-2xl font-black">{{ mname }}</p>
+      <p class="text-xs text-zinc-500 mt-2">{{ membership_commission|default(5) }}% commission</p>
     </div>
   </section>
 
-  {# ===== Main grid ===== #}
-  <section class="grid lg:grid-cols-3 gap-4 md:gap-6">
-
-    {# Left: actions + progress #}
-    <div class="lg:col-span-2 space-y-4 md:space-y-6">
-
-      <div class="rounded-2xl md:rounded-3xl border border-white/10 bg-zinc-900/50 p-4 md:p-6">
-        <div class="flex items-center justify-between gap-3 mb-3 md:mb-5">
-          <h2 class="text-base md:text-lg font-bold">Today’s progress</h2>
-          <span class="text-xs text-zinc-500 whitespace-nowrap">{{ done }}/{{ need }} · {{ pct }}%</span>
-        </div>
-        <div class="h-2 md:h-3 rounded-full bg-zinc-800 overflow-hidden">
-          <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500"
-               style="width: {{ [pct, 100]|min }}%"></div>
-        </div>
-        {# Mobile: single primary CTA; desktop: 3 cards #}
-        <div class="mt-3 md:hidden">
-          <a href="{{ url_for('task.index') }}"
-             class="flex items-center justify-center gap-2 w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 py-3 text-sm font-semibold">
-            <i class="fa-solid fa-play"></i> Continue tasks
-          </a>
-        </div>
-        <div class="mt-5 hidden md:grid sm:grid-cols-3 gap-3">
-          <a href="{{ url_for('task.index') }}" class="group rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-600/20 to-transparent p-4 hover:border-indigo-400/40 transition">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mb-3">
-              <i class="fa-solid fa-clipboard-check"></i>
-            </div>
-            <p class="font-semibold">Continue tasks</p>
-            <p class="text-xs text-zinc-500 mt-1">Hold price → submit → earn</p>
-          </a>
-          <a href="{{ url_for('task.history') }}" class="group rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/20 transition">
-            <div class="w-10 h-10 rounded-xl bg-zinc-700/50 text-zinc-300 flex items-center justify-center mb-3">
-              <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
-            <p class="font-semibold">History</p>
-            <p class="text-xs text-zinc-500 mt-1">Completed & pending</p>
-          </a>
-          <a href="{{ url_for('wallet.index') }}" class="group rounded-2xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/20 transition">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center mb-3">
-              <i class="fa-solid fa-wallet"></i>
-            </div>
-            <p class="font-semibold">Wallet</p>
-            <p class="text-xs text-zinc-500 mt-1">Deposits & receipts</p>
-          </a>
-        </div>
+  <section class="grid lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
+      <div class="flex justify-between mb-4">
+        <h2 class="text-lg font-bold">Recent activity</h2>
+        <a href="{{ url_for('wallet.index') }}" class="text-xs text-indigo-400">View all</a>
       </div>
-
-      {# Recent transactions #}
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold">Recent activity</h2>
-          <a href="{{ url_for('wallet.index') }}" class="text-xs text-indigo-400 hover:underline">View all</a>
-        </div>
-        <div class="space-y-2">
-          {% for tx in recent_transactions|default([]) %}
-          <div class="flex items-center justify-between rounded-2xl bg-white/[0.03] border border-white/5 px-4 py-3">
-            <div class="min-w-0">
-              <p class="text-sm font-medium truncate">{{ tx.description or tx.transaction_type }}</p>
-              <p class="text-xs text-zinc-500 mt-0.5">
-                {% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}
-              </p>
-            </div>
-            <div class="text-right shrink-0 ml-3">
-              <p class="text-sm font-bold {% if (tx.amount or 0)|float >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
-                {% if (tx.amount or 0)|float >= 0 %}+{% endif %}{{ money(current_user, tx.amount) }}
-              </p>
-              <a href="{{ url_for('wallet.receipt', kind='tx', item_id=tx.id) }}" class="text-[11px] text-indigo-400 hover:underline">Receipt</a>
-            </div>
+      <div class="space-y-2">
+        {% for tx in recent_transactions|default([]) %}
+        <div class="flex justify-between rounded-2xl bg-white/[0.03] border border-white/5 px-4 py-3">
+          <div>
+            <p class="text-sm font-medium">{{ tx.description or tx.transaction_type }}</p>
+            <p class="text-xs text-zinc-500">{% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}</p>
           </div>
-          {% else %}
-          <p class="text-center text-zinc-500 text-sm py-10">No transactions yet. Complete a task or make a deposit.</p>
-          {% endfor %}
+          <div class="text-right">
+            <p class="text-sm font-bold {% if (tx.amount or 0)|float >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">
+              {% if (tx.amount or 0)|float >= 0 %}+{% endif %}{{ money(current_user, tx.amount) }}
+            </p>
+            <a href="{{ url_for('wallet.receipt', kind='tx', item_id=tx.id) }}" class="text-[11px] text-indigo-400">Receipt</a>
+          </div>
         </div>
+        {% else %}
+        <p class="text-center text-zinc-500 text-sm py-10">No transactions yet.</p>
+        {% endfor %}
       </div>
     </div>
-
-    {# Right column #}
-    <div class="space-y-4 md:space-y-6">
-
-      <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-indigo-600/15 to-zinc-900/80 p-6">
-        <p class="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Quick links</p>
-        <div class="mt-4 space-y-2">
-          <a href="{{ url_for('dashboard.membership') }}" class="flex items-center gap-3 rounded-2xl bg-white/5 hover:bg-white/10 px-4 py-3 transition">
-            <i class="fa-solid fa-crown text-amber-400 w-5"></i>
-            <span class="text-sm font-medium">Upgrade membership</span>
-          </a>
-          <a href="{{ url_for('wallet.referrals') }}" class="flex items-center gap-3 rounded-2xl bg-white/5 hover:bg-white/10 px-4 py-3 transition">
-            <i class="fa-solid fa-user-plus text-pink-400 w-5"></i>
-            <span class="text-sm font-medium">Refer &amp; earn 25%</span>
-          </a>
-          <a href="{{ url_for('chat.inbox') }}" class="flex items-center gap-3 rounded-2xl bg-white/5 hover:bg-white/10 px-4 py-3 transition">
-            <i class="fa-solid fa-comments text-sky-400 w-5"></i>
-            <span class="text-sm font-medium">Chat support</span>
-          </a>
-          <a href="{{ url_for('profile.index') }}" class="flex items-center gap-3 rounded-2xl bg-white/5 hover:bg-white/10 px-4 py-3 transition">
-            <i class="fa-solid fa-user text-zinc-300 w-5"></i>
-            <span class="text-sm font-medium">Profile &amp; PIN</span>
-          </a>
-        </div>
-      </div>
-
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-        <p class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Referrals</p>
-        <p class="mt-2 text-3xl font-black">{{ referral_count|default(current_user.referral_count or 0) }}</p>
-        <p class="text-sm text-emerald-400 mt-1">{{ money(current_user, referral_earnings|default(current_user.referral_income or 0)) }} earned</p>
-        <p class="text-xs text-zinc-500 mt-3">Code: <span class="text-white font-mono tracking-wider">{{ current_user.referral_code }}</span></p>
-      </div>
-
-      {% if announcements is defined and announcements %}
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-        <p class="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3">Announcements</p>
-        <div class="space-y-3">
-          {% for a in announcements[:3] %}
-          <div class="text-sm">
-            <p class="font-medium">{{ a.title }}</p>
-            <p class="text-zinc-500 text-xs mt-1 line-clamp-2">{{ a.body or a.content or '' }}</p>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endif %}
-
-      <div class="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 text-sm text-zinc-400">
-        <p class="text-indigo-300 font-semibold text-xs uppercase tracking-wider mb-2">How earnings work</p>
-        <ol class="list-decimal pl-4 space-y-1.5">
-          <li>Product price is held from balance</li>
-          <li>Submit review → price + commission back</li>
-          <li>Withdraw after tasks · leave UGX 15,000</li>
-        </ol>
+    <div class="space-y-4">
+      <div class="rounded-3xl border border-white/10 bg-indigo-600/10 p-6 space-y-2">
+        <a href="{{ url_for('dashboard.membership') }}" class="flex gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium"><i class="fa-solid fa-crown text-amber-400 w-5"></i> Upgrade membership</a>
+        <a href="{{ url_for('wallet.referrals') }}" class="flex gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium"><i class="fa-solid fa-user-plus text-pink-400 w-5"></i> Refer &amp; earn</a>
+        <a href="{{ url_for('chat.inbox') }}" class="flex gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium"><i class="fa-solid fa-comments text-sky-400 w-5"></i> Chat support</a>
+        <a href="{{ url_for('profile.index') }}" class="flex gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium"><i class="fa-solid fa-user text-zinc-300 w-5"></i> Profile</a>
       </div>
     </div>
   </section>

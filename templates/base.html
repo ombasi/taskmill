@@ -58,7 +58,7 @@ card:"#18181b"
 
 <header class="sticky top-0 z-50">
 
-<nav class="mx-auto max-w-7xl mt-4 px-5">
+<nav class="mx-auto max-w-7xl mt-2 md:mt-4 px-3 md:px-5">
 
 <div class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl px-4 md:px-8 py-3 md:py-5 flex justify-between items-center shadow-2xl gap-3">
 
@@ -128,8 +128,6 @@ Membership
 
 <a href="{{ url_for('chat.inbox') }}" class="hover:text-indigo-400 transition">Chat</a>
 <a href="{{ url_for('dashboard.contact') }}" class="hover:text-indigo-400 transition">Support</a>
-<a href="{{ url_for('dashboard.faq') }}" class="hover:text-indigo-400 transition">FAQ</a>
-<a href="{{ url_for('dashboard.about') }}" class="hover:text-indigo-400 transition">About</a>
 
 <a href="{{ url_for('profile.index') }}" class="hover:text-indigo-400 transition">
 
@@ -217,7 +215,7 @@ Logout
 
 <!-- Main -->
 
-<main class="max-w-7xl mx-auto px-6 py-10">
+<main class="max-w-7xl mx-auto pt-2 pb-20 md:pt-6 md:pb-10 px-3 md:px-6">
     <!-- Flash Messages -->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -358,7 +356,6 @@ Support
 <a href="{{ url_for('dashboard.contact') }}" class="block hover:text-indigo-400">Contact support</a>
 <a href="{{ url_for('chat.inbox') if current_user.is_authenticated else url_for('auth.login') }}" class="block hover:text-indigo-400">Live chat</a>
 <a href="{{ url_for('dashboard.faq') }}" class="block hover:text-indigo-400">FAQs</a>
-<a href="{{ url_for('dashboard.about') }}" class="block hover:text-indigo-400">About</a>
 <a href="{{ url_for('dashboard.terms') }}" class="block hover:text-indigo-400">Terms &amp; Conditions</a>
 </div>
 
