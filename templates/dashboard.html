@@ -7,7 +7,12 @@
 <div class="space-y-10 fade-up">
 
 <!-- Onboarding checklist -->
-{% set needs_pin = not current_user.has_withdraw_pin() if current_user.has_withdraw_pin is defined else (not current_user.withdraw_pin_hash) %}
+{% set needs_pin = True %}
+{% if current_user.has_withdraw_pin is defined %}
+  {% set needs_pin = not current_user.has_withdraw_pin() %}
+{% elif current_user.withdraw_pin_hash is defined and current_user.withdraw_pin_hash %}
+  {% set needs_pin = False %}
+{% endif %}
 {% set low_bal = (current_user.available_balance or 0)|float < 15000 %}
 {% if needs_pin or low_bal %}
 <div class="glass rounded-3xl p-6 border border-amber-500/30" id="onboarding-checklist">
@@ -1237,7 +1242,7 @@ Support
 
                         <span class="px-3 py-1 rounded-full bg-indigo-600 text-sm">
 
-                            {{ user.membership }}
+                            {{ user.membership.name if user.membership else "—" }}
 
                         </span>
 
