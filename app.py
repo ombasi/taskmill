@@ -78,7 +78,14 @@ def create_app():
 
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
-        db.create_all()
+        try:
+            import models.spin  # noqa: F401
+        except Exception as e:
+            print("model import:", e)
+        try:
+            db.create_all()
+        except Exception as e:
+            print("create_all:", e)
         # Safe add-column for existing DBs (SQLite + Postgres)
         try:
             from sqlalchemy import text, inspect
@@ -86,63 +93,30 @@ def create_app():
             tables = insp.get_table_names()
             if "users" in tables:
                 cols = [c["name"] for c in insp.get_columns("users")]
+                alters = []
                 if "sex" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN sex VARCHAR(20)"))
-                    db.session.commit()
                 if "date_of_birth" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN date_of_birth DATE"))
-                    db.session.commit()
                 if "profile_image" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN profile_image VARCHAR(255)"))
-                    db.session.commit()
                 if "phone_change_month" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN phone_change_month VARCHAR(7)"))
-                    db.session.commit()
                 if "phone_change_count" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN phone_change_count INTEGER DEFAULT 0"))
-                    db.session.commit()
                 if "accepted_terms_at" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN accepted_terms_at TIMESTAMP"))
-                    db.session.commit()
                 if "withdraw_pin_hash" not in cols:
-                    db.session.execute(text(
-                        "ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"
-                    ))
-                    db.session.commit()
-                    print("Added users.withdraw_pin_hash")
-            # create missing tables (login_history, etc.)
-            db.create_all()
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"))
+                db.session.commit()
+                db.create_all()
         except Exception as e:
             print("schema ensure:", e)
             try:
                 db.session.rollback()
             except Exception:
                 pass
-        # Add columns that create_all will not alter on existing Postgres tables
-        try:
-            from sqlalchemy import text
-            alters = [
-                "ALTER TABLE memberships ADD COLUMN IF NOT EXISTS combo_commission_percent FLOAT DEFAULT 5.0",
-                "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attachment VARCHAR(255)",
-                "ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attachment_name VARCHAR(255)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS set2_unlocked BOOLEAN DEFAULT FALSE",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE",
-            ]
-            for sql in alters:
-                try:
-                    db.session.execute(text(sql))
-                except Exception as col_err:
-                    # SQLite may not support IF NOT EXISTS the same way
-                    try:
-                        simple = sql.replace(" IF NOT EXISTS", "")
-                        db.session.execute(text(simple))
-                    except Exception:
-                        pass
-            db.session.commit()
-        except Exception as e:
-            print("Column migrate note:", e)
-            db.session.rollback()
-
+        # Auto-seed if no admin
         try:
             from models.user import User
             from models.membership import Membership
@@ -158,7 +132,11 @@ def create_app():
                 print("Admin + memberships exist — skip auto-seed.")
         except Exception as e:
             print("Auto-seed skipped:", e)
-            db.session.rollback()
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
 
     # Home
     @app.route("/")
