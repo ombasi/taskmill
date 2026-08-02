@@ -28,6 +28,22 @@
 
     <h3 class="text-2xl font-bold">Quick Actions</h3>
 
+    
+    <!-- REWARDS -->
+    <div>
+        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Rewards</p>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <button type="button" onclick="openSpinModal()"
+                    class="bg-amber-600 hover:bg-amber-500 rounded-xl py-3 px-4 font-semibold">
+                Award Spin
+            </button>
+            <button type="button" onclick="openVoucherModal()"
+                    class="bg-fuchsia-600 hover:bg-fuchsia-500 rounded-xl py-3 px-4 font-semibold">
+                Send Voucher
+            </button>
+        </div>
+    </div>
+
     <!-- WALLET -->
     <div>
         <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Wallet</p>
@@ -82,39 +98,6 @@
     </div>
 
     
-    <!-- LUCKY SPIN -->
-    <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Lucky Spin</p>
-        <form method="POST" action="{{ url_for('admin.grant_spin', user_id=user.id) }}" class="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
-            <div class="grid sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="text-xs text-zinc-400">Spins to grant</label>
-                    <input type="number" name="spins" value="1" min="1" max="20"
-                           class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-2.5">
-                </div>
-                <div>
-                    <label class="text-xs text-zinc-400">Note</label>
-                    <input type="text" name="note" placeholder="Optional"
-                           class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-2.5">
-                </div>
-            </div>
-            <p class="text-[11px] text-zinc-500">Optional: limit this grant to specific prizes (leave empty = full wheel).</p>
-            <div class="max-h-28 overflow-y-auto space-y-1 text-sm">
-                {% for p in spin_prizes|default([]) %}
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" name="prize_ids" value="{{ p.id }}" class="rounded">
-                    {{ p.label }} <span class="text-zinc-500">({{ p.prize_type }})</span>
-                </label>
-                {% else %}
-                <p class="text-xs text-zinc-500">No active prizes — add some under Admin → Lucky Spin.</p>
-                {% endfor %}
-            </div>
-            <button type="submit" class="w-full sm:w-auto rounded-xl bg-amber-600 hover:bg-amber-500 px-6 py-2.5 font-semibold text-sm">
-                Award spins
-            </button>
-        </form>
-    </div>
-
     <!-- ACCOUNT -->
     <div>
         <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Account</p>
@@ -963,6 +946,94 @@ function closeNotificationModal(){
 
 
 {% endblock %}
+
+
+<!-- Spin modal -->
+<div id="spinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+    <h3 class="text-xl font-bold mb-4">Award Lucky Spin</h3>
+    <form method="POST" action="{{ url_for('admin.grant_spin', user_id=user.id) }}" class="space-y-3">
+      <div>
+        <label class="text-xs text-zinc-400">Number of spins</label>
+        <input type="number" name="spins" value="1" min="1" max="20" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-400">Note</label>
+        <input type="text" name="note" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+      </div>
+      <p class="text-[11px] text-zinc-500">Optional prize limit:</p>
+      <div class="max-h-28 overflow-y-auto space-y-1 text-sm">
+        {% for p in spin_prizes|default([]) %}
+        <label class="flex items-center gap-2"><input type="checkbox" name="prize_ids" value="{{ p.id }}"> {{ p.label }}</label>
+        {% else %}
+        <p class="text-xs text-zinc-500">Full wheel (configure under Lucky Spin).</p>
+        {% endfor %}
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeSpinModal()" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button type="submit" class="flex-1 rounded-xl bg-amber-600 py-2.5 font-semibold">Award</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Voucher modal -->
+<div id="voucherModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+    <h3 class="text-xl font-bold mb-4">Send voucher to user</h3>
+    <form method="POST" action="{{ url_for('admin.grant_voucher', user_id=user.id) }}" class="space-y-3">
+      <div>
+        <label class="text-xs text-zinc-400">Label</label>
+        <input name="label" value="Special reward" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-400">Type</label>
+        <select name="reward_type" id="vtype" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+          <option value="cash">Cash</option>
+          <option value="membership">Membership</option>
+          <option value="spins">Lucky spins</option>
+        </select>
+      </div>
+      <div id="vf_cash">
+        <label class="text-xs text-zinc-400">Amount UGX</label>
+        <input type="number" name="amount" value="5000" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+      </div>
+      <div id="vf_mem" class="hidden">
+        <label class="text-xs text-zinc-400">Membership ID</label>
+        <select name="membership_id" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+          {% for m in memberships|default([]) %}
+          <option value="{{ m.id }}">{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="vf_spins" class="hidden">
+        <label class="text-xs text-zinc-400">Spins</label>
+        <input type="number" name="spins" value="1" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeVoucherModal()" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button type="submit" class="flex-1 rounded-xl bg-fuchsia-600 py-2.5 font-semibold">Generate & send</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function openSpinModal(){ document.getElementById('spinModal').classList.remove('hidden'); }
+function closeSpinModal(){ document.getElementById('spinModal').classList.add('hidden'); }
+function openVoucherModal(){ document.getElementById('voucherModal').classList.remove('hidden'); }
+function closeVoucherModal(){ document.getElementById('voucherModal').classList.add('hidden'); }
+(function(){
+  var s=document.getElementById('vtype');
+  if(!s) return;
+  function sync(){
+    var v=s.value;
+    document.getElementById('vf_cash').classList.toggle('hidden', v!=='cash');
+    document.getElementById('vf_mem').classList.toggle('hidden', v!=='membership');
+    document.getElementById('vf_spins').classList.toggle('hidden', v!=='spins');
+  }
+  s.addEventListener('change', sync); sync();
+})();
+</script>
 
 {% block scripts %}
 <script>

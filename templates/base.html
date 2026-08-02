@@ -197,11 +197,8 @@ History
 
 </a>
 
-<a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">
-
-Membership
-
-</a>
+<a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">Membership</a>
+<a href="{{ url_for('spin.index') }}" class="tm-nav-link hover:text-indigo-300">Spin</a>
 
 <a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300">Chat</a>
 <a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">Support</a>
@@ -274,6 +271,7 @@ class="hidden mx-5 mt-4 backdrop-blur-xl bg-zinc-900/90 border border-white/10 r
 <a href="{{ url_for('task.history') }}">History</a>
 
 <a href="{{ url_for('dashboard.membership') }}">Membership</a>
+<a href="{{ url_for('spin.index') }}">Lucky Spin</a>
 
 <a href="{{ url_for('chat.inbox') }}">Chat</a>
 <a href="{{ url_for('dashboard.contact') }}">Support</a>

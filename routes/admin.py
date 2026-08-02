@@ -1,3 +1,4 @@
+import secrets
 from functools import wraps
 import os
 import uuid
@@ -2541,4 +2542,94 @@ def grant_spin(user_id):
         pass
     db.session.commit()
     flash(f"Granted {spins} spin(s) to {user.username}.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
+
+# ==========================================================
+# VOUCHERS / REWARDS
+# ==========================================================
+def _gen_voucher_code():
+    return "TM-" + secrets.token_hex(4).upper()
+
+
+@admin_bp.route("/vouchers", methods=["GET", "POST"])
+@login_required
+@admin_required
+def vouchers():
+    from models.voucher import Voucher
+    from models.membership import Membership
+    if request.method == "POST":
+        reward_type = (request.form.get("reward_type") or "cash").strip()
+        label = (request.form.get("label") or "").strip() or "Reward"
+        try:
+            amount = float(request.form.get("amount") or 0)
+        except ValueError:
+            amount = 0
+        membership_id = request.form.get("membership_id", type=int)
+        spins = request.form.get("spins", type=int) or 0
+        note = (request.form.get("note") or "").strip()
+        code = (request.form.get("code") or "").strip().upper() or _gen_voucher_code()
+        v = Voucher(
+            code=code,
+            reward_type=reward_type,
+            amount=amount,
+            membership_id=membership_id if reward_type == "membership" else None,
+            spins=spins if reward_type == "spins" else 0,
+            label=label,
+            note=note,
+            created_by=current_user.id,
+            status="active",
+        )
+        db.session.add(v)
+        db.session.commit()
+        flash(f"Voucher created: {code}", "success")
+        return redirect(url_for("admin.vouchers"))
+
+    rows = Voucher.query.order_by(Voucher.created_at.desc()).limit(100).all()
+    memberships = Membership.query.order_by(Membership.price.asc()).all()
+    return render_template("admin/vouchers.html", vouchers=rows, memberships=memberships)
+
+
+@admin_bp.route("/users/<int:user_id>/grant-voucher", methods=["POST"])
+@login_required
+@admin_required
+def grant_voucher(user_id):
+    """Create voucher for a user and notify them with the code."""
+    from models.voucher import Voucher
+    from models.spin import SpinGrant
+    user = User.query.get_or_404(user_id)
+    reward_type = (request.form.get("reward_type") or "cash").strip()
+    label = (request.form.get("label") or "Admin reward").strip()
+    try:
+        amount = float(request.form.get("amount") or 0)
+    except ValueError:
+        amount = 0
+    membership_id = request.form.get("membership_id", type=int)
+    spins = request.form.get("spins", type=int) or 0
+    note = (request.form.get("note") or "").strip()
+    code = _gen_voucher_code()
+    v = Voucher(
+        code=code,
+        reward_type=reward_type,
+        amount=amount,
+        membership_id=membership_id if reward_type == "membership" else None,
+        spins=spins if reward_type == "spins" else 0,
+        label=label,
+        note=note,
+        user_id=user.id,
+        created_by=current_user.id,
+        status="active",
+    )
+    db.session.add(v)
+    try:
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            user,
+            "You received a voucher",
+            f"Code: {code} — {label}. Redeem it in Profile → Redeem voucher.",
+        )
+    except Exception:
+        pass
+    db.session.commit()
+    flash(f"Voucher {code} sent to {user.username}.", "success")
     return redirect(url_for("admin.view_user", user_id=user.id))

@@ -97,11 +97,27 @@
       </div>
 
       {# Security links #}
+      
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+        <h2 class="font-bold mb-3">Redeem voucher</h2>
+        <form method="POST" action="{{ url_for('profile.redeem_voucher') }}" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="code" required placeholder="TM-XXXXXXXX"
+                 class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm font-mono uppercase">
+          <button type="submit" class="w-full rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 py-2.5 text-sm font-semibold">Redeem</button>
+        </form>
+        <p class="text-[11px] text-zinc-500 mt-2">Enter the code from admin / notification.</p>
+      </div>
+
       <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-2">
         <h2 class="font-bold mb-2">Security</h2>
         <a href="{{ url_for('profile.change_password') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
           <span class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center"><i class="fa-solid fa-key"></i></span>
           <span class="text-sm font-medium">Change password</span>
+        </a>
+        <a href="{{ url_for('spin.index') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
+          <span class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-300 flex items-center justify-center"><i class="fa-solid fa-gift"></i></span>
+          <span class="text-sm font-medium">Lucky Spin</span>
         </a>
         <a href="{{ url_for('profile.set_withdraw_pin') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
           <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center"><i class="fa-solid fa-lock"></i></span>

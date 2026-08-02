@@ -171,3 +171,64 @@ def set_withdraw_pin():
         flash("Withdraw PIN saved.", "success")
         return redirect(url_for("wallet.withdraw"))
     return render_template("profile/withdraw_pin.html")
+
+
+
+@profile_bp.route("/redeem-voucher", methods=["POST"])
+@login_required
+def redeem_voucher():
+    from models.voucher import Voucher
+    from models.spin import SpinGrant
+    from models.wallet_transaction import WalletTransaction
+    from datetime import datetime
+
+    code = (request.form.get("code") or "").strip().upper()
+    if not code:
+        flash("Enter a voucher code.", "danger")
+        return redirect(url_for("profile.index"))
+
+    v = Voucher.query.filter_by(code=code).first()
+    if not v or v.status != "active":
+        flash("Invalid or already used voucher.", "danger")
+        return redirect(url_for("profile.index"))
+    if v.user_id and v.user_id != current_user.id:
+        flash("This voucher is assigned to another account.", "danger")
+        return redirect(url_for("profile.index"))
+
+    detail = v.label or "Voucher"
+    if v.reward_type == "cash" and float(v.amount or 0) > 0:
+        amt = float(v.amount)
+        before = float(current_user.available_balance or 0)
+        current_user.available_balance = before + amt
+        current_user.total_earned = float(current_user.total_earned or 0) + amt
+        db.session.add(WalletTransaction(
+            user_id=current_user.id,
+            amount=amt,
+            transaction_type="voucher",
+            description=f"Voucher {v.code}: {detail}",
+            balance_before=before,
+            balance_after=float(current_user.available_balance),
+        ))
+        flash(f"Redeemed {v.code}: +UGX {amt:,.0f}", "success")
+    elif v.reward_type == "membership" and v.membership_id:
+        current_user.membership_id = v.membership_id
+        flash(f"Redeemed {v.code}: membership updated.", "success")
+    elif v.reward_type == "spins":
+        n = max(1, int(v.spins or 1))
+        db.session.add(SpinGrant(
+            user_id=current_user.id,
+            spins_total=n,
+            spins_used=0,
+            granted_by=v.created_by,
+            note=f"Voucher {v.code}",
+            active=True,
+        ))
+        flash(f"Redeemed {v.code}: {n} lucky spin(s).", "success")
+    else:
+        flash(f"Redeemed {v.code}.", "success")
+
+    v.status = "redeemed"
+    v.redeemed_by = current_user.id
+    v.redeemed_at = datetime.utcnow()
+    db.session.commit()
+    return redirect(url_for("profile.index"))
