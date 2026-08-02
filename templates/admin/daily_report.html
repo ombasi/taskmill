@@ -1,18 +1,36 @@
 {% extends "admin/base.html" %}
 {% block title %}Daily Ops{% endblock %}
-{% block page_title %}Daily Operations Report{% endblock %}
+{% block page_title %}Operations report{% endblock %}
 {% block content %}
 <div class="space-y-6">
-  <p class="text-zinc-400">{{ today.strftime('%A %d %B %Y') }}</p>
+
+  <form method="GET" class="glass rounded-2xl p-5 flex flex-wrap items-end gap-4">
+    <div>
+      <label class="text-xs text-zinc-400">From</label>
+      <input type="date" name="from" value="{{ date_from }}" class="block mt-1 rounded-xl bg-slate-900 border border-white/10 px-3 py-2">
+    </div>
+    <div>
+      <label class="text-xs text-zinc-400">To</label>
+      <input type="date" name="to" value="{{ date_to }}" class="block mt-1 rounded-xl bg-slate-900 border border-white/10 px-3 py-2">
+    </div>
+    <button class="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 font-semibold text-sm">Apply</button>
+    <a href="{{ url_for('admin.daily_ops_report') }}" class="text-sm text-zinc-400 hover:text-white py-2">Today</a>
+  </form>
+
+  <p class="text-zinc-400 text-sm">
+    Showing <strong class="text-white">{{ date_from.strftime('%d %b %Y') }}</strong>
+    → <strong class="text-white">{{ date_to.strftime('%d %b %Y') }}</strong>
+  </p>
+
   <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
     <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">New users</p><p class="text-3xl font-bold mt-2">{{ new_users }}</p></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Deposits approved</p><p class="text-3xl font-bold text-emerald-400 mt-2">{{ dep_approved }}</p><p class="text-sm text-zinc-500">{{ money(current_user, dep_sum) }}</p></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Deposits approved</p><p class="text-3xl font-bold text-emerald-400 mt-2">{{ dep_approved }}</p><p class="text-sm text-zinc-500 mt-1">{{ money(current_user, dep_sum) }}</p></div>
     <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Pending deposits</p><p class="text-3xl font-bold text-yellow-400 mt-2">{{ dep_pending }}</p></div>
     <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Pending withdrawals</p><p class="text-3xl font-bold text-red-400 mt-2">{{ wd_pending }}</p></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Withdrawals today</p><p class="text-3xl font-bold mt-2">{{ wd_paid }}</p></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Withdrawals in range</p><p class="text-3xl font-bold mt-2">{{ wd_paid }}</p><p class="text-sm text-zinc-500 mt-1">{{ money(current_user, wd_sum|default(0)) }}</p></div>
     <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Combos created</p><p class="text-3xl font-bold text-violet-400 mt-2">{{ combos }}</p></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Negative balances</p><p class="text-3xl font-bold text-orange-400 mt-2">{{ negative }}</p></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Tasks completed</p><p class="text-3xl font-bold text-sky-400 mt-2">{{ tasks_done|default(0) }}</p></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Negative balances (now)</p><p class="text-3xl font-bold text-orange-400 mt-2">{{ negative }}</p></div>
   </div>
-  <a href="{{ url_for('admin.dashboard') }}" class="inline-block bg-slate-700 px-5 py-3 rounded-xl">Back to dashboard</a>
 </div>
 {% endblock %}

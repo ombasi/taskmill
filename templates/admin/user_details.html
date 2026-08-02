@@ -1,995 +1,248 @@
 {% extends "admin/base.html" %}
-{% block title %}User Details{% endblock %}
-{% block page_title %}User {{ user.username }}{% endblock %}
+{% block title %}{{ user.username }}{% endblock %}
+{% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
 <div class="space-y-6">
 
-  {# Header #}
-  <div class="glass rounded-3xl p-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-black">{{ user.full_name or user.username }}</h2>
-        <p class="text-zinc-400 text-sm mt-1">@{{ user.username }} · ID {{ user.id }}</p>
+  {# Profile header #}
+  <div class="glass rounded-3xl p-6 md:p-8">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl font-black">
+          {{ (user.username or 'U')[0]|upper }}
+        </div>
+        <div>
+          <h2 class="text-2xl font-black">{{ user.full_name or user.username }}</h2>
+          <p class="text-zinc-400 text-sm">@{{ user.username }} · #{{ user.id }} · {{ user.email }}</p>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="text-[11px] rounded-full px-2.5 py-1 {% if user.is_active %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
+              {{ 'Active' if user.is_active else 'Inactive' }}
+            </span>
+            {% if user.is_blocked %}
+            <span class="text-[11px] rounded-full px-2.5 py-1 bg-rose-500/15 text-rose-300">Blocked</span>
+            {% endif %}
+            <span class="text-[11px] rounded-full px-2.5 py-1 bg-indigo-500/15 text-indigo-300">
+              {{ user.membership.name if user.membership else 'No plan' }}
+            </span>
+          </div>
+        </div>
       </div>
       <div class="text-right">
-        <p class="text-xs text-zinc-500">Balance</p>
-        <p class="text-2xl font-black text-emerald-400">{{ money(current_user, user.available_balance) }}</p>
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500">Available balance</p>
+        <p class="text-3xl font-black text-emerald-400">{{ money(current_user, user.available_balance) }}</p>
+        <p class="text-xs text-zinc-500 mt-1">IP {{ last_ip|default(user.ip_address or '—') }}</p>
       </div>
     </div>
-    <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Email</p><p class="font-medium truncate">{{ user.email }}</p></div>
-      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Phone</p><p class="font-medium">{{ user.phone or '—' }}</p></div>
-      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Membership</p><p class="font-medium">{{ user.membership.name if user.membership else '—' }}</p></div>
-      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">IP</p><p class="font-medium">{{ last_ip|default(user.ip_address or '—') }}</p></div>
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
+        <p class="text-[10px] text-zinc-500 uppercase">Phone</p>
+        <p class="font-medium mt-1">{{ user.phone or '—' }}</p>
+      </div>
+      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
+        <p class="text-[10px] text-zinc-500 uppercase">Country</p>
+        <p class="font-medium mt-1">{{ user.country or '—' }}</p>
+      </div>
+      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
+        <p class="text-[10px] text-zinc-500 uppercase">Tasks today</p>
+        <p class="font-medium mt-1">{{ user.tasks_completed_today or 0 }}</p>
+      </div>
+      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
+        <p class="text-[10px] text-zinc-500 uppercase">Referrals</p>
+        <p class="font-medium mt-1">{{ user.referral_count or 0 }}</p>
+      </div>
     </div>
   </div>
 
-<div class="glass rounded-3xl p-6 space-y-8">
+  {# Actions organized #}
+  <div class="glass rounded-3xl p-6 space-y-6">
+    <h3 class="text-lg font-bold">Quick actions</h3>
 
-    <h3 class="text-2xl font-bold">Quick Actions</h3>
-
-    
-    <!-- REWARDS -->
     <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Rewards</p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button type="button" onclick="openSpinModal()"
-                    class="bg-amber-600 hover:bg-amber-500 rounded-xl py-3 px-4 font-semibold">
-                Award Spin
-            </button>
-            </div>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Wallet</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <button type="button" onclick="openCreditModal()" class="rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 py-3 px-4 text-sm font-semibold transition">Credit</button>
+        <button type="button" onclick="openDeductModal()" class="rounded-2xl bg-rose-600/90 hover:bg-rose-500 py-3 px-4 text-sm font-semibold transition">Deduct</button>
+        <a href="{{ url_for('admin.combos') }}" class="rounded-2xl bg-violet-600/90 hover:bg-violet-500 py-3 px-4 text-sm font-semibold text-center transition">Combo manager</a>
+        <button type="button" onclick="openSpinModal()" class="rounded-2xl bg-amber-600/90 hover:bg-amber-500 py-3 px-4 text-sm font-semibold transition">Award spin</button>
+      </div>
     </div>
 
-    <!-- WALLET -->
     <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Wallet</p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button type="button" onclick="openCreditModal()"
-                    class="bg-green-600 hover:bg-green-500 rounded-xl py-3 px-4 font-semibold">
-                Credit Wallet
-            </button>
-            <button type="button" onclick="openDeductModal()"
-                    class="bg-red-600 hover:bg-red-500 rounded-xl py-3 px-4 font-semibold">
-                Deduct Wallet
-            </button>
-        </div>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Tasks</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <form method="POST" action="{{ url_for('admin.reset_tasks', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-sky-600/80 hover:bg-sky-500 py-3 text-sm font-semibold">Reset tasks</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.unlock_set2', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-teal-600/80 hover:bg-teal-500 py-3 text-sm font-semibold">Unlock set 2</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.remove_combo', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-yellow-700/80 hover:bg-yellow-600 py-3 text-sm font-semibold">Remove combo</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.reset_combo', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-orange-700/80 hover:bg-orange-600 py-3 text-sm font-semibold">Reset combo</button>
+        </form>
+      </div>
     </div>
 
-    <!-- TASKS -->
     <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Tasks</p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <form method="POST" action="{{ url_for('admin.reset_tasks', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 rounded-xl py-3 px-4 font-semibold">
-                    Reset Tasks
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('admin.unlock_set2', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 rounded-xl py-3 px-4 font-semibold">
-                    Unlock Set 2
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- COMBO -->
-    <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Combo</p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button type="button" onclick="openComboModal()"
-                    class="bg-violet-600 hover:bg-violet-500 rounded-xl py-3 px-4 font-semibold">
-                Assign Combo (2 products)
-            </button>
-            <form method="POST" action="{{ url_for('admin.remove_combo', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 rounded-xl py-3 px-4 font-semibold">
-                    Remove Combo
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('admin.reset_combo', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 rounded-xl py-3 px-4 font-semibold">
-                    Reset Combo
-                </button>
-            </form>
-        </div>
-    </div>
-
-    
-    <!-- ACCOUNT -->
-    <div>
-        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Account</p>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button type="button" onclick="openMembershipModal()"
-                    class="bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 px-4 font-semibold">
-                Change Membership
-            </button>
-            <form method="POST" action="{{ url_for('admin.reset_withdraw_pin', user_id=user.id) }}"
-                  onsubmit="return confirm('Reset withdraw PIN to 1234?');">
-                <button type="submit" class="w-full bg-amber-700 hover:bg-amber-600 px-4 py-3 rounded-xl text-left">
-                    Reset Withdraw PIN
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}">
-                <button type="submit"
-                        onclick="return confirm('Reset password to 12345678?')"
-                        class="w-full bg-pink-600 hover:bg-pink-500 rounded-xl py-3 px-4 font-semibold">
-                    Reset Password
-                </button>
-            </form>
-            <form method="GET" action="{{ url_for('admin.toggle_block', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-gray-700 hover:bg-gray-600 rounded-xl py-3 px-4 font-semibold">
-                    {% if user.is_blocked %}Unblock User{% else %}Block User{% endif %}
-                </button>
-            </form>
-            <form method="GET" action="{{ url_for('admin.toggle_active', user_id=user.id) }}">
-                <button type="submit" class="w-full bg-teal-700 hover:bg-teal-600 rounded-xl py-3 px-4 font-semibold">
-                    {% if user.is_active %}Deactivate User{% else %}Activate User{% endif %}
-                </button>
-            </form>
-            <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
-                <button type="submit"
-                        onclick="return confirm('Delete this user permanently?')"
-                        class="w-full bg-red-900 hover:bg-red-800 rounded-xl py-3 px-4 font-semibold">
-                    Delete User
-                </button>
-            </form>
-            <button type="button" onclick="openNotificationModal()"
-                    class="bg-blue-700 hover:bg-blue-600 rounded-xl py-3 px-4 font-semibold">
-                Send Notification
-            </button>
-        </div>
-    </div>
-
-</div>
-
-<!-- ====================================== -->
-<!-- NAVIGATION TABS -->
-<!-- ====================================== -->
-
-<div class="glass rounded-3xl overflow-hidden">
-
-    <div class="border-b border-slate-700">
-
-        <div class="flex flex-wrap">
-
-            <button class="tab-btn active px-6 py-4 border-b-2 border-indigo-500"
-                    data-tab="overview">
-                <i class="fa fa-user mr-2"></i>
-                Overview
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="wallet">
-                <i class="fa fa-wallet mr-2"></i>
-                Wallet History
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="tasks">
-                <i class="fa fa-list-check mr-2"></i>
-                Tasks
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="deposits">
-                <i class="fa fa-money-bill-wave mr-2"></i>
-                Deposits
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="withdrawals">
-                <i class="fa fa-hand-holding-dollar mr-2"></i>
-                Withdrawals
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="referrals">
-                <i class="fa fa-users mr-2"></i>
-                Referrals
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="login">
-                <i class="fa fa-clock-rotate-left mr-2"></i>
-                Login History
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="notifications">
-                <i class="fa fa-bell mr-2"></i>
-                Notifications
-            </button>
-
-            <button class="tab-btn px-6 py-4"
-                    data-tab="notes">
-                <i class="fa fa-note-sticky mr-2"></i>
-                Admin Notes
-            </button>
-
-        </div>
-        
-
-    </div>
-    
-
-    <div class="p-8">
-
-        <!-- OVERVIEW -->
-
-        <div class="tab-content" id="overview">
-
-            <h3 class="text-2xl font-bold mb-6">
-                Account Overview
-            </h3>
-
-            <div class="grid md:grid-cols-4 gap-6">
-
-                <div class="glass rounded-2xl p-5">
-
-                    <p class="text-zinc-400">
-                        Tasks Completed
-                    </p>
-
-                    <h2 class="text-3xl font-black">
-                        {{ tasks|length }}
-                    </h2>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5">
-
-                    <p class="text-zinc-400">
-                        Deposits
-                    </p>
-
-                    <h2 class="text-3xl font-black">
-                        {{ deposits|length }}
-                    </h2>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5">
-
-                    <p class="text-zinc-400">
-                        Withdrawals
-                    </p>
-
-                    <h2 class="text-3xl font-black">
-                        {{ withdrawals|length }}
-                    </h2>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5">
-
-                    <p class="text-zinc-400">
-                        Wallet Transactions
-                    </p>
-
-                    <h2 class="text-3xl font-black">
-                        {{ wallet_transactions|length }}
-                    </h2>
-
-                </div>
-
-            </div>
-
-        </div>
-        
-
-        <!-- Empty placeholders -->
-
-        <div class="tab-content hidden p-6" id="wallet">
-            <h3 class="text-xl font-bold mb-4">Wallet History</h3>
-            <table class="w-full text-sm">
-                <thead class="text-zinc-400"><tr>
-                    <th class="text-left py-2">Type</th><th class="text-left py-2">Amount</th>
-                    <th class="text-left py-2">Description</th><th class="text-left py-2">Date</th>
-                </tr></thead>
-                <tbody>
-                {% for tx in wallet_transactions %}
-                <tr class="border-t border-slate-700">
-                    <td class="py-2">{{ tx.transaction_type }}</td>
-                    <td class="py-2 {% if tx.amount|float < 0 %}text-red-400{% else %}text-green-400{% endif %}">
-                        {{ '%.0f'|format(tx.amount|float) }}
-                    </td>
-                    <td class="py-2 text-zinc-400">{{ tx.description or '—' }}</td>
-                    <td class="py-2">{% if tx.created_at %}{{ tx.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No wallet transactions</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content hidden p-6" id="tasks">
-            <h3 class="text-xl font-bold mb-4">Tasks</h3>
-            <table class="w-full text-sm">
-                <thead class="text-zinc-400"><tr>
-                    <th class="text-left py-2">Product</th><th class="text-left py-2">Price</th>
-                    <th class="text-left py-2">Commission</th><th class="text-left py-2">Status</th>
-                    <th class="text-left py-2">Set</th>
-                </tr></thead>
-                <tbody>
-                {% for task in tasks %}
-                <tr class="border-t border-slate-700">
-                    <td class="py-2">{{ task.product_name }}</td>
-                    <td class="py-2">{{ '%.0f'|format(task.product_price|float) }}</td>
-                    <td class="py-2 text-green-400">{{ '%.0f'|format(task.commission|float) }}</td>
-                    <td class="py-2">{{ task.status }}</td>
-                    <td class="py-2">{{ task.task_set }}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="5" class="py-6 text-center text-zinc-400">No tasks</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content hidden p-6" id="deposits">
-            <h3 class="text-xl font-bold mb-4">Deposits</h3>
-            <table class="w-full text-sm">
-                <thead class="text-zinc-400"><tr>
-                    <th class="text-left py-2">Amount</th><th class="text-left py-2">Method</th>
-                    <th class="text-left py-2">Status</th><th class="text-left py-2">Date</th>
-                </tr></thead>
-                <tbody>
-                {% for d in deposits %}
-                <tr class="border-t border-slate-700">
-                    <td class="py-2">{{ '%.0f'|format(d.amount|float) }}</td>
-                    <td class="py-2">{{ d.payment_method }}</td>
-                    <td class="py-2">{{ d.status }}</td>
-                    <td class="py-2">{% if d.created_at %}{{ d.created_at.strftime('%d %b %Y') }}{% endif %}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No deposits</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="tab-content hidden p-6" id="withdrawals">
-            <h3 class="text-xl font-bold mb-4">Withdrawals</h3>
-            <table class="w-full text-sm">
-                <thead class="text-zinc-400"><tr>
-                    <th class="text-left py-2">Amount</th><th class="text-left py-2">Method</th>
-                    <th class="text-left py-2">Status</th><th class="text-left py-2">Date</th>
-                </tr></thead>
-                <tbody>
-                {% for w in withdrawals %}
-                <tr class="border-t border-slate-700">
-                    <td class="py-2">{{ '%.0f'|format(w.amount|float) }}</td>
-                    <td class="py-2">{{ w.payment_method }}</td>
-                    <td class="py-2">{{ w.status }}</td>
-                    <td class="py-2">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="4" class="py-6 text-center text-zinc-400">No withdrawals</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-<div class="tab-content hidden" id="referrals">
-
-    <h3 class="text-2xl font-bold mb-6">
-        Referral Network
-    </h3>
-
-    <div class="overflow-x-auto">
-
-        <table class="min-w-full">
-
-            <thead>
-
-                <tr class="border-b border-slate-700">
-
-                    <th class="text-left py-3">Username</th>
-
-                    <th class="text-left py-3">Joined</th>
-
-                    <th class="text-left py-3">Membership</th>
-
-                    <th class="text-left py-3">Balance</th>
-
-                    <th class="text-left py-3">Status</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-            {% if referrals %}
-
-                {% for referral in referrals %}
-
-                <tr class="border-b border-slate-800">
-
-                    <td class="py-3">
-                        {{ referral.username }}
-                    </td>
-
-                    <td>
-                        {% if referral.created_at %}{{ referral.created_at.strftime("%d %b %Y") }}{% else %}—{% endif %}
-                    </td>
-
-                    <td>
-                        {{ referral.membership.name if referral.membership else "None" }}
-                    </td>
-
-                    <td>
-                        UGX {{ "{:,.0f}".format(referral.available_balance) }}
-                    </td>
-
-                    <td>
-
-                        {% if referral.is_active %}
-
-                            <span class="text-green-400">
-                                Active
-                            </span>
-
-                        {% else %}
-
-                            <span class="text-red-400">
-                                Inactive
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            {% else %}
-
-                <tr>
-
-                    <td colspan="5" class="text-center py-6 text-slate-400">
-
-                        No referrals found.
-
-                    </td>
-
-                </tr>
-
-            {% endif %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-        <div class="tab-content hidden" id="login">
-    <div class="p-6">
-        <h3 class="text-xl font-bold mb-4">Login History</h3>
-        <table class="w-full text-sm">
-            <thead class="text-zinc-400">
-                <tr>
-                    <th class="text-left py-2">IP Address</th>
-                    <th class="text-left py-2">Time</th>
-                    <th class="text-left py-2">Browser / Device</th>
-                    <th class="text-left py-2">Status</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for row in login_history|default([]) %}
-                <tr class="border-t border-slate-700">
-                    <td class="py-2">{{ row.ip_address or "—" }}</td>
-                    <td class="py-2">
-                        {% if row.login_time %}{{ row.login_time.strftime("%d %b %Y %H:%M") }}{% else %}—{% endif %}
-                    </td>
-                    <td class="py-2 max-w-xs truncate">{{ row.browser or row.device or "—" }}</td>
-                    <td class="py-2">{{ row.status or "—" }}</td>
-                </tr>
-            {% else %}
-                <tr><td colspan="4" class="py-6 text-zinc-400 text-center">No login history yet. It is recorded on each login.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-        <div class="tab-content hidden p-6" id="notifications">
-            <h3 class="text-xl font-bold mb-4">Notifications</h3>
-            <p class="text-zinc-400 text-sm mb-4">Use “Send Notification” in the actions panel to message this user.</p>
-            <p class="text-zinc-500">Recent notifications appear in the user’s app notification list.</p>
-        </div>
-
-        <div class="tab-content hidden p-6" id="notes">
-            <h3 class="text-xl font-bold mb-4">Admin Notes</h3>
-            <p class="text-zinc-400">Internal notes for this user (store offline or use Send Notification for now).</p>
-            <textarea class="w-full bg-slate-800 rounded-xl p-4 mt-4" rows="5" placeholder="Notes (not saved yet — use credit/deduct reason fields for audit)"></textarea>
-        </div>
-
-    </div>
-
-</div>
-<div class="glass rounded-3xl p-8 mt-8">
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h2 class="text-2xl font-bold">
-            <i class="fa-solid fa-bolt text-purple-400 mr-2"></i>
-            Combo
-        </h2>
-        <button type="button" onclick="openComboModal()"
-                class="bg-violet-600 hover:bg-violet-500 rounded-xl py-3 px-6 font-semibold">
-            Assign Combo (2 products)
-        </button>
-    </div>
-
-    {% set active_combos = user.combos|selectattr('active')|list if user.combos else [] %}
-    {% if user.combos and user.combos|length > 0 %}
-        {% set combo = user.combos[-1] %}
-        <div class="bg-slate-800/60 rounded-2xl p-6 space-y-4">
-            <div class="flex flex-wrap gap-6 text-sm">
-                <div><span class="text-zinc-400">Status</span>
-                    <div class="font-bold text-lg">{{ combo.status }}</div>
-                </div>
-                <div><span class="text-zinc-400">Trigger after task</span>
-                    <div class="font-bold text-lg">#{{ combo.trigger_task }}</div>
-                </div>
-                <div><span class="text-zinc-400">Combo value</span>
-                    <div class="font-bold text-lg text-emerald-400">
-                        UGX {{ '{:,.0f}'.format(combo.amount|float) }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-4 pt-2">
-                <div class="bg-slate-900/80 rounded-xl p-4">
-                    <p class="text-xs text-zinc-500 mb-1">Product 1</p>
-                    <p class="font-semibold">{{ combo.product1_name or '—' }}</p>
-                    <p class="text-emerald-400">
-                        {% if combo.product1_price %}UGX {{ '{:,.0f}'.format(combo.product1_price|float) }}{% endif %}
-                    </p>
-                </div>
-                <div class="bg-slate-900/80 rounded-xl p-4">
-                    <p class="text-xs text-zinc-500 mb-1">Product 2</p>
-                    <p class="font-semibold">{{ combo.product2_name or '—' }}</p>
-                    <p class="text-emerald-400">
-                        {% if combo.product2_price %}UGX {{ '{:,.0f}'.format(combo.product2_price|float) }}{% endif %}
-                    </p>
-                </div>
-            </div>
-
-            {% if combo.status == "Pending" %}
-            <form method="POST" action="{{ url_for('admin.trigger_combo', combo_id=combo.id) }}" class="pt-2">
-                <button type="submit"
-                        onclick="return confirm('Trigger combo and assign the 2 products to this user?')"
-                        class="bg-purple-600 hover:bg-purple-500 rounded-xl py-3 px-6 font-semibold">
-                    Trigger Combo Now
-                </button>
-            </form>
-            {% endif %}
-        </div>
-    {% else %}
-        <p class="text-zinc-400">No combo assigned. Use the button above to pick two high-value products.</p>
-    {% endif %}
-</div>
-
-
-</script>
-<!-- CREDIT WALLET MODAL -->
-
-<div
-    id="creditModal"
-    class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-
-    <div class="glass rounded-3xl w-full max-w-lg p-8">
-
-        <h2 class="text-2xl font-bold mb-6">
-            Credit Wallet
-        </h2>
-
-        <form
-            method="POST"
-            action="{{ url_for('admin.credit_wallet', user_id=user.id) }}">
-
-            <div class="space-y-5">
-
-                <div>
-
-                    <label class="block mb-2">
-                        Amount
-                    </label>
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        name="amount"
-                        required
-                        class="w-full bg-slate-800 rounded-xl p-3">
-
-                </div>
-
-                <div>
-
-                    <label class="block mb-2">
-                        Reason
-                    </label>
-
-                    <textarea
-                        name="reason"
-                        rows="3"
-                        class="w-full bg-slate-800 rounded-xl p-3"></textarea>
-
-                </div>
-
-            </div>
-
-            <div class="flex justify-end gap-4 mt-8">
-
-                <button
-                    type="button"
-                    onclick="closeCreditModal()"
-                    class="bg-gray-600 px-6 py-3 rounded-xl">
-
-                    Cancel
-
-                </button>
-
-                <button
-                    class="bg-green-600 px-6 py-3 rounded-xl">
-
-                    Credit Wallet
-
-                </button>
-
-            </div>
-
+      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Account</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <button type="button" onclick="openMembershipModal()" class="rounded-2xl bg-indigo-600/80 hover:bg-indigo-500 py-3 text-sm font-semibold">Membership</button>
+        <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-pink-700/80 hover:bg-pink-600 py-3 text-sm font-semibold" onclick="return confirm('Reset password to 12345678?')">Reset password</button>
         </form>
-
-    </div>
-
-</div>
-<!-- DEDUCT WALLET MODAL -->
-
-<div
-    id="deductModal"
-    class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-
-    <div class="glass rounded-3xl w-full max-w-lg p-8">
-
-        <h2 class="text-2xl font-bold mb-6">
-
-            Deduct Wallet
-
-        </h2>
-
-        <form
-            method="POST"
-            action="{{ url_for('admin.deduct_wallet', user_id=user.id) }}">
-
-            <div class="space-y-5">
-
-                <div>
-
-                    <label class="block mb-2">
-                        Amount
-                    </label>
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        name="amount"
-                        required
-                        class="w-full bg-slate-800 rounded-xl p-3">
-
-                </div>
-
-                <div>
-
-                    <label class="block mb-2">
-                        Reason
-                    </label>
-
-                    <textarea
-                        name="reason"
-                        rows="3"
-                        class="w-full bg-slate-800 rounded-xl p-3"></textarea>
-
-                </div>
-
-            </div>
-
-            <div class="flex justify-end gap-4 mt-8">
-
-                <button
-                    type="button"
-                    onclick="closeDeductModal()"
-                    class="bg-gray-600 px-6 py-3 rounded-xl">
-
-                    Cancel
-
-                </button>
-
-                <button
-                    class="bg-red-600 px-6 py-3 rounded-xl">
-
-                    Deduct Wallet
-
-                </button>
-
-            </div>
-
+        <form method="POST" action="{{ url_for('admin.reset_withdraw_pin', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-amber-800/80 hover:bg-amber-700 py-3 text-sm font-semibold" onclick="return confirm('Reset PIN to 1234?')">Reset PIN</button>
         </form>
-
-    </div>
-
-</div>
-<!-- CHANGE MEMBERSHIP MODAL -->
-
-<div
-    id="membershipModal"
-    class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-
-    <div class="glass rounded-3xl w-full max-w-lg p-8">
-
-        <h2 class="text-2xl font-bold mb-6">
-
-            Change Membership
-
-        </h2>
-
-        <form
-            method="POST"
-            action="{{ url_for('admin.change_membership', user_id=user.id) }}">
-
-            <div class="space-y-5">
-
-                <label class="block">
-
-                    Membership
-
-                </label>
-
-                <select
-                    name="membership_id"
-                    class="w-full bg-slate-800 rounded-xl p-3">
-
-                    {% for membership in memberships %}
-
-                    <option
-                        value="{{ membership.id }}"
-                        {% if user.membership_id == membership.id %}selected{% endif %}>
-
-                        {{ membership.name }}
-                        ({{ money(current_user, membership.price) }})
-
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </div>
-
-            <div class="flex justify-end gap-4 mt-8">
-
-                <button
-                    type="button"
-                    onclick="closeMembershipModal()"
-                    class="bg-gray-600 px-6 py-3 rounded-xl">
-
-                    Cancel
-
-                </button>
-
-                <button type="submit"
-                    class="bg-indigo-600 px-6 py-3 rounded-xl">
-                    Save
-                </button>
-
-            </div>
-
+        <form method="GET" action="{{ url_for('admin.toggle_block', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-zinc-600 hover:bg-zinc-500 py-3 text-sm font-semibold">{{ 'Unblock' if user.is_blocked else 'Block' }}</button>
         </form>
-
-    </div>
-
-</div>
-<!-- ASSIGN COMBO MODAL – pick 2 high-value products -->
-<div id="comboModal"
-     class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-    <div class="glass rounded-3xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-2">Assign Combo</h2>
-        <p class="text-zinc-400 mb-6 text-sm">
-            Select <strong>two high-value products</strong>. The user will see them as premium review tasks.
-            Combo value = sum of both product prices (held from available balance when triggered).
-        </p>
-        <form method="POST" action="{{ url_for('admin.assign_combo', user_id=user.id) }}" class="space-y-4">
-            <div>
-                <label class="block mb-2 text-sm font-semibold">Target amount (UGX)</label>
-                <input type="number" name="target_amount" required min="1000" step="100"
-                       value="{{ '%.0f'|format(((user.available_balance or 0)|float) + 25000) }}"
-                       class="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-lg font-bold"
-                       placeholder="e.g. 50000">
-                <p class="text-xs text-zinc-500 mt-1">Product will be chosen within ±3,000 of this value.</p>
-            </div>
-            <div>
-                <label class="block mb-2 text-sm font-semibold">Trigger after task # (today)</label>
-                <input type="number" name="trigger_task" value="5" min="1"
-                       class="w-full bg-slate-900 border border-white/10 rounded-xl p-3">
-                <p class="text-xs text-zinc-500 mt-1">Auto-fires after the user completes this many tasks today. You can still trigger manually.</p>
-            </div>
-            <div>
-                <label class="block mb-2 text-sm font-semibold">Notes (optional)</label>
-                <textarea name="notes" rows="2" class="w-full bg-slate-900 border border-white/10 rounded-xl p-3"
-                          placeholder="Internal note"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeComboModal()"
-                        class="bg-zinc-700 hover:bg-zinc-600 px-5 py-2.5 rounded-xl text-sm">Cancel</button>
-                <button type="submit" class="bg-violet-600 hover:bg-violet-500 px-6 py-2.5 rounded-xl font-semibold text-sm">
-                    Assign combo
-                </button>
-            </div>
+        <form method="GET" action="{{ url_for('admin.toggle_active', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-zinc-700 hover:bg-zinc-600 py-3 text-sm font-semibold">{{ 'Deactivate' if user.is_active else 'Activate' }}</button>
         </form>
-    </div>
-</div>
-
-<script>
-function openComboModal(){
-    document.getElementById("comboModal").classList.remove("hidden");
-}
-function closeComboModal(){
-    document.getElementById("comboModal").classList.add("hidden");
-}
-</script>
-
-
-<script>
-
-function openMembershipModal(){
-
-    document
-        .getElementById("membershipModal")
-        .classList.remove("hidden");
-
-}
-
-function closeMembershipModal(){
-
-    document
-        .getElementById("membershipModal")
-        .classList.add("hidden");
-
-}
-
-</script>
-<script>
-
-function openDeductModal(){
-
-    document
-        .getElementById("deductModal")
-        .classList.remove("hidden");
-
-}
-
-function closeDeductModal(){
-
-    document
-        .getElementById("deductModal")
-        .classList.add("hidden");
-
-}
-
-</script>
-<script>
-
-function openCreditModal(){
-
-    document
-        .getElementById("creditModal")
-        .classList.remove("hidden");
-
-}
-
-function closeCreditModal(){
-
-    document
-        .getElementById("creditModal")
-        .classList.add("hidden");
-
-}
-
-</script>
-
-<!-- SEND NOTIFICATION MODAL -->
-<div id="notificationModal"
-     class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-    <div class="glass rounded-3xl w-full max-w-lg p-8">
-        <h2 class="text-2xl font-bold mb-6">Send Notification</h2>
-        <form method="POST" action="{{ url_for('admin.send_notification', user_id=user.id) }}">
-            <div class="space-y-5">
-                <div>
-                    <label class="block mb-2">Title</label>
-                    <input type="text" name="title" value="Message from Admin"
-                           class="w-full bg-slate-800 rounded-xl p-3" required>
-                </div>
-                <div>
-                    <label class="block mb-2">Message</label>
-                    <textarea name="message" rows="4" required
-                              class="w-full bg-slate-800 rounded-xl p-3"
-                              placeholder="Write the message to this user..."></textarea>
-                </div>
-            </div>
-            <div class="flex justify-end gap-4 mt-8">
-                <button type="button" onclick="closeNotificationModal()"
-                        class="bg-gray-600 px-6 py-3 rounded-xl">Cancel</button>
-                <button type="submit" class="bg-blue-600 px-6 py-3 rounded-xl">Send</button>
-            </div>
+        <button type="button" onclick="openNotificationModal()" class="rounded-2xl bg-blue-700/80 hover:bg-blue-600 py-3 text-sm font-semibold">Notify</button>
+        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+          <button class="w-full rounded-2xl bg-red-900/80 hover:bg-red-800 py-3 text-sm font-semibold" onclick="return confirm('Delete permanently?')">Delete</button>
         </form>
+      </div>
     </div>
+  </div>
+
+  {# Simple data tabs #}
+  <div class="glass rounded-3xl p-6">
+    <div class="flex flex-wrap gap-2 border-b border-white/10 pb-3 mb-4">
+      <button type="button" class="tab-btn active text-sm px-3 py-1.5 rounded-lg bg-indigo-600" data-tab="tab-wallet">Wallet</button>
+      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-tasks">Tasks</button>
+      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-deps">Deposits</button>
+      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-wds">Withdrawals</button>
+    </div>
+
+    <div id="tab-wallet" class="tab-content space-y-2 max-h-80 overflow-y-auto">
+      {% for t in wallet_transactions|default([]) %}
+      <div class="flex justify-between text-sm border-b border-white/5 py-2">
+        <span class="text-zinc-400">{{ t.description or t.transaction_type }}</span>
+        <span class="font-semibold {% if (t.amount or 0)|float >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">{{ money(current_user, t.amount) }}</span>
+      </div>
+      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No transactions</p>{% endfor %}
+    </div>
+    <div id="tab-tasks" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+      {% for t in tasks|default([]) %}
+      <div class="flex justify-between text-sm border-b border-white/5 py-2">
+        <span>{{ t.product_name }} · {{ t.status }}</span>
+        <span class="text-zinc-500">{{ money(current_user, t.commission) }}</span>
+      </div>
+      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No tasks</p>{% endfor %}
+    </div>
+    <div id="tab-deps" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+      {% for d in deposits|default([]) %}
+      <div class="flex justify-between text-sm border-b border-white/5 py-2">
+        <span>{{ d.status }} · {{ d.payment_method }}</span>
+        <span>{{ money(current_user, d.amount) }}</span>
+      </div>
+      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No deposits</p>{% endfor %}
+    </div>
+    <div id="tab-wds" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+      {% for w in withdrawals|default([]) %}
+      <div class="flex justify-between text-sm border-b border-white/5 py-2">
+        <span>{{ w.status }} · {{ w.payment_method }}</span>
+        <span>{{ money(current_user, w.amount) }}</span>
+      </div>
+      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No withdrawals</p>{% endfor %}
+    </div>
+  </div>
 </div>
 
-<script>
-function openNotificationModal(){
-    document.getElementById("notificationModal").classList.remove("hidden");
-}
-function closeNotificationModal(){
-    document.getElementById("notificationModal").classList.add("hidden");
-}
-</script>
-
-
-
-{% endblock %}
-
-
-<!-- Spin modal -->
+{# Spin modal #}
 <div id="spinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
     <h3 class="text-xl font-bold mb-4">Award Lucky Spin</h3>
     <form method="POST" action="{{ url_for('admin.grant_spin', user_id=user.id) }}" class="space-y-3">
-      <div>
-        <label class="text-xs text-zinc-400">Number of spins</label>
-        <input type="number" name="spins" value="1" min="1" max="20" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
-      </div>
-      <div>
-        <label class="text-xs text-zinc-400">Note</label>
-        <input type="text" name="note" class="w-full mt-1 rounded-xl bg-slate-950 border border-white/10 p-3">
-      </div>
-      <p class="text-[11px] text-zinc-500">Optional prize limit:</p>
-      <div class="max-h-28 overflow-y-auto space-y-1 text-sm">
+      <input type="number" name="spins" value="1" min="1" max="20" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+      <input type="text" name="note" placeholder="Note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+      <div class="max-h-28 overflow-y-auto text-sm space-y-1">
         {% for p in spin_prizes|default([]) %}
-        <label class="flex items-center gap-2"><input type="checkbox" name="prize_ids" value="{{ p.id }}"> {{ p.label }}</label>
-        {% else %}
-        <p class="text-xs text-zinc-500">Full wheel (configure under Lucky Spin).</p>
+        <label class="flex gap-2"><input type="checkbox" name="prize_ids" value="{{ p.id }}"> {{ p.label }}</label>
         {% endfor %}
       </div>
-      <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeSpinModal()" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
-        <button type="submit" class="flex-1 rounded-xl bg-amber-600 py-2.5 font-semibold">Award</button>
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('spinModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-amber-600 py-2.5 font-semibold">Award</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Minimal stubs for credit/deduct/membership/notification if scripts exist in base pages #}
+<div id="creditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Credit wallet</h3>
+    <form method="POST" action="{{ url_for('admin.credit_wallet', user_id=user.id) }}" class="space-y-3">
+      <input type="number" name="amount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
+      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('creditModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-emerald-600 py-2.5 font-semibold">Credit</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="deductModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Deduct wallet</h3>
+    <form method="POST" action="{{ url_for('admin.deduct_wallet', user_id=user.id) }}" class="space-y-3">
+      <input type="number" name="amount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
+      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('deductModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-rose-600 py-2.5 font-semibold">Deduct</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="membershipModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Change membership</h3>
+    <form method="POST" action="{{ url_for('admin.change_membership', user_id=user.id) }}" class="space-y-3">
+      <select name="membership_id" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+        {% for m in memberships|default([]) %}
+        <option value="{{ m.id }}" {% if user.membership_id == m.id %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('membershipModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-indigo-600 py-2.5 font-semibold">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="notificationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Send notification</h3>
+    <form method="POST" action="{{ url_for('admin.send_notification', user_id=user.id) }}" class="space-y-3">
+      <input name="title" required placeholder="Title" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+      <textarea name="message" required rows="3" placeholder="Message" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3"></textarea>
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('notificationModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-blue-600 py-2.5 font-semibold">Send</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
+function openCreditModal(){ document.getElementById('creditModal').classList.remove('hidden'); }
+function openDeductModal(){ document.getElementById('deductModal').classList.remove('hidden'); }
+function openMembershipModal(){ document.getElementById('membershipModal').classList.remove('hidden'); }
+function openNotificationModal(){ document.getElementById('notificationModal').classList.remove('hidden'); }
 function openSpinModal(){ document.getElementById('spinModal').classList.remove('hidden'); }
-function closeSpinModal(){ document.getElementById('spinModal').classList.add('hidden'); }
-</script>
-
-{% block scripts %}
-<script>
-document.querySelectorAll(".tab-btn").forEach(function(btn){
-  btn.addEventListener("click", function(){
-    var tab = btn.getAttribute("data-tab");
-    document.querySelectorAll(".tab-btn").forEach(function(b){
-      b.classList.remove("active", "border-b-2", "border-indigo-500");
-    });
-    btn.classList.add("active", "border-b-2", "border-indigo-500");
-    document.querySelectorAll(".tab-content").forEach(function(c){ c.classList.add("hidden"); });
-    var panel = document.getElementById(tab);
-    if (panel) panel.classList.remove("hidden");
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active','bg-indigo-600'); b.classList.add('bg-white/5'); });
+    btn.classList.add('active','bg-indigo-600'); btn.classList.remove('bg-white/5');
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.add('hidden'); });
+    var p = document.getElementById(btn.getAttribute('data-tab'));
+    if(p) p.classList.remove('hidden');
   });
 });
 </script>

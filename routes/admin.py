@@ -821,6 +821,25 @@ def create_combo():
         combo=None,
         users=users
     )
+
+@admin_bp.route("/combos/assign", methods=["POST"])
+@login_required
+@admin_required
+def assign_combo_from_manager():
+    ref = (request.form.get("user_ref") or "").strip()
+    user = None
+    if ref.isdigit():
+        user = User.query.get(int(ref))
+    if user is None:
+        user = User.query.filter_by(username=ref).first()
+    if user is None:
+        user = User.query.filter_by(email=ref).first()
+    if user is None:
+        flash("User not found. Use ID or username.", "danger")
+        return redirect(url_for("admin.combos"))
+    # Forward to assign_combo by replacing form user - call function with user_id
+    return assign_combo(user.id)
+
 @admin_bp.route("/users/<int:user_id>/assign-combo", methods=["POST"])
 @login_required
 @admin_required
@@ -923,6 +942,8 @@ def assign_combo(user_id):
     db.session.add(combo)
     db.session.commit()
 
+    # Prefer combo manager when assigned from there
+    next_page = request.form.get("next") or request.referrer or ""
     flash(
         f"Combo assigned: {p1.name} @ UGX {price:,.0f} "
         f"(target {target:,.0f} ±{int(RANGE)}). "
@@ -930,6 +951,8 @@ def assign_combo(user_id):
         f"Auto at task #{combo.trigger_task}.",
         "success",
     )
+    if "combos" in (request.referrer or "") or request.form.get("from_manager"):
+        return redirect(url_for("admin.combos"))
     return redirect(url_for("admin.view_user", user_id=user.id))
 
 
@@ -2407,33 +2430,76 @@ def bulk_approve_deposits():
 @login_required
 @admin_required
 def daily_ops_report():
-    today = datetime.utcnow().date()
-    new_users = User.query.filter(func.date(User.created_at) == today).count()
+    from datetime import datetime as dt, timedelta
+    today = dt.utcnow().date()
+    try:
+        date_from = dt.strptime(request.args.get("from") or today.isoformat(), "%Y-%m-%d").date()
+    except ValueError:
+        date_from = today
+    try:
+        date_to = dt.strptime(request.args.get("to") or today.isoformat(), "%Y-%m-%d").date()
+    except ValueError:
+        date_to = today
+    if date_from > date_to:
+        date_from, date_to = date_to, date_from
+
+    new_users = User.query.filter(
+        func.date(User.created_at) >= date_from,
+        func.date(User.created_at) <= date_to,
+    ).count()
     dep_pending = Deposit.query.filter_by(status="Pending").count()
     dep_approved = Deposit.query.filter(
-        Deposit.status == "Approved", func.date(Deposit.approved_at) == today
+        Deposit.status == "Approved",
+        func.date(Deposit.approved_at) >= date_from,
+        func.date(Deposit.approved_at) <= date_to,
     ).count()
     dep_sum = db.session.query(func.coalesce(func.sum(Deposit.amount), 0)).filter(
-        Deposit.status == "Approved", func.date(Deposit.approved_at) == today
+        Deposit.status == "Approved",
+        func.date(Deposit.approved_at) >= date_from,
+        func.date(Deposit.approved_at) <= date_to,
     ).scalar()
     wd_pending = Withdrawal.query.filter_by(status="Pending").count()
     wd_paid = Withdrawal.query.filter(
         Withdrawal.status.in_(["Approved", "Paid"]),
-        func.date(Withdrawal.created_at) == today,
+        func.date(Withdrawal.created_at) >= date_from,
+        func.date(Withdrawal.created_at) <= date_to,
     ).count()
-    combos = Combo.query.filter(func.date(Combo.created_at) == today).count()
+    wd_sum = db.session.query(func.coalesce(func.sum(Withdrawal.amount), 0)).filter(
+        Withdrawal.status.in_(["Approved", "Paid"]),
+        func.date(Withdrawal.created_at) >= date_from,
+        func.date(Withdrawal.created_at) <= date_to,
+    ).scalar()
+    combos = Combo.query.filter(
+        func.date(Combo.created_at) >= date_from,
+        func.date(Combo.created_at) <= date_to,
+    ).count()
     negative = User.query.filter(User.available_balance < 0).count()
+    tasks_done = 0
+    try:
+        from models.task import Task
+        tasks_done = Task.query.filter(
+            Task.status == "completed",
+            func.date(Task.completed_at) >= date_from,
+            func.date(Task.completed_at) <= date_to,
+        ).count()
+    except Exception:
+        pass
+
     return render_template(
         "admin/daily_report.html",
         today=today,
+        date_from=date_from,
+        date_to=date_to,
         new_users=new_users,
         dep_pending=dep_pending,
         dep_approved=dep_approved,
         dep_sum=float(dep_sum or 0),
         wd_pending=wd_pending,
         wd_paid=wd_paid,
+        wd_sum=float(wd_sum or 0),
         combos=combos,
         negative=negative,
+        tasks_done=tasks_done,
     )
 
 
