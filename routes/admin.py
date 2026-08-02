@@ -1943,6 +1943,7 @@ def send_broadcast_notification():
             title=title,
             message=message,
             is_read=False,
+            is_broadcast=True,
         )
         db.session.add(n)
         count += 1

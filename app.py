@@ -106,6 +106,12 @@ def create_app():
                     db.session.execute(text("ALTER TABLE users ADD COLUMN phone_change_count INTEGER DEFAULT 0"))
                 if "accepted_terms_at" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN accepted_terms_at TIMESTAMP"))
+                if "is_broadcast" not in cols and "notifications" in tables:
+                    try:
+                        db.session.execute(text("ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"))
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
                 if "withdraw_pin_hash" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN withdraw_pin_hash VARCHAR(255)"))
                 db.session.commit()

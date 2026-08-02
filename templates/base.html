@@ -593,5 +593,99 @@ function showToast(msg, type){
 })();
 </script>
 
+
+{% if current_user.is_authenticated %}
+<!-- Toasts -->
+<div id="tm-toast-root" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+<!-- Full-page broadcast overlay -->
+<div id="tm-broadcast" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-zinc-950/90 backdrop-blur-md"></div>
+  <div class="relative w-full max-w-lg rounded-3xl border border-white/15 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl p-6 md:p-8 text-center">
+    <div class="mx-auto w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-2xl mb-4">
+      <i class="fa-solid fa-bullhorn"></i>
+    </div>
+    <p class="text-[11px] uppercase tracking-[0.25em] text-indigo-300 font-semibold">Announcement</p>
+    <h2 id="tm-broadcast-title" class="mt-2 text-2xl font-black text-white"></h2>
+    <p id="tm-broadcast-body" class="mt-4 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap"></p>
+    <button type="button" id="tm-broadcast-dismiss"
+            class="mt-8 w-full rounded-2xl bg-white text-zinc-900 font-bold py-3.5 hover:bg-zinc-100 transition">
+      Got it
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var seenToasts = {};
+  var activeBroadcastId = null;
+
+  function toast(item){
+    if (seenToasts[item.id]) return;
+    seenToasts[item.id] = true;
+    var root = document.getElementById('tm-toast-root');
+    if (!root) return;
+    var el = document.createElement('div');
+    el.className = 'pointer-events-auto rounded-2xl border border-white/10 bg-zinc-900/95 shadow-xl p-4 backdrop-blur-xl animate-[slideIn_.25s_ease]';
+    el.innerHTML = '<div class="flex gap-3 items-start">'
+      + '<span class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-bell"></i></span>'
+      + '<div class="flex-1 min-w-0">'
+      + '<p class="text-sm font-semibold text-white"></p>'
+      + '<p class="text-xs text-zinc-400 mt-1 leading-relaxed"></p>'
+      + '</div>'
+      + '<button type="button" class="text-zinc-500 hover:text-white text-sm">&times;</button>'
+      + '</div>';
+    el.querySelector('p.text-sm').textContent = item.title || 'Notification';
+    el.querySelector('p.text-xs').textContent = item.message || '';
+    function dismiss(){
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(12px)';
+      el.style.transition = 'all .2s';
+      setTimeout(function(){ el.remove(); }, 200);
+      fetch('/api/v1/popups/' + item.id + '/dismiss', { method: 'POST', credentials: 'same-origin' }).catch(function(){});
+    }
+    el.querySelector('button').onclick = dismiss;
+    root.appendChild(el);
+    setTimeout(dismiss, 8000);
+  }
+
+  function showBroadcast(item){
+    if (!item || activeBroadcastId === item.id) return;
+    activeBroadcastId = item.id;
+    var wrap = document.getElementById('tm-broadcast');
+    document.getElementById('tm-broadcast-title').textContent = item.title || 'Announcement';
+    document.getElementById('tm-broadcast-body').textContent = item.message || '';
+    wrap.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('tm-broadcast-dismiss').onclick = function(){
+      wrap.classList.add('hidden');
+      document.body.style.overflow = '';
+      activeBroadcastId = null;
+      fetch('/api/v1/popups/' + item.id + '/dismiss', { method: 'POST', credentials: 'same-origin' }).catch(function(){});
+    };
+  }
+
+  function pollPopups(){
+    fetch('/api/v1/popups', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d) return;
+        if (d.broadcasts && d.broadcasts.length) {
+          showBroadcast(d.broadcasts[0]);
+        }
+        (d.toasts || []).forEach(toast);
+      })
+      .catch(function(){});
+  }
+  pollPopups();
+  setInterval(pollPopups, 10000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) pollPopups(); });
+})();
+</script>
+<style>
+@keyframes slideIn { from { opacity:0; transform: translateX(16px); } to { opacity:1; transform:none; } }
+</style>
+{% endif %}
+
 </body>
 </html>

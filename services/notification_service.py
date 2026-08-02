@@ -53,3 +53,22 @@ class NotificationService:
         })
 
         db.session.commit()
+
+    @staticmethod
+    def broadcast(title, message, users=None):
+        """Send a full-screen broadcast notification to many users."""
+        from models.user import User
+        if users is None:
+            users = User.query.filter_by(is_admin=False, is_active=True).all()
+        count = 0
+        for user in users:
+            db.session.add(Notification(
+                user_id=user.id,
+                title=title,
+                message=message,
+                is_read=False,
+                is_broadcast=True,
+            ))
+            count += 1
+        db.session.commit()
+        return count

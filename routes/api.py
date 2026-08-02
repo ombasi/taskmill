@@ -152,3 +152,38 @@ def badges():
     if getattr(current_user, "is_admin", False):
         data["total"] += int(data["pending_deposits"]) + int(data["pending_withdrawals"])
     return jsonify(data)
+
+
+@api_bp.route("/popups")
+@login_required
+def popups():
+    """Unread toasts + active broadcasts for the current user."""
+    from models.notification import Notification
+    q = Notification.query.filter_by(user_id=current_user.id, is_read=False)
+    rows = q.order_by(Notification.created_at.desc()).limit(20).all()
+    toasts = []
+    broadcasts = []
+    for n in rows:
+        item = {
+            "id": n.id,
+            "title": n.title,
+            "message": n.message,
+            "created_at": n.created_at.isoformat() if n.created_at else None,
+        }
+        if getattr(n, "is_broadcast", False):
+            broadcasts.append(item)
+        else:
+            toasts.append(item)
+    return jsonify({"toasts": toasts[:5], "broadcasts": broadcasts[:1]})
+
+
+@api_bp.route("/popups/<int:nid>/dismiss", methods=["POST"])
+@login_required
+def dismiss_popup(nid):
+    from models.notification import Notification
+    n = Notification.query.get_or_404(nid)
+    if n.user_id != current_user.id:
+        return jsonify({"ok": False}), 403
+    n.is_read = True
+    db.session.commit()
+    return jsonify({"ok": True})

@@ -28,6 +28,11 @@ class Notification(db.Model):
         default=False
     )
 
+    is_broadcast = db.Column(
+        db.Boolean,
+        default=False
+    )
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow
