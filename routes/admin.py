@@ -505,6 +505,7 @@ def view_user(user_id):
         combo_products=combo_products or [],
         login_history=login_history or [],
         last_ip=last_ip or "—",
+        spin_prizes=_safe_list(lambda: __import__("models.spin", fromlist=["SpinPrize"]).SpinPrize.query.filter_by(active=True).all()),
     )
 
 # ==========================================================
@@ -2434,3 +2435,110 @@ def daily_ops_report():
         combos=combos,
         negative=negative,
     )
+
+
+# ==========================================================
+# LUCKY SPIN — prizes & grants
+# ==========================================================
+@admin_bp.route("/spin-prizes", methods=["GET", "POST"])
+@login_required
+@admin_required
+def spin_prizes():
+    from models.spin import SpinPrize
+    from models.membership import Membership
+    if request.method == "POST":
+        label = (request.form.get("label") or "").strip()
+        prize_type = (request.form.get("prize_type") or "cash").strip()
+        if not label:
+            flash("Label required.", "danger")
+            return redirect(url_for("admin.spin_prizes"))
+        try:
+            amount = float(request.form.get("amount") or 0)
+        except ValueError:
+            amount = 0
+        membership_id = request.form.get("membership_id", type=int)
+        weight = request.form.get("weight", type=int) or 10
+        color = (request.form.get("color") or "#6366f1").strip()
+        voucher_code = (request.form.get("voucher_code") or "").strip()
+        voucher_note = (request.form.get("voucher_note") or "").strip()
+        p = SpinPrize(
+            label=label,
+            prize_type=prize_type,
+            amount=amount,
+            membership_id=membership_id if prize_type == "membership" else None,
+            voucher_code=voucher_code or None,
+            voucher_note=voucher_note or None,
+            weight=weight,
+            color=color,
+            active=True,
+        )
+        db.session.add(p)
+        db.session.commit()
+        flash("Prize added to wheel.", "success")
+        return redirect(url_for("admin.spin_prizes"))
+
+    prizes = SpinPrize.query.order_by(SpinPrize.sort_order, SpinPrize.id).all()
+    memberships = Membership.query.order_by(Membership.price.asc()).all()
+    return render_template(
+        "admin/spin_prizes.html",
+        prizes=prizes,
+        memberships=memberships,
+    )
+
+
+@admin_bp.route("/spin-prizes/<int:prize_id>/toggle", methods=["POST"])
+@login_required
+@admin_required
+def spin_prize_toggle(prize_id):
+    from models.spin import SpinPrize
+    p = SpinPrize.query.get_or_404(prize_id)
+    p.active = not p.active
+    db.session.commit()
+    flash("Prize updated.", "success")
+    return redirect(url_for("admin.spin_prizes"))
+
+
+@admin_bp.route("/spin-prizes/<int:prize_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def spin_prize_delete(prize_id):
+    from models.spin import SpinPrize
+    p = SpinPrize.query.get_or_404(prize_id)
+    db.session.delete(p)
+    db.session.commit()
+    flash("Prize deleted.", "success")
+    return redirect(url_for("admin.spin_prizes"))
+
+
+@admin_bp.route("/users/<int:user_id>/grant-spin", methods=["POST"])
+@login_required
+@admin_required
+def grant_spin(user_id):
+    from models.spin import SpinGrant, SpinPrize
+    user = User.query.get_or_404(user_id)
+    spins = request.form.get("spins", type=int) or 1
+    note = (request.form.get("note") or "").strip()
+    selected = request.form.getlist("prize_ids")
+    allowed = ",".join([s for s in selected if s.isdigit()]) or None
+    grant = SpinGrant(
+        user_id=user.id,
+        spins_total=max(1, spins),
+        spins_used=0,
+        allowed_prize_ids=allowed,
+        granted_by=current_user.id,
+        note=note,
+        active=True,
+    )
+    db.session.add(grant)
+    try:
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            user,
+            "Lucky Spin awarded",
+            f"You received {spins} lucky spin(s). Open Lucky Spin to play!",
+        )
+    except Exception:
+        pass
+    db.session.commit()
+    flash(f"Granted {spins} spin(s) to {user.username}.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))

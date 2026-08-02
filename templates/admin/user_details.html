@@ -1,227 +1,29 @@
 {% extends "admin/base.html" %}
-
-{% block title %}User Details
-<script>
-document.querySelectorAll(".tab-btn").forEach(function(btn){
-  btn.addEventListener("click", function(){
-    var tab = btn.getAttribute("data-tab");
-    document.querySelectorAll(".tab-btn").forEach(function(b){
-      b.classList.remove("active", "border-b-2", "border-indigo-500");
-    });
-    btn.classList.add("active", "border-b-2", "border-indigo-500");
-    document.querySelectorAll(".tab-content").forEach(function(c){
-      c.classList.add("hidden");
-    });
-    var panel = document.getElementById(tab);
-    if (panel) panel.classList.remove("hidden");
-  });
-});
-</script>
-{% endblock %}
-
-{% block page_title %}User Details
-<script>
-document.querySelectorAll(".tab-btn").forEach(function(btn){
-  btn.addEventListener("click", function(){
-    var tab = btn.getAttribute("data-tab");
-    document.querySelectorAll(".tab-btn").forEach(function(b){
-      b.classList.remove("active", "border-b-2", "border-indigo-500");
-    });
-    btn.classList.add("active", "border-b-2", "border-indigo-500");
-    document.querySelectorAll(".tab-content").forEach(function(c){
-      c.classList.add("hidden");
-    });
-    var panel = document.getElementById(tab);
-    if (panel) panel.classList.remove("hidden");
-  });
-});
-</script>
-{% endblock %}
-
-
+{% block title %}User Details{% endblock %}
+{% block page_title %}User {{ user.username }}{% endblock %}
 {% block content %}
+<div class="space-y-6">
 
-<div class="space-y-8">
-
-    <!-- ====================================== -->
-    <!-- PROFILE -->
-    <!-- ====================================== -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <div class="flex flex-col lg:flex-row justify-between gap-8">
-
-            <div class="flex gap-6">
-
-                <div class="w-28 h-28 rounded-full bg-indigo-600 flex items-center justify-center text-5xl font-black">
-
-                    {{ user.username[:1]|upper }}
-
-                </div>
-
-                <div>
-
-                    <h2 class="text-4xl font-black">
-
-                        {{ user.full_name }}
-
-                    </h2>
-
-                    <p class="text-zinc-400 mt-2">
-
-                        @{{ user.username }}
-
-                    </p>
-
-                    <div class="mt-6 grid md:grid-cols-2 gap-x-10 gap-y-3">
-
-                        <p><strong>Email:</strong> {{ user.email }}</p>
-
-                        <p><strong>Phone:</strong> {{ user.phone }}</p>
-
-                        <p><strong>Country:</strong> {{ user.country }}</p>
-
-                        <p><strong>Membership:</strong>
-                            {{ user.membership.name if user.membership else "None" }}
-                        </p>
-
-                        <p><strong>Referral Code:</strong> {{ user.referral_code }}</p>
-
-                        <p><strong>IP Address:</strong>
-      {% if last_ip and last_ip != '—' %}
-        {{ last_ip }}
-      {% elif user.ip_address %}
-        {{ user.ip_address }}
-      {% elif login_history %}
-        {% set ns = namespace(ip='—') %}
-        {% for row in login_history|default([]) %}
-          {% if ns.ip == '—' and row.ip_address %}{% set ns.ip = row.ip_address %}{% endif %}
-        {% endfor %}
-        {{ ns.ip }}
-      {% else %}
-        —
-      {% endif %}
-    </p>
-
-                        <p><strong>Joined:</strong>
-                            {% if user.created_at %}{{ user.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}
-                        </p>
-
-                        <p><strong>Last Login:</strong>
-                            {% if user.last_login %}
-                                {{ user.last_login.strftime('%d %b %Y %H:%M') }}
-                            {% else %}
-                                Never
-                            {% endif %}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="flex flex-col gap-3">
-
-                {% if user.is_active %}
-                    <span class="bg-green-600 px-4 py-2 rounded-xl text-center">
-                        Active
-                    </span>
-                {% else %}
-                    <span class="bg-red-600 px-4 py-2 rounded-xl text-center">
-                        Suspended
-                    </span>
-                {% endif %}
-
-                {% if user.is_blocked %}
-                    <span class="bg-red-700 px-4 py-2 rounded-xl text-center">
-                        Blocked
-                    </span>
-                {% else %}
-                    <span class="bg-indigo-600 px-4 py-2 rounded-xl text-center">
-                        Not Blocked
-                    </span>
-                {% endif %}
-
-            </div>
-
-        </div>
-
+  {# Header #}
+  <div class="glass rounded-3xl p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-black">{{ user.full_name or user.username }}</h2>
+        <p class="text-zinc-400 text-sm mt-1">@{{ user.username }} · ID {{ user.id }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-zinc-500">Balance</p>
+        <p class="text-2xl font-black text-emerald-400">{{ money(current_user, user.available_balance) }}</p>
+      </div>
     </div>
-
-
-    <!-- ====================================== -->
-    <!-- WALLET SUMMARY -->
-    <!-- ====================================== -->
-
-    <div class="grid md:grid-cols-5 gap-5">
-
-        <div class="glass rounded-2xl p-6">
-
-            <p class="text-zinc-400">Available</p>
-
-            <h3 class="text-3xl font-black mt-2">
-
-                {{ money(user, user.available_balance) }}
-
-            </h3>
-
-        </div>
-
-        <div class="glass rounded-2xl p-6">
-
-            <p class="text-zinc-400">Pending</p>
-
-            <h3 class="text-3xl font-black mt-2">
-
-                {{ money(user, user.pending_balance) }}
-
-            </h3>
-
-        </div>
-
-        <div class="glass rounded-2xl p-6">
-
-            <p class="text-zinc-400">Combo</p>
-
-            <h3 class="text-3xl font-black mt-2">
-
-                {{ money(user, user.combo_balance) }}
-
-            </h3>
-
-        </div>
-
-        <div class="glass rounded-2xl p-6">
-
-            <p class="text-zinc-400">Earned</p>
-
-            <h3 class="text-3xl font-black mt-2">
-
-                {{ money(user, user.total_earned) }}
-
-            </h3>
-
-        </div>
-
-        <div class="glass rounded-2xl p-6">
-
-            <p class="text-zinc-400">Withdrawn</p>
-
-            <h3 class="text-3xl font-black mt-2">
-
-                {{ money(user, user.total_withdrawn) }}
-
-            </h3>
-
-        </div>
-
+    <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Email</p><p class="font-medium truncate">{{ user.email }}</p></div>
+      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Phone</p><p class="font-medium">{{ user.phone or '—' }}</p></div>
+      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">Membership</p><p class="font-medium">{{ user.membership.name if user.membership else '—' }}</p></div>
+      <div class="rounded-xl bg-black/20 p-3"><p class="text-zinc-500 text-xs">IP</p><p class="font-medium">{{ last_ip|default(user.ip_address or '—') }}</p></div>
     </div>
+  </div>
 
-
-    <!-- ====================================== -->
-    <!-- QUICK ACTIONS -->
-    <!-- ====================================== -->
 <div class="glass rounded-3xl p-6 space-y-8">
 
     <h3 class="text-2xl font-bold">Quick Actions</h3>
@@ -277,6 +79,40 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
                 </button>
             </form>
         </div>
+    </div>
+
+    
+    <!-- LUCKY SPIN -->
+    <div>
+        <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Lucky Spin</p>
+        <form method="POST" action="{{ url_for('admin.grant_spin', user_id=user.id) }}" class="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+            <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs text-zinc-400">Spins to grant</label>
+                    <input type="number" name="spins" value="1" min="1" max="20"
+                           class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-2.5">
+                </div>
+                <div>
+                    <label class="text-xs text-zinc-400">Note</label>
+                    <input type="text" name="note" placeholder="Optional"
+                           class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-2.5">
+                </div>
+            </div>
+            <p class="text-[11px] text-zinc-500">Optional: limit this grant to specific prizes (leave empty = full wheel).</p>
+            <div class="max-h-28 overflow-y-auto space-y-1 text-sm">
+                {% for p in spin_prizes|default([]) %}
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="prize_ids" value="{{ p.id }}" class="rounded">
+                    {{ p.label }} <span class="text-zinc-500">({{ p.prize_type }})</span>
+                </label>
+                {% else %}
+                <p class="text-xs text-zinc-500">No active prizes — add some under Admin → Lucky Spin.</p>
+                {% endfor %}
+            </div>
+            <button type="submit" class="w-full sm:w-auto rounded-xl bg-amber-600 hover:bg-amber-500 px-6 py-2.5 font-semibold text-sm">
+                Award spins
+            </button>
+        </form>
     </div>
 
     <!-- ACCOUNT -->
@@ -1125,6 +961,10 @@ function closeNotificationModal(){
 </script>
 
 
+
+{% endblock %}
+
+{% block scripts %}
 <script>
 document.querySelectorAll(".tab-btn").forEach(function(btn){
   btn.addEventListener("click", function(){
@@ -1133,13 +973,10 @@ document.querySelectorAll(".tab-btn").forEach(function(btn){
       b.classList.remove("active", "border-b-2", "border-indigo-500");
     });
     btn.classList.add("active", "border-b-2", "border-indigo-500");
-    document.querySelectorAll(".tab-content").forEach(function(c){
-      c.classList.add("hidden");
-    });
+    document.querySelectorAll(".tab-content").forEach(function(c){ c.classList.add("hidden"); });
     var panel = document.getElementById(tab);
     if (panel) panel.classList.remove("hidden");
   });
 });
 </script>
 {% endblock %}
-
