@@ -16,6 +16,11 @@ from routes.combo import combo_bp
 from routes.chat import chat_bp
 from routes.api import api_bp
 from routes.jobs import jobs_bp
+try:
+    from routes.spin import spin_bp
+except Exception as _spin_err:
+    spin_bp = None
+    print("spin module skip:", _spin_err)
 from models.payment_setting import PaymentSetting
 
 
@@ -63,6 +68,8 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(jobs_bp)
+    if spin_bp:
+        app.register_blueprint(spin_bp) if spin_bp else None
 
     # Ensure folders exist (Windows-safe)
     import os

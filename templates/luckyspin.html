@@ -1,212 +1,103 @@
 {% extends "base.html" %}
-
 {% block title %}Lucky Spin{% endblock %}
-
 {% block content %}
+{% set n = prizes|length if prizes else 0 %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="text-center">
+    <p class="text-[11px] uppercase tracking-[0.2em] text-amber-300 font-semibold">Rewards</p>
+    <h1 class="text-3xl md:text-4xl font-black mt-1">Lucky Spin</h1>
+    <p class="text-zinc-400 text-sm mt-2">Spins are awarded by admin. You have <strong class="text-white">{{ remaining }}</strong> spin(s).</p>
+  </div>
 
-<div class="max-w-7xl mx-auto px-6 py-10">
-
-    <!-- Hero -->
-
-    <div class="glass rounded-3xl p-12 mb-10 text-center">
-
-        <div class="w-32 h-32 mx-auto rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center mb-8 shadow-2xl">
-
-            <i class="fa-solid fa-gift text-white text-6xl"></i>
-
+  <div class="grid lg:grid-cols-2 gap-6 items-start">
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 text-center">
+      <div class="relative inline-block my-4">
+        <div class="absolute left-1/2 -translate-x-1/2 -top-5 z-20 text-rose-500 text-4xl">
+          <i class="fa-solid fa-caret-down"></i>
         </div>
-
-        <h1 class="text-5xl font-black text-white">
-
-            Lucky Spin
-
-        </h1>
-
-        <p class="text-zinc-400 text-lg mt-5">
-
-            Spin the wheel once every 24 hours for amazing rewards.
-
-        </p>
-
+        <div id="wheel" class="w-64 h-64 md:w-80 md:h-80 rounded-full border-8 border-amber-400/80 shadow-2xl transition-transform duration-[4500ms] ease-out mx-auto"
+             style="background: {% if n > 0 %}conic-gradient({% for p in prizes %}{{ p.color or '#6366f1' }} {{ (loop.index0 * 360 / n)|round(2) }}deg {{ (loop.index * 360 / n)|round(2) }}deg{% if not loop.last %}, {% endif %}{% endfor %}){% else %}#312e81{% endif %};">
+        </div>
+      </div>
+      {% if remaining > 0 and n > 0 %}
+      <form method="POST" action="{{ url_for('spin.play') }}" id="spinForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" id="spinBtn"
+                class="mt-4 px-10 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 font-bold text-lg shadow-lg shadow-amber-600/30 hover:brightness-110">
+          Spin now
+        </button>
+      </form>
+      {% elif remaining <= 0 %}
+      <p class="mt-4 text-sm text-zinc-500">No spins left — contact support / wait for admin.</p>
+      {% else %}
+      <p class="mt-4 text-sm text-zinc-500">Wheel has no active prizes yet.</p>
+      {% endif %}
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-10">
-
-        <!-- Wheel -->
-
-        <div class="glass rounded-3xl p-10 text-center">
-
-            <div class="relative inline-block">
-
-                <!-- Pointer -->
-
-                <div class="absolute left-1/2 -translate-x-1/2 -top-6 z-20">
-
-                    <i class="fa-solid fa-caret-down text-red-500 text-5xl"></i>
-
-                </div>
-
-                <!-- Wheel -->
-
-                <div id="wheel"
-                     class="w-96 h-96 rounded-full border-[12px] border-yellow-400 transition-all duration-[5000ms] ease-out"
-
-                     style="background:
-                     conic-gradient(
-                        #6366f1 0deg 45deg,
-                        #10b981 45deg 90deg,
-                        #f59e0b 90deg 135deg,
-                        #ef4444 135deg 180deg,
-                        #8b5cf6 180deg 225deg,
-                        #06b6d4 225deg 270deg,
-                        #22c55e 270deg 315deg,
-                        #f97316 315deg 360deg
-                     );">
-
-                </div>
-
+    <div class="space-y-4">
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+        <h2 class="font-bold mb-3">Prize list</h2>
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+          {% for p in prizes %}
+          <div class="flex items-center gap-3 rounded-xl bg-black/25 border border-white/5 px-3 py-2">
+            <span class="w-3 h-3 rounded-full shrink-0" style="background:{{ p.color or '#6366f1' }}"></span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold truncate">{{ p.label }}</p>
+              <p class="text-[11px] text-zinc-500">
+                {{ p.prize_type }}
+                {% if p.prize_type == 'cash' %}· UGX {{ '{:,.0f}'.format(p.amount or 0) }}{% endif %}
+                {% if p.prize_type == 'membership' and p.membership %}· {{ p.membership.name }}{% endif %}
+                {% if p.prize_type == 'voucher' %}· {{ p.voucher_code or 'code' }}{% endif %}
+              </p>
             </div>
-
-            <button
-                id="spinButton"
-                class="mt-10 px-14 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 font-bold text-xl hover:scale-105 transition">
-
-                🎡 Spin Now
-
-            </button>
-
+          </div>
+          {% else %}
+          <p class="text-sm text-zinc-500">No prizes configured.</p>
+          {% endfor %}
         </div>
+      </div>
 
-        <!-- Rewards -->
-
-        <div class="glass rounded-3xl p-10">
-
-            <h2 class="text-3xl font-bold text-white mb-8">
-
-                Possible Rewards
-
-            </h2>
-
-            <div class="space-y-4">
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>UGX 5,000 Bonus</span>
-
-                    <span>💵</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>UGX 15,000 Bonus</span>
-
-                    <span>💰</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>UGX 50,000 Bonus</span>
-
-                    <span>🤑</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>Free Task</span>
-
-                    <span>🎁</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>Double Commission</span>
-
-                    <span>🚀</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>50 Points</span>
-
-                    <span>⭐</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>100 Points</span>
-
-                    <span>🏆</span>
-
-                </div>
-
-                <div class="glass rounded-2xl p-5 flex justify-between">
-
-                    <span>Jackpot</span>
-
-                    <span>👑</span>
-
-                </div>
-
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+        <h2 class="font-bold mb-3">Your results</h2>
+        <div class="space-y-2 max-h-48 overflow-y-auto">
+          {% for h in history %}
+          <div class="flex justify-between text-sm border-b border-white/5 pb-2">
+            <div>
+              <p class="font-medium">{{ h.label }}</p>
+              <p class="text-[11px] text-zinc-500">{{ h.detail }}</p>
             </div>
-
-            <div class="mt-8 glass rounded-2xl p-6">
-
-                <h3 class="text-xl font-bold text-yellow-400 mb-4">
-
-                    Rules
-
-                </h3>
-
-                <ul class="space-y-3 text-zinc-400">
-
-                    <li>• One spin every 24 hours.</li>
-
-                    <li>• Rewards are credited automatically.</li>
-
-                    <li>• Diamond members receive two spins daily.</li>
-
-                    <li>• Jackpot rewards are manually verified.</li>
-
-                </ul>
-
-            </div>
-
+            <span class="text-[11px] text-zinc-500">{% if h.created_at %}{{ h.created_at.strftime('%d %b') }}{% endif %}</span>
+          </div>
+          {% else %}
+          <p class="text-sm text-zinc-500">No spins yet.</p>
+          {% endfor %}
         </div>
-
+      </div>
     </div>
-
+  </div>
 </div>
-
+{% endblock %}
+{% block scripts %}
 <script>
-
-let spinning=false;
-
-document.getElementById("spinButton").onclick=function(){
-
-    if(spinning)return;
-
-    spinning=true;
-
-    let angle=3600+Math.floor(Math.random()*360);
-
-    document.getElementById("wheel").style.transform="rotate("+angle+"deg)";
-
-    setTimeout(function(){
-
-        alert("🎉 Congratulations! Your reward has been added.");
-
-        spinning=false;
-
-    },5000);
-
-}
-
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var idx = parseInt(params.get('idx') || '-1', 10);
+  var n = {{ n|default(0) }};
+  var wheel = document.getElementById('wheel');
+  if (wheel && idx >= 0 && n > 0) {
+    var seg = 360 / n;
+    var target = 360 * 6 + (360 - (idx * seg + seg/2));
+    wheel.style.transform = 'rotate(' + target + 'deg)';
+  }
+  var form = document.getElementById('spinForm');
+  var btn = document.getElementById('spinBtn');
+  if (form && btn) {
+    form.addEventListener('submit', function(){
+      btn.disabled = true;
+      btn.textContent = 'Spinning…';
+      if (wheel) wheel.style.transform = 'rotate(' + (360 * 8) + 'deg)';
+    });
+  }
+})();
 </script>
-
 {% endblock %}

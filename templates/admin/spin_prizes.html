@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+{% block title %}Spin prizes{% endblock %}
+{% block page_title %}Lucky Spin prizes{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-5 gap-6">
+  <div class="lg:col-span-2 glass rounded-2xl p-5">
+    <h2 class="font-bold mb-4">Add prize</h2>
+    <form method="POST" class="space-y-3">
+      <div>
+        <label class="text-xs text-zinc-400">Label</label>
+        <input name="label" required class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3" placeholder="UGX 5,000 cash">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-400">Type</label>
+        <select name="prize_type" id="prizeType" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
+          <option value="cash">Cash</option>
+          <option value="membership">Membership upgrade</option>
+          <option value="voucher">Voucher</option>
+          <option value="zero">Zero / Try again</option>
+        </select>
+      </div>
+      <div id="cashFields">
+        <label class="text-xs text-zinc-400">Cash amount (UGX)</label>
+        <input type="number" name="amount" step="100" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3" value="0">
+      </div>
+      <div id="memFields" class="hidden">
+        <label class="text-xs text-zinc-400">Membership</label>
+        <select name="membership_id" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
+          {% for m in memberships %}
+          <option value="{{ m.id }}">{{ m.name }} — UGX {{ '{:,.0f}'.format(m.price or 0) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="voucherFields" class="hidden">
+        <label class="text-xs text-zinc-400">Voucher code</label>
+        <input name="voucher_code" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
+        <label class="text-xs text-zinc-400 mt-2 block">Note to user</label>
+        <input name="voucher_note" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-zinc-400">Weight (odds)</label>
+          <input type="number" name="weight" value="10" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400">Color</label>
+          <input type="color" name="color" value="#6366f1" class="w-full mt-1 h-11 rounded-xl bg-slate-900 border border-white/10 p-1">
+        </div>
+      </div>
+      <button class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 py-3 font-semibold">Add to wheel</button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-3 glass rounded-2xl p-5">
+    <h2 class="font-bold mb-4">Wheel prizes</h2>
+    <div class="space-y-2">
+      {% for p in prizes %}
+      <div class="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+        <span class="w-3 h-3 rounded-full" style="background:{{ p.color }}"></span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold">{{ p.label }}</p>
+          <p class="text-xs text-zinc-500">{{ p.prize_type }} · weight {{ p.weight }}
+            {% if p.prize_type=='cash' %}· {{ '{:,.0f}'.format(p.amount or 0) }}{% endif %}
+            {% if not p.active %}<span class="text-rose-400">· off</span>{% endif %}
+          </p>
+        </div>
+        <form method="POST" action="{{ url_for('admin.spin_prize_toggle', prize_id=p.id) }}">
+          <button class="text-xs px-3 py-1.5 rounded-lg bg-slate-700">{{ 'Disable' if p.active else 'Enable' }}</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.spin_prize_delete', prize_id=p.id) }}" onsubmit="return confirm('Delete?')">
+          <button class="text-xs px-3 py-1.5 rounded-lg bg-rose-700/80">Delete</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-zinc-500 text-sm">No prizes yet — add cash, membership, voucher, or zero.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var sel = document.getElementById('prizeType');
+  function sync(){
+    var v = sel.value;
+    document.getElementById('cashFields').classList.toggle('hidden', v !== 'cash');
+    document.getElementById('memFields').classList.toggle('hidden', v !== 'membership');
+    document.getElementById('voucherFields').classList.toggle('hidden', v !== 'voucher');
+  }
+  sel.addEventListener('change', sync); sync();
+})();
+</script>
+{% endblock %}
