@@ -1,255 +1,88 @@
 {% extends "admin/base.html" %}
-
-{% block title %}Admin Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Command center{% endblock %}
 {% block content %}
+<div class="space-y-6">
 
-<!-- Statistics -->
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-
-    <div class="glass rounded-3xl p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-zinc-400">Total Users</p>
-                <h2 class="text-4xl font-black mt-3">{{ total_users }}</h2>
-            </div>
-            <i class="fa-solid fa-users text-5xl text-indigo-400"></i>
-        </div>
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+    <div>
+      <p class="text-indigo-300 text-xs font-semibold tracking-[0.2em] uppercase">Overview</p>
+      <h2 class="text-2xl md:text-3xl font-black mt-1">Operations at a glance</h2>
     </div>
+    <a href="{{ url_for('admin.daily_ops_report') }}" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-sm font-semibold transition">
+      <i class="fa-solid fa-chart-pie"></i> Daily report
+    </a>
+  </div>
 
-    <div class="glass rounded-3xl p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-zinc-400">Today's Deposits</p>
-                <h2 class="text-4xl font-black mt-3 text-emerald-400">
-                    {{ money(current_user, deposits_today) }}
-                </h2>
-            </div>
-            <i class="fa-solid fa-wallet text-5xl text-emerald-400"></i>
-        </div>
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+    <div class="stat-card glass rounded-2xl p-5">
+      <p class="text-zinc-400 text-xs">Users</p>
+      <p class="text-3xl font-black mt-2">{{ total_users|default(0) }}</p>
     </div>
-
-    <div class="glass rounded-3xl p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-zinc-400">Pending Withdrawals</p>
-                <h2 class="text-4xl font-black mt-3 text-red-400">
-                    {{ pending_withdrawals }}
-                </h2>
-            </div>
-            <i class="fa-solid fa-money-bill-wave text-5xl text-red-400"></i>
-        </div>
+    <div class="stat-card glass rounded-2xl p-5">
+      <p class="text-zinc-400 text-xs">Pending deposits</p>
+      <p class="text-3xl font-black mt-2 text-amber-300">{{ pending_deposits|default(0) }}</p>
+      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-[11px] text-indigo-400 mt-2 inline-block">Review →</a>
     </div>
-
-    <div class="glass rounded-3xl p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-zinc-400">Active Tasks</p>
-                <h2 class="text-4xl font-black mt-3 text-yellow-400">
-                    {{ active_tasks }}
-                </h2>
-            </div>
-            <i class="fa-solid fa-box text-5xl text-yellow-400"></i>
-        </div>
+    <div class="stat-card glass rounded-2xl p-5">
+      <p class="text-zinc-400 text-xs">Pending withdrawals</p>
+      <p class="text-3xl font-black mt-2 text-rose-400">{{ pending_withdrawals|default(0) }}</p>
+      <a href="{{ url_for('admin.withdrawals') }}" class="text-[11px] text-indigo-400 mt-2 inline-block">Review →</a>
     </div>
-
-</div>
-
-
-
-<!-- Command Center -->
-<div class="glass rounded-3xl p-6 mb-8 border border-indigo-500/30">
-  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-    <h2 class="text-2xl font-bold">Command Center</h2>
-    <div class="flex flex-wrap gap-2 text-xs">
-      <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300">{{ pending_deposits }} deposits</span>
-      <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-300">{{ pending_withdrawals }} withdrawals</span>
-      <span class="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300">{{ negative_users|length if negative_users is defined else 0 }} negative</span>
+    <div class="stat-card glass rounded-2xl p-5">
+      <p class="text-zinc-400 text-xs">Active tasks</p>
+      <p class="text-3xl font-black mt-2 text-yellow-300">{{ active_tasks|default(0) }}</p>
     </div>
   </div>
-  <div class="grid xl:grid-cols-2 gap-6">
-    <div>
-      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-arrow-down text-emerald-400"></i> Pending deposits</h3>
-      <div class="space-y-2 max-h-64 overflow-y-auto">
-        {% for d in pending_deposit_list|default([]) %}
-        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
-          <div>
-            <p class="font-medium">{{ d.user.username if d.user else d.user_id }}</p>
-            <p class="text-zinc-400 text-xs">{{ money(current_user, d.amount) }} · {{ d.payment_method }}</p>
-          </div>
-          <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-indigo-400 text-xs hover:underline">Review</a>
-        </div>
-        {% else %}
-        <p class="text-zinc-500 text-sm">No pending deposits</p>
-        {% endfor %}
+
+  <div class="grid lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 glass rounded-2xl p-5">
+      <h3 class="font-bold mb-4">Quick actions</h3>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <a href="{{ url_for('admin.users') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-users text-indigo-400 mb-2"></i>
+          <p class="text-sm font-semibold">Manage users</p>
+        </a>
+        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-arrow-down text-emerald-400 mb-2"></i>
+          <p class="text-sm font-semibold">Approve deposits</p>
+        </a>
+        <a href="{{ url_for('admin.withdrawals') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-arrow-up text-rose-400 mb-2"></i>
+          <p class="text-sm font-semibold">Pay withdrawals</p>
+        </a>
+        <a href="{{ url_for('admin.products') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-box text-amber-400 mb-2"></i>
+          <p class="text-sm font-semibold">Products</p>
+        </a>
+        <a href="{{ url_for('admin.combos') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-bolt text-violet-400 mb-2"></i>
+          <p class="text-sm font-semibold">Combo manager</p>
+        </a>
+        <a href="{{ url_for('chat.admin_inbox') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
+          <i class="fa-solid fa-comments text-sky-400 mb-2"></i>
+          <p class="text-sm font-semibold">Support chat</p>
+        </a>
       </div>
     </div>
-    <div>
-      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-arrow-up text-red-400"></i> Pending withdrawals</h3>
-      <div class="space-y-2 max-h-64 overflow-y-auto">
-        {% for w in pending_withdrawal_list|default([]) %}
-        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
-          <div>
-            <p class="font-medium">{{ w.user.username if w.user else w.user_id }}</p>
-            <p class="text-zinc-400 text-xs">{{ money(current_user, w.amount) }} · {{ w.payment_method }}</p>
-          </div>
-          <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="text-indigo-400 text-xs hover:underline">Review</a>
-        </div>
-        {% else %}
-        <p class="text-zinc-500 text-sm">No pending withdrawals</p>
-        {% endfor %}
-      </div>
-    </div>
-    <div>
-      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-orange-400"></i> Negative balances</h3>
-      <div class="space-y-2 max-h-64 overflow-y-auto">
-        {% for u in negative_users|default([]) %}
-        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
-          <div>
-            <p class="font-medium">{{ u.username }}</p>
-            <p class="text-red-400 text-xs">{{ money(current_user, u.available_balance) }}</p>
-          </div>
-          <a href="{{ url_for('admin.view_user', user_id=u.id) }}" class="text-indigo-400 text-xs hover:underline">Open</a>
-        </div>
-        {% else %}
-        <p class="text-zinc-500 text-sm">No negative accounts</p>
-        {% endfor %}
-      </div>
-    </div>
-    <div>
-      <h3 class="font-semibold text-zinc-300 mb-3 flex items-center gap-2"><i class="fa-solid fa-layer-group text-violet-400"></i> Open combos</h3>
-      <div class="space-y-2 max-h-64 overflow-y-auto">
-        {% for c in open_combos|default([]) %}
-        <div class="flex items-center justify-between bg-slate-800/60 rounded-xl px-4 py-3 text-sm">
-          <div>
-            <p class="font-medium">{{ c.user.username if c.user else c.user_id }} · {{ c.status }}</p>
-            <p class="text-zinc-400 text-xs">{{ c.product1_name or 'Combo' }} · {{ money(current_user, c.amount) }}</p>
-          </div>
-          <a href="{{ url_for('admin.view_user', user_id=c.user_id) }}" class="text-indigo-400 text-xs hover:underline">User</a>
-        </div>
-        {% else %}
-        <p class="text-zinc-500 text-sm">No open combos</p>
-        {% endfor %}
-      </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h3 class="font-bold mb-3">Attention</h3>
+      <ul class="space-y-3 text-sm">
+        <li class="flex justify-between gap-2 border-b border-white/5 pb-2">
+          <span class="text-zinc-400">Pending deposits</span>
+          <span class="font-bold text-amber-300">{{ pending_deposits|default(0) }}</span>
+        </li>
+        <li class="flex justify-between gap-2 border-b border-white/5 pb-2">
+          <span class="text-zinc-400">Pending withdrawals</span>
+          <span class="font-bold text-rose-400">{{ pending_withdrawals|default(0) }}</span>
+        </li>
+        <li class="flex justify-between gap-2">
+          <span class="text-zinc-400">Active tasks</span>
+          <span class="font-bold">{{ active_tasks|default(0) }}</span>
+        </li>
+      </ul>
     </div>
   </div>
 </div>
-
-
-<!-- Charts -->
-
-<div class="grid xl:grid-cols-2 gap-8 mb-8">
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-2xl font-bold mb-6">
-
-            Revenue (7 Days)
-
-        </h2>
-
-        <canvas id="revenueChart"></canvas>
-
-    </div>
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-2xl font-bold mb-6">
-
-            User Growth
-
-        </h2>
-
-        <canvas id="usersChart"></canvas>
-
-    </div>
-
-</div>
-
-
-<!-- Recent Activity -->
-
-<div class="glass rounded-3xl p-8">
-
-    <h2 class="text-2xl font-bold mb-6">
-
-        Recent Activity
-
-    </h2>
-
-    <div class="space-y-4">
-
-        {% for item in activities %}
-
-        <div class="flex justify-between items-center border-b border-white/10 pb-3">
-
-            <div>
-
-                <p class="font-semibold">
-
-                    {{ item.message }}
-
-                </p>
-
-                <small class="text-zinc-500">
-
-                    {{ item.time }}
-
-                </small>
-
-            </div>
-
-            <span class="text-indigo-400">
-
-                {{ item.type }}
-
-            </span>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-</div>
-
-<script>
-
-const revenueChart = new Chart(document.getElementById("revenueChart"),{
-    type:"line",
-    data:{
-        labels:{{ revenue_labels|tojson }},
-        datasets:[{
-            label:"Revenue",
-            data: {{ revenue_data|tojson }},
-            borderColor:"#6366f1",
-            backgroundColor:"rgba(99,102,241,.25)",
-            fill:true,
-            tension:.4
-        }]
-    },
-    options:{
-        plugins:{legend:{display:false}}
-    }
-});
-
-
-const usersChart = new Chart(document.getElementById("usersChart"),{
-    type:"bar",
-    data:{
-        labels:{{ user_labels|tojson }},
-        datasets:[{
-            data:{{ user_values|tojson }},
-            backgroundColor:"#22c55e"
-        }]
-    },
-    options:{
-        plugins:{legend:{display:false}}
-    }
-});
-
-</script>
-
 {% endblock %}

@@ -1,178 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{% block title %}Admin{% endblock %}</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        body {
-            background: #0f172a;
-            color: white;
-            font-family: Inter, sans-serif;
-        }
-        .glass {
-            background: rgba(255,255,255,.06);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(255,255,255,.08);
-        }
-        .sidebar-link {
-            transition: .25s;
-        }
-        .sidebar-link:hover {
-            background: #4f46e5;
-            transform: translateX(6px);
-        }
-        .active {
-            background: #4f46e5;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin{% endblock %} · Taskmill</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --sidebar-w: 17rem; }
+    body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
+    .glass {
+      background: rgba(15,23,42,.72);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .sidebar {
+      width: var(--sidebar-w);
+      transition: width .25s ease, transform .25s ease;
+    }
+    .sidebar.collapsed { width: 4.75rem; }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .brand-text { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: .85rem;
+      padding: .7rem .9rem; border-radius: .85rem;
+      color: #94a3b8; transition: .2s ease;
+      border: 1px solid transparent;
+    }
+    .sidebar-link i { width: 1.25rem; text-align: center; }
+    .sidebar-link:hover {
+      background: rgba(99,102,241,.15);
+      color: #e2e8f0;
+      border-color: rgba(99,102,241,.25);
+      transform: translateX(3px);
+    }
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(99,102,241,.9), rgba(139,92,246,.75));
+      color: white;
+      box-shadow: 0 8px 24px rgba(99,102,241,.25);
+    }
+    .stat-card {
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(129,140,248,.35);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+    @media (max-width: 1023px) {
+      .sidebar {
+        position: fixed; inset: 0 auto 0 0; z-index: 50;
+        transform: translateX(-105%);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 40;
+      }
+      .sidebar-backdrop.show { display: block; }
+    }
+  </style>
 </head>
-<body>
-
+<body class="min-h-screen">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="flex min-h-screen">
 
-    <!-- Sidebar -->
-    <aside class="w-72 glass border-r border-white/10">
+  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen" id="adminSidebar">
+    <div class="p-5 flex items-center gap-3 border-b border-white/5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 font-black">T</div>
+      <div class="brand-text transition-all duration-200">
+        <p class="font-black text-lg leading-none">Taskmill</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>
+      </div>
+    </div>
 
-        <div class="p-8 text-center">
-            <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" 
-                 class="w-20 mx-auto mb-5">
-            <h2 class="text-3xl font-black">Taskmill</h2>
-            <p class="text-zinc-400">Administration</p>
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      {% set links = [
+        ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
+        ('admin.users', 'fa-users', 'Users'),
+        ('admin.products', 'fa-box', 'Products'),
+        ('admin.combos', 'fa-bolt', 'Combos'),
+        ('admin.deposits', 'fa-arrow-down', 'Deposits'),
+        ('admin.withdrawals', 'fa-arrow-up', 'Withdrawals'),
+        ('admin.memberships', 'fa-crown', 'Memberships'),
+        ('admin.daily_ops_report', 'fa-chart-pie', 'Daily report'),
+        ('admin.announcements', 'fa-bullhorn', 'Announcements'),
+        ('admin.notifications', 'fa-bell', 'Notifications'),
+        ('admin.support', 'fa-headset', 'Support'),
+        ('chat.admin_inbox', 'fa-comments', 'Chat'),
+        ('admin.settings', 'fa-gear', 'Settings'),
+      ] %}
+      {% for ep, icon, label in links %}
+      <a href="{{ url_for(ep) }}"
+         class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">
+        <i class="fa-solid {{ icon }}"></i>
+        <span class="nav-label text-sm font-medium whitespace-nowrap transition-all duration-200">{{ label }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+
+    <div class="p-3 border-t border-white/5 space-y-2">
+      <button type="button" id="toggleSidebar"
+              class="w-full sidebar-link justify-center cursor-pointer">
+        <i class="fa-solid fa-bars"></i>
+        <span class="nav-label text-sm">Collapse</span>
+      </button>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-rose-300 hover:text-white">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="nav-label text-sm">Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header class="sticky top-0 z-30 glass border-b border-white/10 px-4 md:px-8 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <button type="button" id="openMobileSidebar" class="lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
+          <h1 class="text-lg md:text-xl font-bold leading-tight">{% block page_title %}Dashboard{% endblock %}</h1>
         </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="hidden sm:inline-flex items-center gap-2 text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Pending ops
+        </a>
+        <a href="{{ url_for('dashboard.index') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">View site</a>
+      </div>
+    </header>
 
-        <nav class="px-5 space-y-2">
-
-            <a href="{{ url_for('admin.dashboard') }}" 
-               class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                <i class="fa-solid fa-chart-line w-6"></i>
-                Dashboard
-            </a>
-
-            <a href="{{ url_for('admin.users') }}" 
-               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-users w-6"></i>
-                Users
-            </a>
-
-            <a href="{{ url_for('admin.products') }}" 
-               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-box w-6"></i>
-                Products
-            </a>
-            <a href="{{ url_for('admin.combos') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.combos' %}active{% endif %}">
-    <i class="fa-solid fa-bolt w-6"></i>
-    Combo Manager
-</a>
-            <a href="{{ url_for('admin.deposits') }}" 
-               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-wallet w-6"></i>
-                Deposits
-            </a>
-
-            <a href="{{ url_for('admin.withdrawals') }}" 
-               class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-money-bill-wave w-6"></i>
-                Withdrawals
-            </a>
-        
-    <a href="{{ url_for('admin.payment_settings') }}"
-    class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-        <i class="fa-solid fa-money-check-dollar"></i>
-        Payment Settings
-    </a>
-
-            <a href="{{ url_for('admin.memberships') }}" class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-crown w-6"></i>
-                Memberships
-            </a>
-
-<a href="{{ url_for('admin.reports') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.reports' %}active{% endif %}">
-    <i class="fa-solid fa-chart-column w-6"></i>
-    Reports
-</a>
-
-            <a href="{{ url_for('admin.announcements') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.announcements' %}active{% endif %}">
-    <i class="fa-solid fa-bullhorn w-6"></i>
-    Announcements
-</a>
-            <a href="{{ url_for('admin.notifications') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.notifications' %}active{% endif %}">
-    <i class="fa-solid fa-bell w-6"></i>
-    Notifications
-</a>
-
-            <a href="{{ url_for('admin.support') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.support' %}active{% endif %}">
-   <i class="fa-solid fa-headset w-6"></i>             
-   Support
-            </a>
-            <a href="{{ url_for('chat.admin_inbox') }}"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint and request.endpoint.startswith('chat.') %}active{% endif %}">
-                <i class="fa-solid fa-comments w-6 text-center"></i>
-                <span>Live Chat</span>
-            </a>
-
-            <a href="#"
-   class="sidebar-link flex items-center gap-4 p-4 rounded-xl {% if request.endpoint=='admin.audit_logs' %}active{% endif %}">
-    <i class="fa-solid fa-file-alt w-6"></i>
-    Audit Logs
-</a>
-
-            <a href="{{ url_for('admin.settings') }}" class="sidebar-link flex items-center gap-4 p-4 rounded-xl">
-                <i class="fa-solid fa-gear w-6"></i>
-                Settings
-            </a>
-
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1">
-
-        <!-- Top Bar -->
-        <header class="glass px-10 py-6 flex justify-between items-center border-b border-white/10">
-            <div>
-                <h1 class="text-3xl font-black">
-                    {% block page_title %}Admin{% endblock %}
-                </h1>
-            </div>
-
-            <div class="flex items-center gap-6">
-                <button class="text-2xl">
-                    <i class="fa-solid fa-bell"></i>
-                </button>
-                <button class="text-2xl">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-                    <div>
-                        <p class="font-bold">{{ current_user.full_name }}</p>
-                        <p class="text-sm text-zinc-400">Administrator</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Page Content -->
-        <div class="p-10">
-            {% block content %}
-            {% endblock %}
+    <main class="flex-1 p-4 md:p-8">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for cat, msg in messages %}
+          <div class="rounded-xl border border-white/10 px-4 py-3 text-sm
+            {% if cat == 'success' %}bg-emerald-500/10 text-emerald-200
+            {% elif cat == 'danger' %}bg-rose-500/10 text-rose-200
+            {% else %}bg-indigo-500/10 text-indigo-100{% endif %}">{{ msg }}</div>
+          {% endfor %}
         </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
     </main>
+  </div>
 </div>
 
+<script>
+(function(){
+  const side = document.getElementById('adminSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const toggle = document.getElementById('toggleSidebar');
+  const mobile = document.getElementById('openMobileSidebar');
+  if (toggle) toggle.addEventListener('click', function(){
+    side.classList.toggle('collapsed');
+  });
+  function openMobile(){ side.classList.add('open'); backdrop.classList.add('show'); }
+  function closeMobile(){ side.classList.remove('open'); backdrop.classList.remove('show'); }
+  if (mobile) mobile.addEventListener('click', openMobile);
+  if (backdrop) backdrop.addEventListener('click', closeMobile);
+})();
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

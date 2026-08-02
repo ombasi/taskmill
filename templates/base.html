@@ -38,6 +38,56 @@ card:"#18181b"
 }
 </script>
 
+
+<style>
+  :root {
+    --tm-accent: #818cf8;
+    --tm-glow: rgba(99,102,241,.35);
+  }
+  html { scroll-behavior: smooth; }
+  body { -webkit-font-smoothing: antialiased; }
+  .tm-nav-link {
+    position: relative;
+    padding: .4rem .15rem;
+    transition: color .2s ease;
+  }
+  .tm-nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -4px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg,#6366f1,#a855f7);
+    transform: scaleX(0);
+    transition: transform .2s ease;
+  }
+  .tm-nav-link:hover { color: #c7d2fe; }
+  .tm-nav-link:hover::after { transform: scaleX(1); }
+  .tm-card {
+    background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(16px);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .tm-card:hover {
+    border-color: rgba(129,140,248,.35);
+    box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(129,140,248,.12);
+    transform: translateY(-2px);
+  }
+  .tm-btn {
+    transition: transform .15s ease, box-shadow .2s ease, filter .15s ease;
+  }
+  .tm-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+  .tm-btn:active { transform: scale(.98); }
+  /* Hide site footer on mobile — bottom nav is enough */
+  @media (max-width: 1023px) {
+    footer.site-footer { display: none !important; }
+  }
+  @media (min-width: 1024px) {
+    .mobile-bottom-nav { display: none !important; }
+  }
+</style>
+
 </head>
 
 <body class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-24 lg:pb-0">
@@ -96,40 +146,40 @@ Earn • Review • Grow
 
 <div class="hidden lg:flex items-center gap-8 text-sm font-medium">
 
-<a href="{{ url_for('dashboard.index') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('dashboard.index') }}" class="tm-nav-link hover:text-indigo-300">
 
 Dashboard
 
 </a>
 
-<a href="{{ url_for('task.index') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('task.index') }}" class="tm-nav-link hover:text-indigo-300">
 
 Tasks
 
 </a>
 
-<a href="{{ url_for('wallet.index') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('wallet.index') }}" class="tm-nav-link hover:text-indigo-300">
 
 Wallet
 
 </a>
 
-<a href="{{ url_for('task.history') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('task.history') }}" class="tm-nav-link hover:text-indigo-300">
 
 History
 
 </a>
 
-<a href="{{ url_for('dashboard.membership') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">
 
 Membership
 
 </a>
 
-<a href="{{ url_for('chat.inbox') }}" class="hover:text-indigo-400 transition">Chat</a>
-<a href="{{ url_for('dashboard.contact') }}" class="hover:text-indigo-400 transition">Support</a>
+<a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300">Chat</a>
+<a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">Support</a>
 
-<a href="{{ url_for('profile.index') }}" class="hover:text-indigo-400 transition">
+<a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">
 
 Profile
 
@@ -278,7 +328,7 @@ shadow-lg">
 
 <!-- Footer -->
 
-<footer class="border-t border-white/10 mt-20">
+<footer class="site-footer border-t border-white/10 mt-20 hidden lg:block">
 
 <div class="max-w-7xl mx-auto px-6 py-12">
 
