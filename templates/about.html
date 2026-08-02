@@ -1,81 +1,43 @@
 {% extends "base.html" %}
-{% block title %}About Taskmill{% endblock %}
+{% block title %}About{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto px-6 py-12 space-y-10">
-
-  <div class="glass rounded-3xl p-10 text-center">
-    <h1 class="text-4xl md:text-5xl font-black text-white">About Taskmill</h1>
-    <p class="text-zinc-400 mt-4 text-lg">Who we are, what we do, and why teams trust us</p>
-  </div>
-
-  <div class="glass rounded-3xl p-8">
-    <h2 class="text-2xl font-bold text-indigo-400 mb-4">Who We Are</h2>
-    <p class="text-zinc-300 leading-relaxed">
-      Taskmill agency is a modern Work Operating System designed to help teams manage projects,
-      workflows, and product optimization with clarity and confidence.
+<div class="max-w-4xl mx-auto space-y-10">
+  <header class="text-center border-b border-white/10 pb-10">
+    <p class="text-[11px] tracking-[0.3em] uppercase text-zinc-500">Our story</p>
+    <h1 class="mt-2 text-3xl md:text-5xl font-serif font-semibold">About Taskmill</h1>
+    <p class="mt-4 text-zinc-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+      Taskmill helps people earn through structured product review tasks — with a clear wallet,
+      membership tiers, and transparent support.
     </p>
-    <p class="text-zinc-300 leading-relaxed mt-4">
-      Our platform enables businesses to enhance performance through structured processes,
-      intelligent automation, and data-driven optimization strategies.
-    </p>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-      <div class="bg-slate-800/60 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-white">500+</p>
-        <p class="text-zinc-400 text-sm mt-1">Projects Completed</p>
-      </div>
-      <div class="bg-slate-800/60 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-white">98%</p>
-        <p class="text-zinc-400 text-sm mt-1">Client Satisfaction</p>
-      </div>
-      <div class="bg-slate-800/60 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-white">15+</p>
-        <p class="text-zinc-400 text-sm mt-1">Years Experience</p>
-      </div>
-      <div class="bg-slate-800/60 rounded-2xl p-4 text-center">
-        <p class="text-3xl font-black text-white">50+</p>
-        <p class="text-zinc-400 text-sm mt-1">Countries Served</p>
-      </div>
+  </header>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-center">
+    {% for n, l in [('500+','Projects'),('98%','Satisfaction'),('15+','Years focus'),('50+','Markets')] %}
+    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
+      <p class="text-2xl font-black text-white">{{ n }}</p>
+      <p class="text-xs text-zinc-500 mt-1 uppercase tracking-wider">{{ l }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
+      <h2 class="font-serif text-xl font-semibold mb-3">Mission</h2>
+      <p class="text-sm text-zinc-400 leading-relaxed">To help users participate in product optimization workflows with fair commissions, clear rules, and reliable payouts.</p>
+    </div>
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
+      <h2 class="font-serif text-xl font-semibold mb-3">Values</h2>
+      <ul class="text-sm text-zinc-400 space-y-2">
+        <li>· Clarity in balances and holds</li>
+        <li>· Membership-based progression</li>
+        <li>· Responsive human support</li>
+        <li>· Integrity against fraud</li>
+      </ul>
     </div>
   </div>
 
-  <div class="glass rounded-3xl p-8">
-    <h2 class="text-2xl font-bold text-indigo-400 mb-4">Our Mission</h2>
-    <p class="text-zinc-300 leading-relaxed">
-      To help businesses optimize products efficiently by combining analytics, automation,
-      and structured execution delivering consistent and measurable results.
-    </p>
+  <div class="text-center">
+    <a href="{{ url_for('auth.register') }}" class="inline-flex rounded-full bg-white text-zinc-900 px-8 py-3 text-sm font-bold hover:bg-zinc-100">Get started</a>
   </div>
-
-  <div class="glass rounded-3xl p-8">
-    <h2 class="text-2xl font-bold text-indigo-400 mb-6">Why Choose Taskmill</h2>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Technical Expertise</p><p class="text-zinc-400 text-sm mt-1">Experienced specialists in optimization and performance engineering.</p></div>
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Innovative Systems</p><p class="text-zinc-400 text-sm mt-1">Automation and analytics designed for real-world workflows.</p></div>
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Data-Driven Decisions</p><p class="text-zinc-400 text-sm mt-1">Every action backed by measurable insights.</p></div>
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Trusted Partnerships</p><p class="text-zinc-400 text-sm mt-1">Transparent processes and long-term collaboration.</p></div>
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Proven Results</p><p class="text-zinc-400 text-sm mt-1">Consistent ROI across hundreds of projects.</p></div>
-      <div class="bg-slate-800/50 rounded-xl p-4"><p class="font-bold text-white">Global Reach</p><p class="text-zinc-400 text-sm mt-1">Supporting clients across multiple regions and industries.</p></div>
-    </div>
-  </div>
-
-  <div class="glass rounded-3xl p-8">
-    <h2 class="text-2xl font-bold text-indigo-400 mb-6">Core Values</h2>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div><p class="font-bold text-white">Excellence</p><p class="text-zinc-400 text-sm">High standards in every solution delivered.</p></div>
-      <div><p class="font-bold text-white">Innovation</p><p class="text-zinc-400 text-sm">Using modern tools to solve complex problems.</p></div>
-      <div><p class="font-bold text-white">Integrity</p><p class="text-zinc-400 text-sm">Transparency and accountability at every stage.</p></div>
-      <div><p class="font-bold text-white">Sustainability</p><p class="text-zinc-400 text-sm">Long-term value for businesses and systems.</p></div>
-    </div>
-  </div>
-
-  <div class="glass rounded-3xl p-10 text-center">
-    <h2 class="text-3xl font-black text-white">Ready to Get Started?</h2>
-    <p class="text-zinc-400 mt-3">Join businesses worldwide using Taskmill to optimize and scale with confidence.</p>
-    <div class="flex flex-wrap justify-center gap-4 mt-8">
-      <a href="{{ url_for('dashboard.contact') }}" class="bg-indigo-600 hover:bg-indigo-500 rounded-xl px-8 py-3 font-semibold">Contact Support</a>
-      <a href="{{ url_for('chat.inbox') }}" class="bg-slate-700 hover:bg-slate-600 rounded-xl px-8 py-3 font-semibold">Live Chat</a>
-    </div>
-  </div>
-
 </div>
 {% endblock %}

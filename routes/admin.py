@@ -2610,3 +2610,56 @@ def grant_spin(user_id):
     return redirect(url_for("admin.view_user", user_id=user.id))
 
 
+
+
+@admin_bp.route("/users/create", methods=["GET", "POST"])
+@login_required
+@admin_required
+def create_user():
+    """Create a normal user or an admin (role-based)."""
+    from models.membership import Membership
+    memberships = Membership.query.order_by(Membership.price.asc()).all()
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        phone = (request.form.get("phone") or "").strip()
+        full_name = (request.form.get("full_name") or "").strip()
+        password = request.form.get("password") or "12345678"
+        role = (request.form.get("role") or "user").strip()
+        membership_id = request.form.get("membership_id", type=int)
+        if not username:
+            flash("Username required.", "danger")
+            return redirect(url_for("admin.create_user"))
+        if User.query.filter_by(username=username).first():
+            flash("Username already exists.", "danger")
+            return redirect(url_for("admin.create_user"))
+        if email and User.query.filter_by(email=email).first():
+            flash("Email already exists.", "danger")
+            return redirect(url_for("admin.create_user"))
+        u = User(
+            username=username,
+            email=email or f"{username}@taskmill.local",
+            phone=phone or None,
+            full_name=full_name or username,
+            is_admin=(role == "admin"),
+            is_active=True,
+            is_blocked=False,
+            membership_id=membership_id,
+            country=request.form.get("country") or "Uganda",
+            currency="UGX",
+            currency_symbol="UGX",
+        )
+        u.set_password(password)
+        if hasattr(u, "must_change_password"):
+            u.must_change_password = True
+        db.session.add(u)
+        db.session.commit()
+        flash(
+            f"{'Admin' if role == 'admin' else 'User'} {username} created. Temp password: {password}",
+            "success",
+        )
+        return redirect(url_for("admin.view_user", user_id=u.id))
+    return render_template(
+        "admin/create_user.html",
+        memberships=memberships,
+    )

@@ -1,444 +1,93 @@
 {% extends "admin/base.html" %}
-
 {% block title %}Users{% endblock %}
-{% block page_title %}User Management{% endblock %}
-
+{% block page_title %}Users{% endblock %}
 {% block content %}
-
-<div class="space-y-8">
-
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
-        <div>
-            <h2 class="text-4xl font-black">Users</h2>
-            <p class="text-zinc-400 mt-2">
-                Manage all registered Taskmill users.
-            </p>
-        </div>
-
-        <!-- Add User -->
-        <!-- Change href later if you create admin.create_user -->
-        <a href="#"
-           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl font-semibold transition">
-
-            <i class="fa-solid fa-user-plus mr-2"></i>
-            Add User
-
-        </a>
-
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-black">Users</h2>
+      <p class="text-sm text-zinc-400 mt-1">Search, manage, and create accounts</p>
     </div>
-
-    <!-- Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-
-        <div class="glass rounded-3xl p-6">
-            <p class="text-zinc-400">Total Users</p>
-            <h3 class="text-4xl font-black">
-                {{ users.total }}
-            </h3>
-        </div>
-
-        <div class="glass rounded-3xl p-6">
-            <p class="text-zinc-400">Current Page</p>
-            <h3 class="text-4xl font-black">
-                {{ users.page }}
-            </h3>
-        </div>
-
-        <div class="glass rounded-3xl p-6">
-            <p class="text-zinc-400">Pages</p>
-            <h3 class="text-4xl font-black">
-                {{ users.pages }}
-            </h3>
-        </div>
-
-        <div class="glass rounded-3xl p-6">
-            <p class="text-zinc-400">Showing</p>
-            <h3 class="text-4xl font-black">
-                {{ users.items|length }}
-            </h3>
-        </div>
-
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.create_user') }}?role=user"
+         class="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 text-sm font-semibold">
+        <i class="fa-solid fa-user-plus mr-1"></i> Add user
+      </a>
+      <a href="{{ url_for('admin.create_user') }}?role=admin"
+         class="rounded-xl bg-amber-600 hover:bg-amber-500 px-5 py-2.5 text-sm font-semibold">
+        <i class="fa-solid fa-user-shield mr-1"></i> Create admin
+      </a>
     </div>
+  </div>
 
-    <!-- Search -->
-    <div class="glass rounded-3xl p-6">
-
-        <form method="GET"
-              action="{{ url_for('admin.users') }}">
-
-            <div class="flex flex-col md:flex-row gap-4">
-
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ search }}"
-                    placeholder="Search username, name or email..."
-                    class="flex-1 bg-slate-800 rounded-xl px-5 py-3 outline-none">
-
-                <button
-                    class="bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-xl">
-
-                    <i class="fa-solid fa-search mr-2"></i>
-
-                    Search
-
-                </button>
-
-            </div>
-
-        </form>
-
+  <form method="GET" class="glass rounded-2xl p-4 flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-[200px]">
+      <label class="text-xs text-zinc-400">Search</label>
+      <input name="q" value="{{ q or '' }}" placeholder="Username, phone, email, IP..."
+             class="w-full bg-slate-900 border border-white/10 rounded-xl p-3 mt-1">
     </div>
-    <!-- Users Table -->
+    <label class="flex items-center gap-2 text-sm text-zinc-300">
+      <input type="checkbox" name="negative" value="1" {% if filter_neg %}checked{% endif %}> Negative balance
+    </label>
+    <button class="bg-indigo-600 px-5 py-3 rounded-xl font-semibold text-sm">Search</button>
+  </form>
 
-<div class="glass rounded-3xl overflow-hidden">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Total</p><p class="text-2xl font-black">{{ users.total }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Page</p><p class="text-2xl font-black">{{ users.page }} / {{ users.pages }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">On page</p><p class="text-2xl font-black">{{ users.items|length }}</p></div>
+  </div>
 
-    <table class="w-full text-sm">
-
-        <thead class="bg-slate-800">
-
-        <tr>
-
-            <th class="p-4">
-                <input type="checkbox">
-            </th>
-
-            <th class="p-4 text-left">User</th>
-
-            <th class="p-4 text-left">Contact</th>
-
-            <th class="p-4 text-left">Membership</th>
-
-            <th class="p-4 text-right">Wallet</th>
-
-            <th class="p-4 text-center">Combo</th>
-
-            <th class="p-4 text-left">Country</th>
-
-            <th class="p-4 text-left">IP Address</th>
-
-            <th class="p-4 text-center">Status</th>
-
-            <th class="p-4 text-center">Actions</th>
-
-        </tr>
-
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-800/80 text-left text-zinc-400">
+          <tr>
+            <th class="p-4">User</th>
+            <th class="p-4">Membership</th>
+            <th class="p-4">Balance</th>
+            <th class="p-4">Status</th>
+            <th class="p-4"></th>
+          </tr>
         </thead>
-
-        <tbody>
-
-        {% if users.items %}
-
-            {% for user in users.items %}
-
-            <tr class="border-t border-slate-700 hover:bg-slate-800 transition">
-
-                <td class="p-4">
-                    <input type="checkbox">
-                </td>
-
-                <td class="p-4">
-
-                    <div class="flex items-center gap-3">
-
-                        <div class="w-11 h-11 rounded-full bg-indigo-600 flex items-center justify-center font-bold">
-
-                            {{ user.username[:1]|upper }}
-
-                        </div>
-
-                        <div>
-
-                            <div class="font-bold">
-                                {{ user.username }}
-                            </div>
-
-                            <div class="text-xs text-zinc-400">
-                                {{ user.full_name }}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </td>
-
-                <td class="p-4">
-
-                    <div>{{ user.email }}</div>
-
-                    <div class="text-xs text-zinc-400">
-                        {{ user.phone }}
-                    </div>
-
-                </td>
-
-                <td class="p-4">
-
-                    <span class="bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-
-                        {{ user.membership or "Novice" }}
-
-                    </span>
-
-                </td>
-
-                <td class="p-4 text-right font-bold text-green-400">
-
-                    {{ money(current_user, user.available_balance or 0) }}
-
-                </td>
-
-                <td class="p-4 text-center">
-
-                    {% if user.combo_active %}
-
-                        <span class="text-green-400 font-semibold">
-
-                            Active
-
-                        </span>
-
-                    {% else %}
-
-                        <span class="text-zinc-500">
-
-                            None
-
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-                <td class="p-4">
-
-                    {{ user.country or "-" }}
-
-                </td>
-
-                <td class="p-4">
-
-                    {{ user.ip_address or "-" }}
-
-                </td>
-
-                <td class="p-4 text-center">
-
-                    {% if user.is_blocked %}
-
-                        <span class="bg-red-600 px-3 py-1 rounded-full text-xs">
-
-                            Blocked
-
-                        </span>
-
-                    {% elif user.is_active %}
-
-                        <span class="bg-green-600 px-3 py-1 rounded-full text-xs">
-
-                            Active
-
-                        </span>
-
-                    {% else %}
-
-                        <span class="bg-yellow-500 text-black px-3 py-1 rounded-full text-xs">
-
-                            Suspended
-
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-                <td class="p-4">
-
-                    <td>
-
-    <a href="{{ url_for('admin.view_user', user_id=user.id) }}"
-       class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 px-5 py-2 rounded-xl shadow-lg transition">
-
-        <i class="fa-solid fa-sliders"></i>
-
-        Manage User
-
-    </a>
-
-</td>
-
-                        </form>
-
-                    </div>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-        {% else %}
-
-            <tr>
-
-                <td colspan="10" class="text-center py-16 text-zinc-400">
-
-                    <i class="fa-solid fa-users text-5xl mb-4"></i>
-
-                    <div class="text-xl">
-
-                        No users found.
-
-                    </div>
-
-                </td>
-
-            </tr>
-
-        {% endif %}
-
+        <tbody class="divide-y divide-white/5">
+          {% for user in users.items %}
+          <tr class="hover:bg-white/[0.03]">
+            <td class="p-4">
+              <p class="font-semibold">{{ user.username }}{% if user.is_admin %} <span class="text-amber-400 text-[10px]">ADMIN</span>{% endif %}</p>
+              <p class="text-xs text-zinc-500">{{ user.email }} · {{ user.phone or '—' }}</p>
+            </td>
+            <td class="p-4">{{ user.membership.name if user.membership else '—' }}</td>
+            <td class="p-4 font-semibold {% if (user.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+              {{ money(current_user, user.available_balance) }}
+            </td>
+            <td class="p-4">
+              {% if user.is_blocked %}<span class="text-xs text-rose-300">Blocked</span>
+              {% elif user.is_active %}<span class="text-xs text-emerald-300">Active</span>
+              {% else %}<span class="text-xs text-zinc-500">Inactive</span>{% endif %}
+            </td>
+            <td class="p-4 text-right">
+              <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="text-indigo-400 hover:underline text-sm font-medium">Open →</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="p-10 text-center text-zinc-500">No users found</td></tr>
+          {% endfor %}
         </tbody>
-
-    </table>
-
-</div>
-<!-- Pagination -->
-
-{% if users.pages > 1 %}
-
-<div class="flex flex-col md:flex-row items-center justify-between gap-6">
-
-    <div class="text-zinc-400">
-
-        Showing
-        <span class="font-semibold text-white">
-            {{ users.items|length }}
-        </span>
-
-        of
-
-        <span class="font-semibold text-white">
-            {{ users.total }}
-        </span>
-
-        users
-
+      </table>
     </div>
+  </div>
 
-    <div class="flex items-center gap-2">
-
-        <!-- Previous -->
-
-        {% if users.has_prev %}
-
-        <a href="{{ url_for('admin.users', page=users.prev_num, search=search) }}"
-           class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-indigo-600 transition">
-
-            <i class="fa-solid fa-angle-left"></i>
-
-        </a>
-
-        {% else %}
-
-        <span class="px-4 py-2 rounded-xl bg-slate-900 opacity-40">
-
-            <i class="fa-solid fa-angle-left"></i>
-
-        </span>
-
-        {% endif %}
-
-        <!-- Pages -->
-
-        {% for page_num in users.iter_pages(left_edge=1,
-                                            right_edge=1,
-                                            left_current=2,
-                                            right_current=2) %}
-
-            {% if page_num %}
-
-                {% if page_num == users.page %}
-
-                <span class="px-4 py-2 rounded-xl bg-indigo-600 font-bold">
-
-                    {{ page_num }}
-
-                </span>
-
-                {% else %}
-
-                <a href="{{ url_for('admin.users',
-                                    page=page_num,
-                                    search=search) }}"
-                   class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-indigo-600 transition">
-
-                    {{ page_num }}
-
-                </a>
-
-                {% endif %}
-
-            {% else %}
-
-                <span class="px-2">
-
-                    ...
-
-                </span>
-
-            {% endif %}
-
-        {% endfor %}
-
-        <!-- Next -->
-
-        {% if users.has_next %}
-
-        <a href="{{ url_for('admin.users',
-                            page=users.next_num,
-                            search=search) }}"
-           class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-indigo-600 transition">
-
-            <i class="fa-solid fa-angle-right"></i>
-
-        </a>
-
-        {% else %}
-
-        <span class="px-4 py-2 rounded-xl bg-slate-900 opacity-40">
-
-            <i class="fa-solid fa-angle-right"></i>
-
-        </span>
-
-        {% endif %}
-
-    </div>
-
+  {% if users.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if users.has_prev %}
+    <a href="{{ url_for('admin.users', page=users.prev_num, q=q) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-zinc-400">{{ users.page }} / {{ users.pages }}</span>
+    {% if users.has_next %}
+    <a href="{{ url_for('admin.users', page=users.next_num, q=q) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
-
-{% endif %}
-
-<script>function openCreditModal(id){
-    document.getElementById("creditModal").classList.remove("hidden");
-    document.getElementById("creditForm").action =
-        "/admin/users/" + id + "/credit";
-}
-
-function closeCreditModal(){
-    document.getElementById("creditModal").classList.add("hidden");
-}
-
-function openDeductModal(id){
-    document.getElementById("deductModal").classList.remove("hidden");
-    document.getElementById("deductForm").action =
-        "/admin/users/" + id + "/deduct";
-}
-
-function closeDeductModal(){
-    document.getElementById("deductModal").classList.add("hidden");
-}</script>
 {% endblock %}

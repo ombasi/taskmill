@@ -1,75 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Terms & Conditions{% endblock %}
+{% block title %}Terms{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-8 py-6">
-  <div class="text-center">
-    <h1 class="text-4xl font-black">Terms &amp; Conditions</h1>
-    <p class="text-zinc-400 mt-2">Last updated: August 2026 · Taskmill</p>
-  </div>
+<div class="max-w-3xl mx-auto space-y-8">
+  <header class="text-center border-b border-white/10 pb-8">
+    <p class="text-[11px] tracking-[0.3em] uppercase text-zinc-500">Legal</p>
+    <h1 class="mt-2 text-3xl md:text-5xl font-serif font-semibold">Terms &amp; Conditions</h1>
+    <p class="mt-3 text-zinc-400 text-sm">Please read carefully before using Taskmill.</p>
+  </header>
 
-  <div class="glass rounded-3xl p-8 space-y-6 text-zinc-300 leading-relaxed text-sm md:text-base">
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">1. Eligibility</h2>
-      <p>You must be at least <strong class="text-white">20 years old</strong> to create an account and use Taskmill. By registering, you confirm that the name, sex, date of birth, and country you provide are accurate.</p>
+  <article class="prose-invert space-y-6 text-sm text-zinc-300 leading-relaxed">
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">1. Eligibility</h2>
+      <p>Users must be at least 20 years of age. You are responsible for accurate registration details. Username cannot be changed after signup.</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">2. Account</h2>
-      <ul class="list-disc pl-5 space-y-1">
-        <li>One account per person. Multiple accounts may be suspended.</li>
-        <li>Your <strong>username cannot be changed</strong> after signup.</li>
-        <li>Keep your password and withdraw PIN confidential.</li>
-        <li>You are responsible for activity under your account.</li>
-      </ul>
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">2. Account security</h2>
+      <p>Keep your password and withdraw PIN confidential. Taskmill will never ask for your password via chat. Report suspicious activity immediately.</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">3. Tasks &amp; wallet</h2>
-      <ul class="list-disc pl-5 space-y-1">
-        <li>When a product is assigned, its price may be held from your balance.</li>
-        <li>After you submit a valid review, the product price plus commission is credited back.</li>
-        <li>Combo products may create a temporary negative balance until you deposit and complete the review.</li>
-        <li>You should maintain at least <strong>UGX 15,000</strong> to start tasks and when withdrawing (reserve for the next day).</li>
-      </ul>
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">3. Wallet &amp; tasks</h2>
+      <p>Product prices may be held during reviews and refunded with commission on completion. A minimum balance may be required to start tasks. Withdrawals may require leaving a reserve (UGX 15,000).</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">4. Deposits &amp; withdrawals</h2>
-      <ul class="list-disc pl-5 space-y-1">
-        <li>Deposits are credited after admin verification.</li>
-        <li>Withdrawals require a withdraw PIN and are subject to daily task / membership rules.</li>
-        <li>Processing times depend on payment rails and review queues.</li>
-      </ul>
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">4. Combo products</h2>
+      <p>High-value assignments can create a temporary negative balance. You must deposit to clear the hold before completing those products. Earnings are not guaranteed.</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">5. Referrals</h2>
-      <p>Referral rewards (including percentage bonuses on referred users’ approved deposits) are subject to anti-fraud checks and may be adjusted or withheld in case of abuse.</p>
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">5. Prohibited use</h2>
+      <p>Fraud, multi-accounting abuse, manipulation of referrals, or attempts to exploit the system may result in suspension and forfeiture of balances pending investigation.</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">6. Prohibited conduct</h2>
-      <ul class="list-disc pl-5 space-y-1">
-        <li>Fake reviews, bots, or automated task completion</li>
-        <li>Self-referrals or fake deposit schemes</li>
-        <li>Abuse of support, chargebacks, or payment fraud</li>
-      </ul>
-      <p class="mt-2">Violations may result in balance freezes, forfeiture, or permanent ban.</p>
+    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
+      <h2 class="text-white font-semibold text-base mb-2">6. Changes</h2>
+      <p>We may update these terms. Continued use of the platform constitutes acceptance of the latest version.</p>
     </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">7. Changes</h2>
-      <p>We may update these terms. Continued use of Taskmill after changes means you accept the updated terms. Material changes may be announced in-app.</p>
-    </section>
-
-    <section>
-      <h2 class="text-xl font-bold text-white mb-2">8. Contact</h2>
-      <p>For support, use in-app Chat or the Support page.</p>
-    </section>
-  </div>
-
-  <div class="text-center">
-    <a href="{{ url_for('auth.register') }}" class="text-indigo-400 hover:underline">Back to signup</a>
-  </div>
+  </article>
 </div>
 {% endblock %}
