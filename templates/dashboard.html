@@ -126,7 +126,7 @@
         </div>
       </div>
 
-      <div class="tm-card rounded-3xl p-5">
+      <div class="tm-card rounded-3xl p-5 hidden md:block">
         <div class="flex items-center justify-between mb-3">
           <h2 class="font-bold text-lg">Recent activity</h2>
           <a href="{{ url_for('wallet.index') }}" class="text-xs text-indigo-400 hover:underline">All</a>
@@ -155,7 +155,7 @@
       </div>
     </div>
 
-    <div class="lg:col-span-2 space-y-4">
+    <div class="lg:col-span-2 space-y-4 hidden md:block">
       <div class="tm-card rounded-3xl p-5 relative overflow-hidden">
         <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-indigo-500/20 blur-2xl"></div>
         <p class="text-[11px] uppercase tracking-wider text-zinc-500 relative">Your referral code</p>

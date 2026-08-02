@@ -88,9 +88,36 @@ card:"#18181b"
   }
 </style>
 
+
+<style>
+  body.theme-dark { background: #070b14; color: #f1f5f9; }
+  body.theme-light {
+    background: #f1f5f9; color: #0f172a;
+  }
+  body.theme-light .glass,
+  body.theme-light .tm-card {
+    background: rgba(255,255,255,.85) !important;
+    border-color: rgba(15,23,42,.08) !important;
+    color: #0f172a;
+  }
+  body.theme-light header nav > div,
+  body.theme-light .backdrop-blur-xl {
+    background: rgba(255,255,255,.8) !important;
+    border-color: rgba(15,23,42,.08) !important;
+  }
+  body.theme-light .text-white { color: #0f172a !important; }
+  body.theme-light .text-zinc-400 { color: #64748b !important; }
+  body.theme-light .text-zinc-500 { color: #94a3b8 !important; }
+  body.theme-light .bg-zinc-900\/60,
+  body.theme-light .bg-zinc-900\/50,
+  body.theme-light .bg-zinc-900\/80,
+  body.theme-light .bg-black\/30 { background: rgba(255,255,255,.9) !important; }
+  body.theme-light .mobile-bottom-nav,
+  body.theme-light nav.fixed { background: rgba(255,255,255,.95) !important; border-color: rgba(15,23,42,.08) !important; }
+</style>
 </head>
 
-<body class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-24 lg:pb-0">
+<body id="tm-body" class="theme-dark" class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-24 lg:pb-0">
 
 <!-- Background -->
 
@@ -199,6 +226,11 @@ Logout
 <!-- Right actions: bell + menu -->
 {% if current_user.is_authenticated %}
 <div class="flex items-center gap-2 md:gap-3">
+  <button type="button" id="theme-toggle" title="Toggle theme"
+     class="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition">
+    <i class="fa-solid fa-moon" id="theme-icon"></i>
+  </button>
+
   <a href="{{ url_for('profile.notifications') }}"
      class="relative w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
      title="Notifications">
@@ -504,6 +536,28 @@ function showToast(msg, type){
 {% block scripts %}
 
 {% endblock %}
+
+
+<script>
+(function(){
+  var body = document.getElementById('tm-body') || document.body;
+  var btn = document.getElementById('theme-toggle');
+  var icon = document.getElementById('theme-icon');
+  function apply(t){
+    body.classList.remove('theme-dark','theme-light');
+    body.classList.add(t === 'light' ? 'theme-light' : 'theme-dark');
+    if(icon){ icon.className = t === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'; }
+    try { localStorage.setItem('tm-theme', t); } catch(e){}
+  }
+  var saved = 'dark';
+  try { saved = localStorage.getItem('tm-theme') || 'dark'; } catch(e){}
+  apply(saved);
+  if(btn) btn.addEventListener('click', function(){
+    var next = body.classList.contains('theme-light') ? 'dark' : 'light';
+    apply(next);
+  });
+})();
+</script>
 
 </body>
 </html>

@@ -203,6 +203,19 @@ def history():
     )
 
 
+@task_bp.route("/park/<int:id>", methods=["POST", "GET"])
+@login_required
+def park(id):
+    """Leave task assigned (pending) — user cannot get a new one until done."""
+    task = Task.query.get_or_404(id)
+    if task.user_id != current_user.id:
+        flash("Not allowed.", "danger")
+        return redirect(url_for("task.history"))
+    if task.status in ("assigned", "frozen"):
+        flash("Task saved as pending. Complete it before starting another.", "info")
+    return redirect(url_for("task.history"))
+
+
 @task_bp.route("/cancel/<int:id>")
 @login_required
 def cancel(id):

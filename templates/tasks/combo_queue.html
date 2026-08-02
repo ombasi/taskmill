@@ -8,25 +8,28 @@
   <h1 class="text-3xl font-black text-white mt-4">Completed Orders</h1>
   <p class="text-zinc-400 mt-1 text-sm">Track your order status</p>
 
-  {% if needs_deposit %}
-  <div class="mt-6 rounded-2xl bg-red-950/50 border border-red-500/40 p-4">
-    <p class="text-red-300 font-bold">Negative balance</p>
-    <p class="text-zinc-300 text-sm mt-1">
-      Current balance:
-      <span class="text-red-400 font-bold">{{ money(current_user, balance) }}</span>
-    </p>
-    <p class="text-zinc-400 text-sm mt-2">
-      Deposit to clear the negative amount. Products stay <span class="text-yellow-400">Pending</span>
-      until your balance is zero or positive, then you can submit.
-    </p>
-    <a href="{{ url_for('wallet.deposit') }}"
-       class="mt-4 inline-block w-full text-center bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 font-semibold">
-      Deposit to clear negative
-    </a>
+  {% if needs_deposit or (balance is defined and (balance|float) < 0) %}
+  <div class="mt-6 rounded-2xl border border-rose-500/40 overflow-hidden">
+    <div class="bg-gradient-to-br from-rose-600/35 via-fuchsia-700/20 to-zinc-900 p-5">
+      <div class="flex items-start gap-3">
+        <span class="w-12 h-12 rounded-2xl bg-white/10 text-rose-100 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-snowflake"></i></span>
+        <div class="flex-1">
+          <p class="text-[11px] uppercase tracking-[0.2em] text-rose-200/80 font-semibold">Combo status</p>
+          <p class="text-xl font-black text-white mt-1">Negative balance hold</p>
+          <p class="text-sm text-rose-50/85 mt-2 leading-relaxed">
+            Balance <span class="font-bold text-white">{{ money(current_user, balance) }}</span>.
+            Deposit to clear the hold. Products stay <span class="text-amber-300 font-semibold">Pending</span> until balance ≥ 0, then submit to earn combo commission.
+          </p>
+          <a href="{{ url_for('wallet.deposit') }}" class="mt-4 inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-xl bg-white text-rose-700 font-bold text-sm px-6 py-3 shadow-lg">
+            <i class="fa-solid fa-plus"></i> Deposit to continue
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
   {% else %}
-  <div class="mt-4 text-sm text-emerald-400">
-    Balance: <strong>{{ money(current_user, balance) }}</strong> — you can submit pending products.
+  <div class="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+    Balance <strong>{{ money(current_user, balance) }}</strong> — submit pending products below.
   </div>
   {% endif %}
 

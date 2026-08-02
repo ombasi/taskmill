@@ -1,76 +1,48 @@
 {% extends "base.html" %}
 {% block title %}Login · Taskmill{% endblock %}
 {% block content %}
-<div class="min-h-[70vh] flex items-center justify-center px-4 py-8">
-  <div class="w-full max-w-md">
-    <div class="text-center mb-8">
-      <div class="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-        <i class="fa-solid fa-cube text-2xl"></i>
+<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-6">
+  <div class="w-full max-w-[400px]">
+    <div class="text-center mb-6">
+      <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+        <i class="fa-solid fa-cube text-xl"></i>
       </div>
-      <h1 class="mt-5 text-3xl font-black tracking-tight">Welcome back</h1>
-      <p class="text-zinc-400 mt-2 text-sm">Sign in to continue earning with Taskmill</p>
+      <h1 class="mt-4 text-2xl font-black">Welcome back</h1>
+      <p class="text-zinc-400 mt-1 text-sm">Sign in to Taskmill</p>
     </div>
 
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/70 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
-      <form method="POST" class="space-y-5">
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/80 p-6 shadow-2xl">
+      <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
         <div>
-          <label class="block text-sm text-zinc-400 mb-2">Username or email</label>
-          <div class="relative">
-            <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-            <input type="text" name="username" required autocomplete="username"
-                   placeholder="Your username"
-                   class="w-full bg-zinc-950/80 border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition">
-          </div>
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Username or email</label>
+          <input type="text" name="username" required autocomplete="username"
+                 class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm focus:border-indigo-500 outline-none">
         </div>
-
         <div>
-          <label class="block text-sm text-zinc-400 mb-2">Password</label>
+          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Password</label>
           <div class="relative">
-            <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
             <input id="password" type="password" name="password" required autocomplete="current-password"
-                   placeholder="••••••••"
-                   class="w-full bg-zinc-950/80 border border-white/10 rounded-xl py-3.5 pl-11 pr-12 text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition">
-            <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white">
-              <i id="eye" class="fa-solid fa-eye"></i>
-            </button>
+                   class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 pr-11 text-sm focus:border-indigo-500 outline-none">
+            <button type="button" onclick="var p=document.getElementById('password');p.type=p.type==='password'?'text':'password'"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"><i class="fa-solid fa-eye"></i></button>
           </div>
         </div>
-
-        <label class="flex items-center gap-2 text-sm text-zinc-400">
-          <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900 text-indigo-600 focus:ring-indigo-500">
-          Remember me
-        </label>
-
-        <button type="submit"
-                class="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 py-3.5 font-bold text-white shadow-lg shadow-indigo-600/25 transition">
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-2 text-zinc-400">
+            <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900">
+            Remember me
+          </label>
+          <a href="{{ url_for('auth.forgot_password') }}" class="text-indigo-400 hover:underline">Forgot password?</a>
+        </div>
+        <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 font-bold text-sm">
           Sign in
         </button>
       </form>
-
-      <p class="text-center text-sm text-zinc-500 mt-6">
-        New to Taskmill?
-        <a href="{{ url_for('auth.register') }}" class="text-indigo-400 font-semibold hover:underline">Create account</a>
+      <p class="text-center text-xs text-zinc-500 mt-5">
+        No account? <a href="{{ url_for('auth.register') }}" class="text-indigo-400 font-semibold">Create one</a>
       </p>
     </div>
-
-    <p class="text-center text-xs text-zinc-600 mt-6">
-      By continuing you agree to our
-      <a href="{{ url_for('dashboard.terms') }}" class="text-zinc-400 hover:text-indigo-400">Terms</a>
-    </p>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-function togglePassword(){
-  var p = document.getElementById('password');
-  var e = document.getElementById('eye');
-  if(!p) return;
-  if(p.type === 'password'){ p.type = 'text'; if(e) e.className = 'fa-solid fa-eye-slash'; }
-  else { p.type = 'password'; if(e) e.className = 'fa-solid fa-eye'; }
-}
-</script>
 {% endblock %}
