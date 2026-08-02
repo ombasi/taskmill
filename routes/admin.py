@@ -825,80 +825,112 @@ def create_combo():
 @admin_required
 def assign_combo(user_id):
     """
-    Assign ONE high-value product as combo.
-    On trigger: full product price is deducted (can go negative).
-    User deposits, then submits that single product.
+    Admin enters target combo amount (how much the product should cost).
+    System picks a product within ±3000 UGX of that target.
+    On trigger: product price is deducted (can go negative).
     """
     from models.product import Product
     import random
 
     user = User.query.get_or_404(user_id)
-    product_id = request.form.get("product1_id", type=int) or request.form.get("product_id", type=int)
-    use_random = request.form.get("random_high") == "1"
     trigger_task = request.form.get("trigger_task", type=int) or 1
     notes = (request.form.get("notes") or "").strip()
+    product_id = request.form.get("product1_id", type=int) or request.form.get("product_id", type=int)
 
-    if use_random or not product_id:
-        # One high-priced product that should exceed balance → creates negative
-        bal = float(user.available_balance or 0)
-        products = (
+    try:
+        target = float(request.form.get("target_amount") or 0)
+    except (TypeError, ValueError):
+        target = 0
+
+    bal = float(user.available_balance or 0)
+    RANGE = 3000.0  # ±3000 UGX
+
+    # Suggested default shown to admin: slightly above balance
+    if target <= 0:
+        flash("Enter a target amount (UGX) for the combo product.", "danger")
+        return redirect(url_for("admin.view_user", user_id=user.id))
+
+    p1 = None
+    if product_id:
+        p1 = Product.query.get(product_id)
+
+    if not p1:
+        low = max(0.0, target - RANGE)
+        high = target + RANGE
+        candidates = (
             Product.query
             .filter(
-                Product.active == True,
+                Product.active.is_(True),
                 Product.price > 0,
-                Product.stock > 0,
-                Product.price > max(bal, 5000),  # must be above balance to force negative
+                Product.price >= low,
+                Product.price <= high,
             )
-            .order_by(Product.price.desc())
-            .limit(60)
+            .order_by(Product.price.asc())
+            .limit(80)
             .all()
         )
-        if not products:
-            products = (
+        if not candidates:
+            # nearest products to target
+            all_p = (
                 Product.query
-                .filter(Product.active == True, Product.price > 0, Product.stock > 0)
-                .order_by(Product.price.desc())
-                .limit(40)
+                .filter(Product.active.is_(True), Product.price > 0)
+                .order_by(Product.price.asc())
+                .limit(400)
                 .all()
             )
-        if not products:
-            flash("No products available for combo.", "danger")
+            all_p.sort(key=lambda x: abs(float(x.price or 0) - target))
+            candidates = all_p[:15]
+        if not candidates:
+            flash("No products available near that amount.", "danger")
             return redirect(url_for("admin.view_user", user_id=user.id))
-        pool = products[: max(8, len(products) // 2)]
+        # Prefer price slightly above balance when possible
+        above = [p for p in candidates if float(p.price or 0) > bal]
+        pool = above if above else candidates
         p1 = random.choice(pool)
-    else:
-        p1 = Product.query.get_or_404(product_id)
 
-    combo_value = float(p1.price or 0)
+    price = float(p1.price or 0)
+    if abs(price - target) > RANGE * 2:
+        # soft warning only
+        pass
+
+    # Cancel previous pending combos
+    Combo.query.filter_by(user_id=user.id, status="Pending", active=True).update(
+        {"active": False, "status": "Cancelled"}
+    )
 
     combo = Combo(
         user_id=user.id,
-        created_by=current_user.id,
-        trigger_task=trigger_task,
-        amount=combo_value,
-        combo_type="fixed",
-        tasks_required=1,
+        product1_id=p1.id,
+        product1_name=p1.name,
+        product1_price=price,
+        product1_image=getattr(p1, "image_url", None) or getattr(p1, "image", None),
+        amount=price,
+        trigger_task=max(1, trigger_task),
         status="Pending",
         active=True,
-        notes=notes or f"Single combo product: {p1.name}",
-        product1_id=p1.id,
-        product2_id=None,
-        product1_name=p1.name,
-        product2_name=None,
-        product1_price=combo_value,
-        product2_price=0,
-        product1_image=p1.image,
-        product2_image=None,
+        notes=notes or f"Target UGX {target:,.0f} · picked {price:,.0f} (bal {bal:,.0f})",
     )
+    # optional fields if model has them
+    for attr, val in (
+        ("product2_id", None),
+        ("product2_name", None),
+        ("product2_price", None),
+    ):
+        if hasattr(combo, attr):
+            setattr(combo, attr, val)
+
     db.session.add(combo)
     db.session.commit()
 
     flash(
-        f"Combo assigned: {p1.name} (UGX {combo_value:,.0f}). "
-        f"Trigger after task #{trigger_task} (or trigger manually).",
+        f"Combo assigned: {p1.name} @ UGX {price:,.0f} "
+        f"(target {target:,.0f} ±{int(RANGE)}). "
+        f"User balance UGX {bal:,.0f} → projected {bal - price:,.0f} after trigger. "
+        f"Auto at task #{combo.trigger_task}.",
         "success",
     )
     return redirect(url_for("admin.view_user", user_id=user.id))
+
 
 @admin_bp.route("/combos/<int:id>/edit", methods=["GET", "POST"])
 @login_required

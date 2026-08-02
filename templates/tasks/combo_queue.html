@@ -1,26 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Combo Orders{% endblock %}
 {% block content %}
-<div class="max-w-lg mx-auto px-4 py-8">
+<div class="max-w-lg mx-auto space-y-4 pb-4">
 
-  <a href="{{ url_for('dashboard.index') }}" class="text-indigo-400 text-sm hover:underline">← Back to Dashboard</a>
+  <div class="flex items-center justify-between">
+    <a href="{{ url_for('dashboard.index') }}" class="text-sm text-indigo-400 hover:underline">← Dashboard</a>
+    <a href="{{ url_for('task.history') }}" class="text-sm text-zinc-400 hover:text-white">History</a>
+  </div>
 
-  <h1 class="text-3xl font-black text-white mt-4">Completed Orders</h1>
-  <p class="text-zinc-400 mt-1 text-sm">Track your order status</p>
+  <div>
+    <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Orders</p>
+    <h1 class="text-2xl md:text-3xl font-black mt-1">Completed orders</h1>
+    <p class="text-sm text-zinc-400 mt-1">Track combo status and submit when unlocked</p>
+  </div>
 
   {% if needs_deposit or (balance is defined and (balance|float) < 0) %}
-  <div class="mt-6 rounded-2xl border border-rose-500/40 overflow-hidden">
-    <div class="bg-gradient-to-br from-rose-600/35 via-fuchsia-700/20 to-zinc-900 p-5">
+  <div class="rounded-3xl border border-rose-500/40 overflow-hidden shadow-xl shadow-rose-900/20">
+    <div class="bg-gradient-to-br from-rose-600/40 via-fuchsia-700/20 to-zinc-950 p-5">
       <div class="flex items-start gap-3">
-        <span class="w-12 h-12 rounded-2xl bg-white/10 text-rose-100 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-snowflake"></i></span>
-        <div class="flex-1">
-          <p class="text-[11px] uppercase tracking-[0.2em] text-rose-200/80 font-semibold">Combo status</p>
+        <span class="w-12 h-12 rounded-2xl bg-white/10 text-rose-100 flex items-center justify-center text-lg shrink-0">
+          <i class="fa-solid fa-snowflake"></i>
+        </span>
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] uppercase tracking-[0.18em] text-rose-200/90 font-semibold">Combo status</p>
           <p class="text-xl font-black text-white mt-1">Negative balance hold</p>
           <p class="text-sm text-rose-50/85 mt-2 leading-relaxed">
-            Balance <span class="font-bold text-white">{{ money(current_user, balance) }}</span>.
-            Deposit to clear the hold. Products stay <span class="text-amber-300 font-semibold">Pending</span> until balance ≥ 0, then submit to earn combo commission.
+            Balance <span class="font-bold text-white">{{ money(current_user, balance|default(current_user.available_balance)) }}</span>.
+            Deposit to clear the hold. Products stay
+            <span class="text-amber-300 font-semibold">Pending</span>
+            until balance ≥ 0, then submit to earn combo commission.
           </p>
-          <a href="{{ url_for('wallet.deposit') }}" class="mt-4 inline-flex items-center justify-center gap-2 w-full sm:w-auto rounded-xl bg-white text-rose-700 font-bold text-sm px-6 py-3 shadow-lg">
+          <a href="{{ url_for('wallet.deposit') }}"
+             class="mt-4 inline-flex items-center justify-center gap-2 w-full rounded-2xl bg-white text-rose-700 font-bold text-sm py-3 shadow-lg">
             <i class="fa-solid fa-plus"></i> Deposit to continue
           </a>
         </div>
@@ -28,87 +39,79 @@
     </div>
   </div>
   {% else %}
-  <div class="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-    Balance <strong>{{ money(current_user, balance) }}</strong> — submit pending products below.
+  <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 flex items-center justify-between gap-2">
+    <span>Balance <strong>{{ money(current_user, balance|default(current_user.available_balance)) }}</strong> — you can submit.</span>
   </div>
   {% endif %}
 
-  <div class="mt-6 space-y-6">
+  <div class="space-y-4">
     {% for t in combo_tasks %}
-    <div class="bg-white text-slate-900 rounded-3xl overflow-hidden shadow-xl">
-      <div class="p-4">
-        <div class="bg-zinc-50 rounded-2xl p-4 flex items-center justify-center min-h-[200px]">
-          <img
-            src="{{ media(t.product_image) }}"
-            alt="{{ t.product_name }}"
-            class="max-h-52 object-contain"
-            onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop'">
-        </div>
-
-        <div class="mt-4">
-          <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
-            {% if 'Amazon' in (t.product_name or '') %}Amazon
-            {% elif 'Alibaba' in (t.product_name or '') %}Alibaba
-            {% elif 'Temu' in (t.product_name or '') %}Temu
-            {% elif 'eBay' in (t.product_name or '') %}eBay
-            {% elif 'Jumia' in (t.product_name or '') %}Jumia
-            {% else %}Brand{% endif %}
-          </span>
-        </div>
-
-        <h2 class="mt-3 text-lg font-bold text-slate-900 leading-snug">
-          {{ t.product_name|replace('[COMBO] ', '') }}
-        </h2>
-
-        <p class="text-zinc-500 text-sm mt-2">Quantity: 1</p>
-
-        <p class="text-zinc-400 text-sm mt-3">Create Time</p>
-        <p class="text-slate-700 text-sm">
-          {% if t.created_at %}{{ t.created_at.strftime('%d/%m/%Y, %I:%M:%S %p') }}{% else %}—{% endif %}
-        </p>
-
-        <p class="text-zinc-400 text-sm mt-3">Status</p>
-        <div class="mt-1">
-          {% if needs_deposit or t.status == 'frozen' %}
-            <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-orange-100 text-orange-700">Frozen</span>
-            <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 ml-1">Pending</span>
-          {% else %}
-            <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-          {% endif %}
-        </div>
-
-        <p class="text-zinc-400 text-sm mt-4">Total amount</p>
-        <p class="text-slate-900 text-xl font-black">
-          {{ money(current_user, t.product_price) }}
-        </p>
-
-        <p class="text-zinc-400 text-sm mt-3">Commission</p>
-        <p class="text-emerald-600 text-lg font-bold">
-          {{ money(current_user, t.commission) }}
-        </p>
-
-        {% if needs_deposit or t.status == 'frozen' %}
-        <button disabled
-                class="mt-5 w-full rounded-xl py-3.5 font-semibold text-white bg-zinc-300 cursor-not-allowed">
-          Frozen — deposit first
-        </button>
-        {% else %}
-        <a href="{{ url_for('task.review', id=t.id) }}"
-           class="mt-5 block w-full text-center rounded-xl py-3.5 font-semibold text-white bg-lime-500 hover:bg-lime-600">
-          Proceed to Submit
-        </a>
-        {% endif %}
+    <article class="rounded-3xl border border-white/10 overflow-hidden bg-zinc-900/60 shadow-xl">
+      <div class="bg-gradient-to-r from-indigo-600/20 to-transparent px-4 py-2 flex items-center justify-between text-[11px] text-zinc-400">
+        <span>Brand · Combo product</span>
+        <span>{% if t.created_at %}{{ t.created_at.strftime('%d/%m/%Y, %I:%M:%S %p') }}{% endif %}</span>
       </div>
-    </div>
+      <div class="p-4 flex gap-4">
+        <img src="{{ media(t.product_image) }}" alt=""
+             class="w-24 h-24 rounded-2xl object-cover bg-zinc-800 shrink-0"
+             onerror="this.src='https://ui-avatars.com/api/?name=Combo&background=4c1d95&color=fff'">
+        <div class="min-w-0 flex-1">
+          <h2 class="font-bold text-base leading-snug">{{ t.product_name|replace('[COMBO] ','') }}</h2>
+          <p class="text-xs text-zinc-500 mt-1">Quantity: 1</p>
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            {% if t.status == 'frozen' %}
+            <span class="text-[10px] rounded-full bg-sky-500/20 text-sky-300 px-2 py-0.5 font-semibold">Frozen</span>
+            <span class="text-[10px] rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 font-semibold">Pending</span>
+            {% elif t.status == 'assigned' %}
+            <span class="text-[10px] rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 font-semibold">Pending · Ready</span>
+            {% else %}
+            <span class="text-[10px] rounded-full bg-zinc-500/20 text-zinc-300 px-2 py-0.5">{{ t.status }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="px-4 pb-4 grid grid-cols-2 gap-2">
+        <div class="rounded-2xl bg-black/30 border border-white/5 p-3">
+          <p class="text-[10px] text-zinc-500 uppercase">Total amount</p>
+          <p class="font-black text-sm mt-0.5">{{ money(current_user, t.product_price) }}</p>
+        </div>
+        <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/15 p-3">
+          <p class="text-[10px] text-emerald-400/80 uppercase">Commission</p>
+          <p class="font-black text-sm text-emerald-400 mt-0.5">{{ money(current_user, t.commission) }}</p>
+        </div>
+      </div>
+      {% if t.status == 'assigned' %}
+      <div class="px-4 pb-4">
+        <a href="{{ url_for('task.review', id=t.id) }}"
+           class="block w-full text-center rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 font-bold text-sm shadow-lg shadow-indigo-600/20">
+          Submit review
+        </a>
+      </div>
+      {% elif t.status == 'frozen' %}
+      <div class="px-4 pb-4">
+        <a href="{{ url_for('wallet.deposit') }}"
+           class="block w-full text-center rounded-2xl border border-white/15 bg-white/5 py-3 font-semibold text-sm">
+          Deposit to unlock
+        </a>
+      </div>
+      {% endif %}
+    </article>
     {% else %}
-    <div class="glass rounded-3xl p-8 text-center text-zinc-400">
-      No pending combo products.
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/40 p-10 text-center text-zinc-500 text-sm">
+      No active combo orders.
     </div>
     {% endfor %}
   </div>
 
-  <p class="text-center text-zinc-500 text-xs mt-8">
-    View all in <a href="{{ url_for('task.history') }}" class="text-indigo-400 underline">Task History</a>
-  </p>
+  {% if combo_total is defined and combo_total %}
+  <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm flex justify-between">
+    <span class="text-zinc-400">Combo total held</span>
+    <span class="font-bold">{{ money(current_user, combo_total) }}</span>
+  </div>
+  {% endif %}
+
+  <a href="{{ url_for('task.history') }}" class="block text-center text-sm text-indigo-400 hover:underline py-2">
+    View all in Task History
+  </a>
 </div>
 {% endblock %}
