@@ -1,114 +1,103 @@
 from datetime import datetime, date
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import os
+import uuid
+from flask import (
+    Blueprint, render_template, request, redirect, url_for, flash, current_app
+)
 from flask_login import login_required, current_user
-from models.task import Task
 from models.notification import Notification
 from extensions import db
 
 profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
 
-
-def _ensure_membership(user):
-    if user.membership_id and getattr(user, "membership", None):
-        return
-    try:
-        from models.membership import Membership
-        starter = (
-            Membership.query.filter_by(name="Starter").first()
-            or Membership.query.order_by(Membership.price.asc()).first()
-        )
-        if starter:
-            user.membership_id = starter.id
-            db.session.commit()
-    except Exception:
-        db.session.rollback()
+PHONE_CHANGES_PER_MONTH = 2
 
 
-def _parse_dob(value):
-    if not value:
-        return None
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
-    except ValueError:
-        return None
+def _month_key():
+    return date.today().strftime("%Y-%m")
 
 
-def _age(dob: date) -> int:
-    today = date.today()
-    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+def _phone_changes_left(user):
+    month = _month_key()
+    if (user.phone_change_month or "") != month:
+        return PHONE_CHANGES_PER_MONTH
+    used = int(user.phone_change_count or 0)
+    return max(0, PHONE_CHANGES_PER_MONTH - used)
 
 
-def _max_dob_str():
-    """Latest DOB allowed for age >= 20."""
-    today = date.today()
-    try:
-        return date(today.year - 20, today.month, today.day).isoformat()
-    except ValueError:
-        return date(today.year - 20, today.month, 28).isoformat()
+def _avatar_url(user):
+    if getattr(user, "profile_image", None):
+        return url_for("static", filename=f"uploads/avatars/{user.profile_image}")
+    name = (user.full_name or user.username or "U")
+    return f"https://ui-avatars.com/api/?name={name.replace(' ', '+')}&background=6366f1&color=fff&size=256"
 
 
 @profile_bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
-    _ensure_membership(current_user)
+    left = _phone_changes_left(current_user)
 
     if request.method == "POST":
-        full_name = (request.form.get("full_name") or "").strip()
-        email = (request.form.get("email") or "").strip().lower()
-        phone = (request.form.get("phone") or "").strip()
-        sex = (request.form.get("sex") or "").strip()
-        dob = _parse_dob(request.form.get("date_of_birth"))
-        accept = request.form.get("accept_terms") == "1"
+        action = (request.form.get("action") or "phone").strip()
 
-        if not full_name:
-            flash("Full name is required.", "danger")
-            return redirect(url_for("profile.index"))
-        if sex not in ("Male", "Female", "Other"):
-            flash("Please select your sex.", "danger")
-            return redirect(url_for("profile.index"))
-        if not dob:
-            flash("Valid date of birth is required.", "danger")
-            return redirect(url_for("profile.index"))
-        if _age(dob) < 20:
-            flash("You must be at least 20 years old to use Taskmill.", "danger")
-            return redirect(url_for("profile.index"))
-        if not accept:
-            flash("You must accept the Terms & Conditions.", "danger")
-            return redirect(url_for("profile.index"))
-
-        if email and email != (current_user.email or "").lower():
-            from models.user import User
-            if User.query.filter(User.email == email, User.id != current_user.id).first():
-                flash("Email already in use.", "danger")
+        if action == "phone":
+            phone = (request.form.get("phone") or "").strip()
+            if not phone:
+                flash("Enter a phone number.", "danger")
                 return redirect(url_for("profile.index"))
-            current_user.email = email
+            if phone == (current_user.phone or ""):
+                flash("That is already your phone number.", "info")
+                return redirect(url_for("profile.index"))
+            if left <= 0:
+                flash("Phone number can only be changed twice per month.", "danger")
+                return redirect(url_for("profile.index"))
 
-        current_user.full_name = full_name
-        current_user.phone = phone or current_user.phone
-        current_user.sex = sex
-        current_user.date_of_birth = dob
-        if not current_user.accepted_terms_at:
-            current_user.accepted_terms_at = datetime.utcnow()
-
-        try:
+            month = _month_key()
+            if (current_user.phone_change_month or "") != month:
+                current_user.phone_change_month = month
+                current_user.phone_change_count = 0
+            current_user.phone = phone
+            current_user.phone_change_count = int(current_user.phone_change_count or 0) + 1
             db.session.commit()
-            flash("Profile updated.", "success")
-        except Exception:
-            db.session.rollback()
-            flash("Could not update profile.", "danger")
-        return redirect(url_for("profile.index"))
+            flash(f"Phone updated. {_phone_changes_left(current_user)} change(s) left this month.", "success")
+            return redirect(url_for("profile.index"))
 
-    try:
-        completed = Task.query.filter_by(user_id=current_user.id, status="completed").count()
-        total = Task.query.filter_by(user_id=current_user.id).count()
-    except Exception:
-        completed, total = 0, 0
+        if action == "avatar":
+            f = request.files.get("avatar")
+            if not f or not f.filename:
+                flash("Choose an image file.", "danger")
+                return redirect(url_for("profile.index"))
+            name = f.filename.rsplit(".", 1)
+            ext = name[1].lower() if len(name) == 2 else "png"
+            if ext not in {"png", "jpg", "jpeg", "webp", "gif"}:
+                flash("Use png, jpg, webp, or gif.", "danger")
+                return redirect(url_for("profile.index"))
+            folder = os.path.join(current_app.static_folder, "uploads", "avatars")
+            os.makedirs(folder, exist_ok=True)
+            fname = f"{current_user.id}_{uuid.uuid4().hex[:12]}.{ext}"
+            f.save(os.path.join(folder, fname))
+            # remove old
+            try:
+                old = current_user.profile_image
+                if old:
+                    op = os.path.join(folder, old)
+                    if os.path.isfile(op):
+                        os.remove(op)
+            except Exception:
+                pass
+            current_user.profile_image = fname
+            db.session.commit()
+            flash("Profile photo updated.", "success")
+            return redirect(url_for("profile.index"))
+
+        flash("Invalid action.", "danger")
+        return redirect(url_for("profile.index"))
 
     return render_template(
         "profile.html",
-        completed=completed,
-        total=total,
-        max_dob=_max_dob_str(),
+        avatar_url=_avatar_url(current_user),
+        phone_changes_left=left,
+        phone_changes_max=PHONE_CHANGES_PER_MONTH,
     )
 
 
@@ -161,7 +150,7 @@ def change_password():
         flash("Password updated successfully.", "success")
         if current_user.is_admin:
             return redirect(url_for("admin.dashboard"))
-        return redirect(url_for("dashboard.index"))
+        return redirect(url_for("profile.index"))
     return render_template("profile/change_password.html")
 
 

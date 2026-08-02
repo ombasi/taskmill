@@ -1,122 +1,113 @@
 {% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
+{% block title %}Profile{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-8">
+<div class="max-w-4xl mx-auto space-y-5">
 
-  <div class="glass rounded-3xl p-8">
-    <div class="flex flex-col md:flex-row items-center gap-6">
-      <img
-        src="https://ui-avatars.com/api/?name={{ (current_user.full_name or current_user.username or 'U')|urlencode }}&background=6366f1&color=fff&size=128"
-        class="w-24 h-24 rounded-3xl" alt="avatar">
-      <div class="text-center md:text-left">
-        <h1 class="text-3xl font-black">{{ current_user.full_name or current_user.username }}</h1>
-        <p class="text-zinc-400 mt-1">@{{ current_user.username }} · {{ current_user.email }}</p>
-        <div class="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
-          <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-sm">
+  {# Header card #}
+  <section class="relative overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8"
+           style="background: radial-gradient(100% 80% at 0% 0%, rgba(99,102,241,.35), transparent 50%), #0c0f1a;">
+    <div class="flex flex-col sm:flex-row items-center gap-5">
+      <div class="relative">
+        <img src="{{ avatar_url }}" alt="Avatar"
+             class="w-24 h-24 md:w-28 md:h-28 rounded-3xl object-cover border-2 border-white/20 shadow-xl bg-zinc-800">
+        <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-indigo-600 border border-white/20 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-camera"></i>
+        </span>
+      </div>
+      <div class="text-center sm:text-left flex-1">
+        <h1 class="text-2xl md:text-3xl font-black">{{ current_user.full_name or current_user.username }}</h1>
+        <p class="text-zinc-400 text-sm mt-1">@{{ current_user.username }} · {{ current_user.email }}</p>
+        <div class="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+          <span class="text-xs rounded-full bg-indigo-500/20 text-indigo-200 px-3 py-1">
             {{ current_user.membership.name if current_user.membership else "Starter" }}
           </span>
-          <span class="px-3 py-1 rounded-full bg-slate-700 text-sm">
-            {{ current_user.country or "—" }}
-          </span>
+          <span class="text-xs rounded-full bg-white/5 text-zinc-300 px-3 py-1">{{ current_user.country or "—" }}</span>
           {% if current_user.sex %}
-          <span class="px-3 py-1 rounded-full bg-slate-700 text-sm">{{ current_user.sex }}</span>
+          <span class="text-xs rounded-full bg-white/5 text-zinc-300 px-3 py-1">{{ current_user.sex }}</span>
           {% endif %}
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="grid lg:grid-cols-3 gap-8">
-    <div class="glass rounded-3xl p-6 space-y-4">
-      <h2 class="text-xl font-bold">Account</h2>
-      <div>
-        <p class="text-zinc-500 text-xs">Username (cannot change)</p>
-        <p class="font-semibold">{{ current_user.username }}</p>
+  <div class="grid lg:grid-cols-5 gap-4">
+    {# Locked identity #}
+    <div class="lg:col-span-3 rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-bold text-lg">Account details</h2>
+        <span class="text-[11px] text-zinc-500 flex items-center gap-1"><i class="fa-solid fa-lock"></i> Locked</span>
       </div>
-      <div>
-        <p class="text-zinc-500 text-xs">Member since</p>
-        <p class="font-semibold">{% if current_user.created_at %}{{ current_user.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}</p>
+
+      <div class="grid sm:grid-cols-2 gap-3">
+        {% for label, value in [
+          ('Full name', current_user.full_name or '—'),
+          ('Username', current_user.username),
+          ('Email', current_user.email or '—'),
+          ('Sex', current_user.sex or '—'),
+          ('Date of birth', current_user.date_of_birth.strftime('%d %b %Y') if current_user.date_of_birth else '—'),
+          ('Country', current_user.country or '—'),
+          ('Referral code', current_user.referral_code or '—'),
+          ('Member since', current_user.created_at.strftime('%d %b %Y') if current_user.created_at else '—'),
+        ] %}
+        <div class="rounded-2xl bg-black/25 border border-white/5 px-4 py-3">
+          <p class="text-[10px] uppercase tracking-wider text-zinc-500">{{ label }}</p>
+          <p class="text-sm font-semibold mt-1 truncate">{{ value }}</p>
+        </div>
+        {% endfor %}
       </div>
-      <div>
-        <p class="text-zinc-500 text-xs">Referral code</p>
-        <p class="font-semibold tracking-wider">{{ current_user.referral_code }}</p>
-      </div>
-      <div class="flex flex-col gap-2 pt-2">
-        <a href="{{ url_for('profile.change_password') }}" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm text-center">Change password</a>
-        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm text-center">Withdraw PIN</a>
-        <a href="{{ url_for('dashboard.terms') }}" class="text-indigo-400 text-sm text-center mt-2">Terms &amp; Conditions</a>
-      </div>
+      <p class="text-xs text-zinc-500">Name, username, email, sex, date of birth, and country cannot be changed. Contact admin if a correction is required.</p>
     </div>
 
-    <div class="lg:col-span-2 glass rounded-3xl p-8">
-      <h2 class="text-2xl font-bold mb-6">Personal details</h2>
-      <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-5">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {# Editable side #}
+    <div class="lg:col-span-2 space-y-4">
+      {# Avatar #}
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+        <h2 class="font-bold mb-3">Profile photo</h2>
+        <form method="POST" enctype="multipart/form-data" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="avatar">
+          <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required
+                 class="block w-full text-xs text-zinc-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-2 file:text-white file:text-xs">
+          <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 py-2.5 text-sm font-semibold">Upload photo</button>
+        </form>
+      </div>
 
-        <div class="grid md:grid-cols-2 gap-5">
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Full name</label>
-            <input type="text" name="full_name" required
-                   value="{{ current_user.full_name or '' }}"
-                   class="w-full bg-slate-800 border border-white/10 rounded-xl p-3">
-          </div>
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Username</label>
-            <input type="text" value="{{ current_user.username }}" disabled
-                   class="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-zinc-500 cursor-not-allowed">
-            <p class="text-xs text-zinc-500 mt-1">Username cannot be changed</p>
-          </div>
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Email</label>
-            <input type="email" name="email" required
-                   value="{{ current_user.email or '' }}"
-                   class="w-full bg-slate-800 border border-white/10 rounded-xl p-3">
-          </div>
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Phone</label>
-            <input type="text" name="phone"
-                   value="{{ current_user.phone or '' }}"
-                   class="w-full bg-slate-800 border border-white/10 rounded-xl p-3">
-          </div>
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Sex</label>
-            <select name="sex" required class="w-full bg-slate-800 border border-white/10 rounded-xl p-3">
-              <option value="" disabled {% if not current_user.sex %}selected{% endif %}>Select</option>
-              <option value="Male" {% if current_user.sex=='Male' %}selected{% endif %}>Male</option>
-              <option value="Female" {% if current_user.sex=='Female' %}selected{% endif %}>Female</option>
-              <option value="Other" {% if current_user.sex=='Other' %}selected{% endif %}>Other</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm text-zinc-400 mb-2">Date of birth</label>
-            <input type="date" name="date_of_birth" required
-                   value="{{ current_user.date_of_birth.isoformat() if current_user.date_of_birth else '' }}"
-                   max="{{ max_dob }}"
-                   class="w-full bg-slate-800 border border-white/10 rounded-xl p-3">
-            <p class="text-xs text-zinc-500 mt-1">You must be at least 20 years old</p>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-sm text-zinc-400 mb-2">Country</label>
-            <input type="text" value="{{ current_user.country or '' }}" disabled
-                   class="w-full bg-slate-900 border border-white/5 rounded-xl p-3 text-zinc-500 cursor-not-allowed">
-            <p class="text-xs text-zinc-500 mt-1">Country is set at signup</p>
-          </div>
+      {# Phone #}
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold">Phone number</h2>
+          <span class="text-[11px] rounded-full px-2 py-0.5 {% if phone_changes_left > 0 %}bg-emerald-500/15 text-emerald-300{% else %}bg-rose-500/15 text-rose-300{% endif %}">
+            {{ phone_changes_left }}/{{ phone_changes_max }} left
+          </span>
         </div>
+        <form method="POST" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="phone">
+          <input type="text" name="phone" value="{{ current_user.phone or '' }}"
+                 placeholder="e.g. 07XXXXXXXX"
+                 {% if phone_changes_left <= 0 %}disabled{% endif %}
+                 class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm disabled:opacity-50">
+          <button type="submit"
+                  {% if phone_changes_left <= 0 %}disabled{% endif %}
+                  class="w-full rounded-xl bg-white/10 hover:bg-white/15 py-2.5 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+            Update phone
+          </button>
+        </form>
+        <p class="text-[11px] text-zinc-500 mt-2">Maximum {{ phone_changes_max }} changes per calendar month.</p>
+      </div>
 
-        <div class="flex items-start gap-3 bg-slate-800/50 rounded-xl p-4">
-          <input type="checkbox" name="accept_terms" value="1" id="terms"
-                 class="mt-1" {% if current_user.accepted_terms_at %}checked{% endif %} required>
-          <label for="terms" class="text-sm text-zinc-300">
-            I confirm my details are accurate and I agree to the
-            <a href="{{ url_for('dashboard.terms') }}" target="_blank" class="text-indigo-400 underline">Terms &amp; Conditions</a>.
-            I am at least 20 years of age.
-          </label>
-        </div>
-
-        <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-semibold">
-          Save profile
-        </button>
-      </form>
+      {# Security links #}
+      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-2">
+        <h2 class="font-bold mb-2">Security</h2>
+        <a href="{{ url_for('profile.change_password') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
+          <span class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center"><i class="fa-solid fa-key"></i></span>
+          <span class="text-sm font-medium">Change password</span>
+        </a>
+        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
+          <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center"><i class="fa-solid fa-lock"></i></span>
+          <span class="text-sm font-medium">Withdraw PIN</span>
+        </a>
+      </div>
     </div>
   </div>
 </div>

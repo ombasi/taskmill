@@ -85,6 +85,15 @@ def create_app():
                 if "date_of_birth" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN date_of_birth DATE"))
                     db.session.commit()
+                if "profile_image" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN profile_image VARCHAR(255)"))
+                    db.session.commit()
+                if "phone_change_month" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN phone_change_month VARCHAR(7)"))
+                    db.session.commit()
+                if "phone_change_count" not in cols:
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN phone_change_count INTEGER DEFAULT 0"))
+                    db.session.commit()
                 if "accepted_terms_at" not in cols:
                     db.session.execute(text("ALTER TABLE users ADD COLUMN accepted_terms_at TIMESTAMP"))
                     db.session.commit()

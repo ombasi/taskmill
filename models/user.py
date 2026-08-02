@@ -247,6 +247,9 @@ class User(db.Model, UserMixin):
     sex = db.Column(db.String(20), nullable=True)  # Male / Female / Other
     date_of_birth = db.Column(db.Date, nullable=True)
     accepted_terms_at = db.Column(db.DateTime, nullable=True)
+    profile_image = db.Column(db.String(255), nullable=True)
+    phone_change_month = db.Column(db.String(7), nullable=True)  # YYYY-MM
+    phone_change_count = db.Column(db.Integer, default=0)
 
     # =====================================================
     # ACCOUNT STATUS
