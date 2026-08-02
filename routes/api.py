@@ -84,3 +84,71 @@ def notifications():
         }
         for n in rows
     ])
+
+
+@api_bp.route("/badges")
+@login_required
+def badges():
+    """Live counts for nav badges (polled every few seconds)."""
+    from models.notification import Notification
+    from models.chat import ChatMessage
+
+    data = {
+        "notifications": 0,
+        "chat": 0,
+        "pending_deposits": 0,
+        "pending_withdrawals": 0,
+        "pending_tasks": 0,
+    }
+
+    try:
+        data["notifications"] = Notification.query.filter_by(
+            user_id=current_user.id, is_read=False
+        ).count()
+    except Exception:
+        pass
+
+    try:
+        if current_user.is_admin:
+            data["chat"] = ChatMessage.query.filter_by(
+                is_from_admin=False, is_read=False
+            ).count()
+            try:
+                from models.deposit import Deposit
+                data["pending_deposits"] = Deposit.query.filter(
+                    Deposit.status.in_(["Pending", "pending"])
+                ).count()
+            except Exception:
+                data["pending_deposits"] = 0
+            try:
+                from models.withdraw import Withdrawal
+                data["pending_withdrawals"] = Withdrawal.query.filter(
+                    Withdrawal.status.in_(["Pending", "pending"])
+                ).count()
+            except Exception:
+                try:
+                    from models.withdraw import Withdraw
+                    data["pending_withdrawals"] = Withdraw.query.filter(
+                        Withdraw.status.in_(["Pending", "pending"])
+                    ).count()
+                except Exception:
+                    data["pending_withdrawals"] = 0
+        else:
+            data["chat"] = ChatMessage.query.filter_by(
+                user_id=current_user.id, is_from_admin=True, is_read=False
+            ).count()
+            try:
+                from models.task import Task
+                data["pending_tasks"] = Task.query.filter(
+                    Task.user_id == current_user.id,
+                    Task.status.in_(["assigned", "frozen"]),
+                ).count()
+            except Exception:
+                data["pending_tasks"] = 0
+    except Exception as e:
+        print("badges:", e)
+
+    data["total"] = int(data["notifications"]) + int(data["chat"])
+    if getattr(current_user, "is_admin", False):
+        data["total"] += int(data["pending_deposits"]) + int(data["pending_withdrawals"])
+    return jsonify(data)

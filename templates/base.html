@@ -200,7 +200,7 @@ History
 <a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">Membership</a>
 <a href="{{ url_for('spin.index') }}" class="tm-nav-link hover:text-indigo-300">Spin</a>
 
-<a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300">Chat</a>
+<a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300 relative pr-4">Chat<span data-badge="chat" class="absolute -top-1 right-0 min-w-[1rem] h-4 px-1 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></a>
 <a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">Support</a>
 
 <a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">
@@ -232,6 +232,7 @@ Logout
      class="relative w-11 h-11 rounded-xl bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
      title="Notifications">
     <i class="fa-solid fa-bell text-lg"></i>
+    <span data-badge="notifications" class="absolute -top-1 -right-1 min-w-[1.15rem] h-5 px-1 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold hidden"></span>
     {% if unread_notifications|default(0) > 0 %}
     <span class="absolute -top-1 -right-1 min-w-[1.15rem] h-5 px-1 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center font-bold">
       {{ unread_notifications }}
@@ -496,7 +497,7 @@ mobile.classList.toggle("hidden");
       <span>Home</span>
     </a>
     <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('task.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
-      <i class="fa-solid fa-list-check text-lg"></i>
+      <span class="relative inline-block"><i class="fa-solid fa-list-check text-lg"></i><span data-badge="pending_tasks" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
       <span>Tasks</span>
     </a>
     <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
@@ -554,6 +555,41 @@ function showToast(msg, type){
     var next = body.classList.contains('theme-light') ? 'dark' : 'light';
     apply(next);
   });
+})();
+</script>
+
+
+<script>
+(function(){
+  function setBadge(key, n){
+    document.querySelectorAll('[data-badge="'+key+'"]').forEach(function(el){
+      var n2 = parseInt(n, 10) || 0;
+      if (n2 > 0) {
+        el.textContent = n2 > 99 ? '99+' : String(n2);
+        el.classList.remove('hidden');
+      } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+      }
+    });
+  }
+  function tick(){
+    fetch('/api/v1/badges', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d) return;
+        setBadge('notifications', d.notifications);
+        setBadge('chat', d.chat);
+        setBadge('pending_deposits', d.pending_deposits);
+        setBadge('pending_withdrawals', d.pending_withdrawals);
+        setBadge('pending_tasks', d.pending_tasks);
+        setBadge('total', d.total);
+      })
+      .catch(function(){});
+  }
+  tick();
+  setInterval(tick, 8000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) tick(); });
 })();
 </script>
 

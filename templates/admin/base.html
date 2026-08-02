@@ -96,6 +96,13 @@
          class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">
         <i class="fa-solid {{ icon }}"></i>
         <span class="nav-label text-sm font-medium whitespace-nowrap transition-all duration-200">{{ label }}</span>
+        {% if label == 'Deposits' %}
+        <span data-badge="pending_deposits" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-amber-400 text-black text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% elif label == 'Withdrawals' %}
+        <span data-badge="pending_withdrawals" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% elif label == 'Chat' %}
+        <span data-badge="chat" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% endif %}
       </a>
       {% endfor %}
     </nav>
@@ -166,5 +173,40 @@
 })();
 </script>
 {% block scripts %}{% endblock %}
+
+<script>
+(function(){
+  function setBadge(key, n){
+    document.querySelectorAll('[data-badge="'+key+'"]').forEach(function(el){
+      var n2 = parseInt(n, 10) || 0;
+      if (n2 > 0) {
+        el.textContent = n2 > 99 ? '99+' : String(n2);
+        el.classList.remove('hidden');
+      } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+      }
+    });
+  }
+  function tick(){
+    fetch('/api/v1/badges', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d) return;
+        setBadge('notifications', d.notifications);
+        setBadge('chat', d.chat);
+        setBadge('pending_deposits', d.pending_deposits);
+        setBadge('pending_withdrawals', d.pending_withdrawals);
+        setBadge('pending_tasks', d.pending_tasks);
+        setBadge('total', d.total);
+      })
+      .catch(function(){});
+  }
+  tick();
+  setInterval(tick, 8000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) tick(); });
+})();
+</script>
+
 </body>
 </html>
