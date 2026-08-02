@@ -216,6 +216,10 @@ def upgrade_membership(plan_id):
         flash("You are already on this plan.", "info")
         return redirect(url_for("dashboard.membership"))
 
+    if current_user.membership and float(plan.price or 0) < float(current_user.membership.price or 0):
+        flash("You cannot downgrade your membership. Please contact admin.", "danger")
+        return redirect(url_for("dashboard.membership"))
+
     ok, msg = MembershipService.upgrade(current_user, plan)
     flash(msg, "success" if ok else "danger")
     return redirect(url_for("dashboard.membership"))

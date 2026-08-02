@@ -90,13 +90,22 @@
         {% endif %}
       </ul>
 
-      {# CTA #}
-      <div class="mt-7">
+      {# CTA — upgrade only; no self-service downgrade #}
+      {% set can_up = (not current) or ((m.price or 0)|float > (current.price or 0)|float) %}
+      <div class="mt-5 rounded-xl bg-black/20 border border-white/5 px-3 py-2 text-xs text-zinc-500">
+        Min. balance to work: <span class="text-white font-semibold">
+        {% if (m.name or '')|lower == 'silver' %}UGX 30,000
+        {% elif (m.name or '')|lower == 'gold' %}UGX 60,000
+        {% elif (m.name or '')|lower == 'vip' %}UGX 200,000
+        {% else %}UGX 15,000{% endif %}
+        </span>
+      </div>
+      <div class="mt-4">
         {% if is_current %}
         <div class="w-full rounded-2xl border border-amber-400/40 bg-amber-400/10 py-3.5 text-center text-sm font-bold text-amber-200">
           Your current plan
         </div>
-        {% else %}
+        {% elif can_up %}
         <form method="POST" action="{{ url_for('dashboard.upgrade_membership', plan_id=m.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit"
@@ -109,6 +118,10 @@
             Upgrade to {{ m.name }}
           </button>
         </form>
+        {% else %}
+        <div class="w-full rounded-2xl border border-white/10 bg-white/5 py-3.5 text-center text-sm text-zinc-500">
+          Downgrade via admin only
+        </div>
         {% endif %}
       </div>
     </article>

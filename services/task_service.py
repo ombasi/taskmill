@@ -41,7 +41,7 @@ class TaskService:
 
 
     NEGATIVE_DAY_CHANCE = 8
-    MINIMUM_START_BALANCE = 15000  # UGX required before submitting tasks
+    MINIMUM_START_BALANCE = 15000  # Default Starter; higher tiers use membership.minimum_deposit
     WITHDRAW_RESERVE = 15000  # Must remain after withdrawal
 
     @staticmethod
@@ -188,16 +188,22 @@ class TaskService:
         if pending_combo > 0:
             return True, "OK"
 
-        # 15,000 rule only when starting fresh (no work today, no active combo)
+        # Membership minimum balance when starting fresh (combo / negative handled above)
         started_today = int(user.tasks_completed_today or 0) > 0
+        try:
+            from services.membership_service import MembershipService
+            min_start = float(MembershipService.minimum_balance(user))
+        except Exception:
+            min_start = float(TaskService.MINIMUM_START_BALANCE)
         if (
-            bal < TaskService.MINIMUM_START_BALANCE
-            and not started_today
-            and not bool(user.combo_active)
+            not started_today
+            and bal < min_start
+            and not bool(getattr(user, "negative_today", False))
+            and not bool(getattr(user, "combo_active", False))
         ):
             return (
                 False,
-                f"You need at least UGX {TaskService.MINIMUM_START_BALANCE:,} in your account to start tasks. "
+                f"You need at least UGX {min_start:,.0f} in your account to start tasks (required for your membership). "
                 "Please deposit or top up first.",
             )
 

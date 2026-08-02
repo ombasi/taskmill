@@ -132,6 +132,23 @@ def create_app():
                 print("Admin + memberships exist — skip auto-seed.")
         except Exception as e:
             print("Auto-seed skipped:", e)
+
+        # Ensure membership minimum balances
+        try:
+            from models.membership import Membership
+            mins = {"Starter": 15000, "Silver": 30000, "Gold": 60000, "VIP": 200000}
+            for name, val in mins.items():
+                m = Membership.query.filter_by(name=name).first()
+                if m and float(m.minimum_deposit or 0) != float(val):
+                    m.minimum_deposit = val
+            db.session.commit()
+        except Exception as e:
+            print("membership mins:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
             try:
                 db.session.rollback()
             except Exception:

@@ -128,8 +128,8 @@ class MembershipService:
     @staticmethod
     def upgrade(user, membership):
         """
-        Upgrade membership by debiting available balance.
-        Fires referral activation once when leaving free/starter tier.
+        Upgrade only (no self-service downgrade). Admin can change via admin panel.
+        Debits available balance for paid upgrades.
         """
         from services.wallet_service import WalletService
         from services.referral_service import ReferralService
@@ -138,6 +138,12 @@ class MembershipService:
         price = float(membership.price or 0)
         previous = user.membership
         previous_price = float(previous.price or 0) if previous else 0
+
+        # Block downgrades for users
+        if previous and price < previous_price:
+            return False, "You cannot downgrade your membership. Contact admin for assistance."
+        if previous and price == previous_price and previous.id == membership.id:
+            return False, "You are already on this plan."
 
         if price > 0 and price > previous_price:
             if float(user.available_balance) < price:
