@@ -47,9 +47,16 @@
       .stat-card:hover { transform: translateY(-3px); border-color: rgba(129,140,248,.35); }
     }
     /* Tables scroll on small screens */
-    .table-wrap, main table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    main table { border-collapse: collapse; }
-    main th, main td { white-space: nowrap; }
+    .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (min-width: 768px) {
+      main .table-wrap table, main table { width: 100%; }
+      main th, main td { white-space: nowrap; }
+    }
+    /* Stack-friendly inputs */
+    main input, main select, main textarea, main button {
+      max-width: 100%;
+    }
+    main .grid { min-width: 0; }
     /* Forms full width on mobile */
     @media (max-width: 1023px) {
       .sidebar {
