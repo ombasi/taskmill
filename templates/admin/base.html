@@ -2,117 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Admin{% endblock %} · Taskmill</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root { --sidebar-w: 17rem; --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px); }
     body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
-    body.nav-open { overflow: hidden; touch-action: none; }
     .glass {
-      background: rgba(15,23,42,.85);
+      background: rgba(15,23,42,.72);
       backdrop-filter: blur(18px);
       border: 1px solid rgba(255,255,255,.07);
     }
-    .sidebar {
-      width: var(--sidebar-w);
-      transition: width .25s ease, transform .25s ease;
-    }
-    .sidebar.collapsed { width: 4.75rem; }
-    .sidebar.collapsed .nav-label,
-    .sidebar.collapsed .brand-text,
-    .sidebar.collapsed .collapse-label { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+    .sidebar { width: 16rem; }
     .sidebar-link {
-      display: flex; align-items: center; gap: .85rem;
-      padding: .75rem .9rem; border-radius: .85rem;
-      color: #94a3b8; transition: .2s ease;
-      border: 1px solid transparent;
-      min-height: 2.75rem;
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem .85rem; border-radius: .75rem;
+      color: #94a3b8; transition: .15s ease;
     }
-    .sidebar-link i { width: 1.25rem; text-align: center; flex-shrink: 0; }
-    .sidebar-link:hover, .sidebar-link:active {
-      background: rgba(99,102,241,.15);
-      color: #e2e8f0;
-      border-color: rgba(99,102,241,.25);
-    }
+    .sidebar-link i { width: 1.15rem; text-align: center; }
+    .sidebar-link:hover { background: rgba(99,102,241,.12); color: #e2e8f0; }
     .sidebar-link.active {
       background: linear-gradient(135deg, rgba(99,102,241,.9), rgba(139,92,246,.75));
       color: white;
-      box-shadow: 0 8px 24px rgba(99,102,241,.25);
-    }
-    .stat-card { transition: transform .2s ease, border-color .2s ease; }
-    @media (hover:hover) {
-      .stat-card:hover { transform: translateY(-3px); border-color: rgba(129,140,248,.35); }
-    }
-    /* Tables scroll on small screens */
-    .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    @media (min-width: 768px) {
-      main .table-wrap table, main table { width: 100%; }
-      main th, main td { white-space: nowrap; }
-    }
-    /* Stack-friendly inputs */
-    main input, main select, main textarea, main button {
-      max-width: 100%;
-    }
-    main .grid { min-width: 0; }
-    /* Forms full width on mobile */
-    @media (max-width: 1023px) {
-      .sidebar {
-        position: fixed;
-        top: 0; left: 0; bottom: 0;
-        z-index: 60;
-        width: min(86vw, 20rem) !important;
-        transform: translateX(-105%);
-        box-shadow: 12px 0 40px rgba(0,0,0,.45);
-        padding-top: var(--safe-t);
-        padding-bottom: var(--safe-b);
-      }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar.collapsed { width: min(86vw, 20rem) !important; }
-      .sidebar.collapsed .nav-label,
-      .sidebar.collapsed .brand-text,
-      .sidebar.collapsed .collapse-label {
-        opacity: 1; width: auto; overflow: visible; pointer-events: auto;
-      }
-      .sidebar-backdrop {
-        display: none;
-        position: fixed; inset: 0;
-        background: rgba(0,0,0,.6);
-        z-index: 50;
-        backdrop-filter: blur(2px);
-      }
-      .sidebar-backdrop.show { display: block; }
-      #toggleSidebar { display: none !important; }
-      main { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-      .admin-topbar { padding-top: max(0.75rem, var(--safe-t)); }
-    }
-    @media (min-width: 1024px) {
-      .sidebar-backdrop { display: none !important; }
-      #closeMobileSidebar { display: none !important; }
     }
   </style>
 </head>
 <body class="min-h-screen">
-<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 <div class="flex min-h-screen">
 
-  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen" id="adminSidebar">
-    <div class="p-4 sm:p-5 flex items-center gap-3 border-b border-white/5">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 font-black">T</div>
-      <div class="brand-text transition-all duration-200 flex-1 min-w-0">
+  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0">
+    <div class="p-5 flex items-center gap-3 border-b border-white/5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-black">T</div>
+      <div>
         <p class="font-black text-lg leading-none">Taskmill</p>
         <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>
       </div>
-      <button type="button" id="closeMobileSidebar"
-              class="lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-zinc-300"
-              aria-label="Close menu">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="adminNav">
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
       {% set links = [
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
@@ -134,7 +62,7 @@
       <a href="{{ url_for(ep) }}"
          class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">
         <i class="fa-solid {{ icon }}"></i>
-        <span class="nav-label text-sm font-medium whitespace-nowrap transition-all duration-200">{{ label }}</span>
+        <span class="text-sm font-medium">{{ label }}</span>
         {% if label == 'Deposits' %}
         <span data-badge="pending_deposits" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-amber-400 text-black text-[10px] flex items-center justify-center font-bold hidden"></span>
         {% elif label == 'Withdrawals' %}
@@ -146,45 +74,27 @@
       {% endfor %}
     </nav>
 
-    <div class="p-3 border-t border-white/5 space-y-1">
-      <button type="button" id="toggleSidebar" class="sidebar-link w-full">
-        <i class="fa-solid fa-left-right"></i>
-        <span class="nav-label collapse-label text-sm">Collapse</span>
-      </button>
+    <div class="p-3 border-t border-white/5">
       <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-rose-300">
         <i class="fa-solid fa-right-from-bracket"></i>
-        <span class="nav-label text-sm">Logout</span>
+        <span class="text-sm">Logout</span>
       </a>
     </div>
   </aside>
 
   <div class="flex-1 flex flex-col min-w-0">
-    <header class="admin-topbar sticky top-0 z-30 glass border-b border-white/10 px-3 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-        <button type="button" id="openMobileSidebar"
-                class="lg:hidden w-11 h-11 rounded-xl bg-white/5 border border-white/10 shrink-0"
-                aria-label="Open menu">
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <div class="min-w-0">
-          <p class="text-[10px] sm:text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
-          <h1 class="text-base sm:text-lg md:text-xl font-bold leading-tight truncate">{% block page_title %}Dashboard{% endblock %}</h1>
-        </div>
+    <header class="glass border-b border-white/10 px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-20">
+      <div>
+        <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
+        <h1 class="text-xl font-bold">{% block page_title %}Dashboard{% endblock %}</h1>
       </div>
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <a href="{{ url_for('admin.deposits', status='Pending') }}"
-           class="inline-flex items-center gap-1.5 text-[11px] sm:text-xs rounded-xl border border-white/10 bg-white/5 px-2.5 sm:px-3 py-2 hover:bg-white/10">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-          <span class="hidden xs:inline sm:inline">Pending</span>
-        </a>
-        <a href="{{ url_for('dashboard.index') }}"
-           class="text-[11px] sm:text-xs rounded-xl border border-white/10 bg-white/5 px-2.5 sm:px-3 py-2 hover:bg-white/10">
-          Site
-        </a>
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">Pending ops</a>
+        <a href="{{ url_for('dashboard.index') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">View site</a>
       </div>
     </header>
 
-    <main class="flex-1 p-3 sm:p-4 md:p-8 pb-8" style="padding-bottom: calc(1.5rem + var(--safe-b));">
+    <main class="flex-1 p-6 md:p-8">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="mb-4 space-y-2">
@@ -202,53 +112,7 @@
   </div>
 </div>
 
-<script>
-(function(){
-  var side = document.getElementById('adminSidebar');
-  var backdrop = document.getElementById('sidebarBackdrop');
-  var toggle = document.getElementById('toggleSidebar');
-  var mobile = document.getElementById('openMobileSidebar');
-  var closeBtn = document.getElementById('closeMobileSidebar');
-
-  function isMobile(){ return window.matchMedia('(max-width: 1023px)').matches; }
-  function openMobile(){
-    if (!side) return;
-    side.classList.add('open');
-    if (backdrop) backdrop.classList.add('show');
-    document.body.classList.add('nav-open');
-  }
-  function closeMobile(){
-    if (!side) return;
-    side.classList.remove('open');
-    if (backdrop) backdrop.classList.remove('show');
-    document.body.classList.remove('nav-open');
-  }
-
-  if (toggle) toggle.addEventListener('click', function(){
-    if (isMobile()) { openMobile(); return; }
-    side.classList.toggle('collapsed');
-  });
-  if (mobile) mobile.addEventListener('click', openMobile);
-  if (closeBtn) closeBtn.addEventListener('click', closeMobile);
-  if (backdrop) backdrop.addEventListener('click', closeMobile);
-
-  // Close drawer after tapping a nav link on mobile
-  var nav = document.getElementById('adminNav');
-  if (nav) {
-    nav.querySelectorAll('a').forEach(function(a){
-      a.addEventListener('click', function(){
-        if (isMobile()) closeMobile();
-      });
-    });
-  }
-
-  window.addEventListener('resize', function(){
-    if (!isMobile()) closeMobile();
-  });
-})();
-</script>
 {% block scripts %}{% endblock %}
-
 <script>
 (function(){
   function setBadge(key, n){
@@ -279,9 +143,7 @@
   }
   tick();
   setInterval(tick, 8000);
-  document.addEventListener('visibilitychange', function(){ if (!document.hidden) tick(); });
 })();
 </script>
-
 </body>
 </html>

@@ -2,97 +2,60 @@
 {% block title %}Withdrawals{% endblock %}
 {% block page_title %}Withdrawals{% endblock %}
 {% block content %}
-<div class="space-y-4">
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-    <div class="glass rounded-2xl p-3"><p class="text-[10px] text-zinc-500 uppercase">Pending</p><p class="text-2xl font-black text-amber-300">{{ pending }}</p></div>
-    <div class="glass rounded-2xl p-3"><p class="text-[10px] text-zinc-500 uppercase">Approved today</p><p class="text-2xl font-black text-emerald-400">{{ approved_today }}</p></div>
-    <div class="glass rounded-2xl p-3"><p class="text-[10px] text-zinc-500 uppercase">Rejected</p><p class="text-2xl font-black text-rose-400">{{ rejected }}</p></div>
-    <div class="glass rounded-2xl p-3"><p class="text-[10px] text-zinc-500 uppercase">Today amount</p><p class="text-lg font-black">{{ money(current_user, today_amount) }}</p></div>
+<div class="space-y-6">
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Pending</p><h2 class="text-3xl font-black text-amber-300">{{ pending }}</h2></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Approved Today</p><h2 class="text-3xl font-black text-emerald-400">{{ approved_today }}</h2></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Rejected</p><h2 class="text-3xl font-black text-rose-400">{{ rejected }}</h2></div>
+    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Today's Amount</p><h2 class="text-2xl font-black">{{ money(current_user, today_amount) }}</h2></div>
   </div>
 
-  <form method="GET" class="glass rounded-2xl p-3 flex flex-wrap gap-2">
-    <select name="status" class="flex-1 min-w-[120px] bg-slate-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm">
-      <option value="">All</option>
+  <form method="GET" class="glass rounded-2xl p-4 flex gap-3">
+    <select name="status" class="bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
+      <option value="">All Status</option>
       {% for s in ['Pending','Approved','Rejected','Paid'] %}
       <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s }}</option>
       {% endfor %}
     </select>
-    <button class="bg-indigo-600 px-4 rounded-xl text-sm font-semibold">Filter</button>
+    <button class="bg-indigo-600 px-5 rounded-xl text-sm font-semibold">Filter</button>
   </form>
 
-  <div class="md:hidden space-y-3">
-    {% for w in withdrawals.items %}
-    <div class="glass rounded-2xl p-4 space-y-3">
-      <div class="flex justify-between gap-2">
-        <div>
-          <p class="font-semibold">{% if w.user %}<a href="{{ url_for('admin.view_user', user_id=w.user_id) }}" class="text-indigo-300">{{ w.user.username }}</a>{% else %}#{{ w.user_id }}{% endif %}</p>
-          <p class="text-xs text-zinc-500">{{ w.payment_method or '—' }} · {{ w.account_number or w.wallet_address or '—' }}</p>
-        </div>
-        <span class="text-[11px] rounded-full px-2 py-0.5 h-fit
-          {% if w.status=='Pending' %}bg-amber-500/15 text-amber-300
-          {% elif w.status in ['Approved','Paid'] %}bg-emerald-500/15 text-emerald-300
-          {% else %}bg-rose-500/15 text-rose-300{% endif %}">{{ w.status }}</span>
-      </div>
-      <p class="text-xl font-black">{{ money(current_user, w.amount) }}</p>
-      <p class="text-[11px] text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</p>
-      {% if w.status=='Pending' %}
-      <div class="flex gap-2">
-        <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="flex-1 text-center rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold">Approve</a>
-        <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="flex-1 text-center rounded-xl bg-rose-700 py-2.5 text-sm font-semibold">Reject</a>
-      </div>
-      {% endif %}
-    </div>
-    {% else %}
-    <p class="text-center text-zinc-500 py-10 text-sm">No withdrawals</p>
-    {% endfor %}
+  <div class="glass rounded-3xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-800 text-left text-zinc-400">
+        <tr>
+          <th class="p-4">ID</th>
+          <th class="p-4">User</th>
+          <th class="p-4">Amount</th>
+          <th class="p-4">Method</th>
+          <th class="p-4">Account</th>
+          <th class="p-4">Status</th>
+          <th class="p-4">Date</th>
+          <th class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        {% for w in withdrawals.items %}
+        <tr>
+          <td class="p-4">#{{ w.id }}</td>
+          <td class="p-4">{% if w.user %}<a href="{{ url_for('admin.view_user', user_id=w.user_id) }}" class="text-indigo-400">{{ w.user.username }}</a>{% endif %}</td>
+          <td class="p-4 font-semibold">{{ money(current_user, w.amount) }}</td>
+          <td class="p-4">{{ w.payment_method or '—' }}</td>
+          <td class="p-4 text-xs">{{ w.account_number or w.wallet_address or '—' }}</td>
+          <td class="p-4">{{ w.status }}</td>
+          <td class="p-4 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
+          <td class="p-4">
+            {% if w.status=='Pending' %}
+            <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
+            <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="p-10 text-center text-zinc-500">No withdrawals</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-
-  <div class="hidden md:block glass rounded-3xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-800/80 text-left text-zinc-400">
-          <tr>
-            <th class="p-3">ID</th>
-            <th class="p-3">User</th>
-            <th class="p-3">Amount</th>
-            <th class="p-3">Method</th>
-            <th class="p-3">Account</th>
-            <th class="p-3">Status</th>
-            <th class="p-3">Date</th>
-            <th class="p-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/5">
-          {% for w in withdrawals.items %}
-          <tr>
-            <td class="p-3">#{{ w.id }}</td>
-            <td class="p-3">{% if w.user %}<a href="{{ url_for('admin.view_user', user_id=w.user_id) }}" class="text-indigo-400">{{ w.user.username }}</a>{% endif %}</td>
-            <td class="p-3 font-semibold">{{ money(current_user, w.amount) }}</td>
-            <td class="p-3">{{ w.payment_method or '—' }}</td>
-            <td class="p-3 text-xs">{{ w.account_number or w.wallet_address or '—' }}</td>
-            <td class="p-3">{{ w.status }}</td>
-            <td class="p-3 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
-            <td class="p-3">
-              {% if w.status=='Pending' %}
-              <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
-              <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
-              {% endif %}
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="8" class="p-10 text-center text-zinc-500">No withdrawals</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {% if withdrawals.pages > 1 %}
-  <div class="flex justify-center gap-2">
-    {% if withdrawals.has_prev %}<a href="{{ url_for('admin.withdrawals', page=withdrawals.prev_num, status=status) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Prev</a>{% endif %}
-    <span class="text-sm text-zinc-400 py-1.5">{{ withdrawals.page }}/{{ withdrawals.pages }}</span>
-    {% if withdrawals.has_next %}<a href="{{ url_for('admin.withdrawals', page=withdrawals.next_num, status=status) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Next</a>{% endif %}
-  </div>
-  {% endif %}
 </div>
 {% endblock %}

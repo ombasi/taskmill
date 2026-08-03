@@ -2,102 +2,66 @@
 {% block title %}Combo Manager{% endblock %}
 {% block page_title %}Combo Manager{% endblock %}
 {% block content %}
-<div class="space-y-5">
-  <div class="glass rounded-3xl p-4 sm:p-6">
-    <h3 class="font-bold mb-4 text-base">Assign combo to user</h3>
-    <form method="POST" action="{{ url_for('admin.assign_combo_from_manager') }}" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+<div class="space-y-6">
+  <div class="glass rounded-3xl p-6">
+    <h3 class="font-bold mb-4">Assign combo to user</h3>
+    <form method="POST" action="{{ url_for('admin.assign_combo_from_manager') }}" class="grid md:grid-cols-4 gap-4 items-end">
       <div>
         <label class="text-xs text-zinc-400">User ID or username</label>
-        <input name="user_ref" required placeholder="12 or johndoe"
-               class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3 text-sm">
+        <input name="user_ref" required placeholder="12 or johndoe" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
       </div>
       <div>
         <label class="text-xs text-zinc-400">Target amount (UGX)</label>
-        <input type="number" name="target_amount" required min="1000" step="100" placeholder="50000"
-               class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3 text-sm">
+        <input type="number" name="target_amount" required min="1000" step="100" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
       </div>
       <div>
         <label class="text-xs text-zinc-400">Trigger after task #</label>
-        <input type="number" name="trigger_task" value="5" min="1"
-               class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3 text-sm">
+        <input type="number" name="trigger_task" value="5" min="1" class="w-full mt-1 rounded-xl bg-slate-900 border border-white/10 p-3">
       </div>
-      <button type="submit" class="w-full rounded-xl bg-violet-600 hover:bg-violet-500 py-3 font-semibold text-sm">
-        Assign combo
-      </button>
+      <button type="submit" class="w-full rounded-xl bg-violet-600 hover:bg-violet-500 py-3 font-semibold">Assign combo</button>
     </form>
   </div>
 
-  <div class="md:hidden space-y-3">
-    {% for combo in combos.items %}
-    <div class="glass rounded-2xl p-4 space-y-2">
-      <div class="flex justify-between gap-2">
-        <a href="{{ url_for('admin.view_user', user_id=combo.user_id) }}" class="font-semibold text-indigo-300">
-          {% if combo.user %}{{ combo.user.username }}{% else %}#{{ combo.user_id }}{% endif %}
-        </a>
-        <span class="text-[11px] rounded-full px-2 py-0.5
-          {% if combo.status == 'Pending' %}bg-amber-500/15 text-amber-300
-          {% elif combo.status == 'Triggered' %}bg-violet-500/15 text-violet-300
-          {% else %}bg-zinc-500/20 text-zinc-400{% endif %}">{{ combo.status }}</span>
-      </div>
-      <p class="text-sm">{{ combo.product1_name or '—' }}</p>
-      <p class="text-lg font-black">UGX {{ '{:,.0f}'.format((combo.amount or 0)|float) }}</p>
-      <p class="text-[11px] text-zinc-500">Trigger #{{ combo.trigger_task }} · {% if combo.created_at %}{{ combo.created_at.strftime('%d %b %Y') }}{% endif %}</p>
-      <div class="flex gap-2 pt-1">
-        {% if combo.status == 'Pending' %}
-        <form method="POST" action="{{ url_for('admin.trigger_combo', combo_id=combo.id) }}" class="flex-1">
-          <button class="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-semibold" onclick="return confirm('Trigger now?')">Trigger</button>
-        </form>
-        {% endif %}
-        <a href="{{ url_for('admin.view_user', user_id=combo.user_id) }}" class="flex-1 text-center rounded-xl border border-white/10 py-2.5 text-sm">User</a>
-      </div>
-    </div>
-    {% else %}
-    <p class="text-center text-zinc-500 py-10 text-sm">No combos yet</p>
-    {% endfor %}
-  </div>
-
-  <div class="hidden md:block glass rounded-3xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-800/80 text-left text-zinc-400">
-          <tr>
-            <th class="p-4">User</th>
-            <th class="p-4">Product / amount</th>
-            <th class="p-4">Trigger #</th>
-            <th class="p-4">Status</th>
-            <th class="p-4">Created</th>
-            <th class="p-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/5">
-          {% for combo in combos.items %}
-          <tr class="hover:bg-white/[0.03]">
-            <td class="p-4">
-              <a href="{{ url_for('admin.view_user', user_id=combo.user_id) }}" class="text-indigo-400 font-medium">
-                {% if combo.user %}{{ combo.user.username }}{% else %}#{{ combo.user_id }}{% endif %}
-              </a>
-            </td>
-            <td class="p-4">
-              <p class="font-medium">{{ combo.product1_name or '—' }}</p>
-              <p class="text-xs text-zinc-500">UGX {{ '{:,.0f}'.format((combo.amount or 0)|float) }}</p>
-            </td>
-            <td class="p-4">{{ combo.trigger_task }}</td>
-            <td class="p-4"><span class="text-xs">{{ combo.status }}</span></td>
-            <td class="p-4 text-zinc-500 text-xs">{% if combo.created_at %}{{ combo.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</td>
-            <td class="p-4">
-              {% if combo.status == 'Pending' %}
-              <form method="POST" action="{{ url_for('admin.trigger_combo', combo_id=combo.id) }}" class="inline">
-                <button class="text-xs rounded-lg bg-violet-600 px-3 py-1.5" onclick="return confirm('Trigger now?')">Trigger</button>
-              </form>
-              {% endif %}
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="6" class="p-10 text-center text-zinc-500">No combos yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="glass rounded-3xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-800 text-left text-zinc-400">
+        <tr>
+          <th class="p-4">User</th>
+          <th class="p-4">Product / amount</th>
+          <th class="p-4">Trigger #</th>
+          <th class="p-4">Status</th>
+          <th class="p-4">Created</th>
+          <th class="p-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        {% for combo in combos.items %}
+        <tr>
+          <td class="p-4">
+            <a href="{{ url_for('admin.view_user', user_id=combo.user_id) }}" class="text-indigo-400 font-medium">
+              {% if combo.user %}{{ combo.user.username }}{% else %}#{{ combo.user_id }}{% endif %}
+            </a>
+          </td>
+          <td class="p-4">
+            <p class="font-medium">{{ combo.product1_name or '—' }}</p>
+            <p class="text-xs text-zinc-500">UGX {{ '{:,.0f}'.format((combo.amount or 0)|float) }}</p>
+          </td>
+          <td class="p-4">{{ combo.trigger_task }}</td>
+          <td class="p-4">{{ combo.status }}</td>
+          <td class="p-4 text-xs text-zinc-500">{% if combo.created_at %}{{ combo.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</td>
+          <td class="p-4">
+            {% if combo.status == 'Pending' %}
+            <form method="POST" action="{{ url_for('admin.trigger_combo', combo_id=combo.id) }}" class="inline">
+              <button class="text-xs rounded-lg bg-violet-600 px-3 py-1.5" onclick="return confirm('Trigger now?')">Trigger</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="p-10 text-center text-zinc-500">No combos yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}
