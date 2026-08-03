@@ -3,54 +3,94 @@
 {% block page_title %}Users{% endblock %}
 {% block content %}
 <div class="space-y-6">
-  <div class="flex flex-wrap gap-2 items-center justify-between">
-    <div class="flex gap-2">
-      <a href="{{ url_for('admin.create_user') }}?role=user" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold">Add user</a>
-      <a href="{{ url_for('admin.create_user') }}?role=admin" class="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold">Create admin</a>
+  <div class="flex flex-wrap gap-3 items-center justify-between">
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.create_user') }}?role=user"
+         class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-bold shadow-lg shadow-indigo-900/30 hover:brightness-110 transition">
+        <i class="fa-solid fa-user-plus"></i> Add user
+      </a>
+      <a href="{{ url_for('admin.create_user') }}?role=admin"
+         class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-3 text-sm font-bold shadow-lg shadow-amber-900/20 hover:brightness-110 transition">
+        <i class="fa-solid fa-user-shield"></i> Create admin
+      </a>
     </div>
-    <p class="text-sm text-zinc-500">{{ users.total }} users</p>
+    <p class="text-sm text-zinc-400 font-medium">{{ users.total }} users</p>
   </div>
 
-  <form method="GET" class="glass rounded-2xl p-4 flex gap-3 items-center">
+  <form method="GET" class="glass rounded-2xl p-4 flex flex-wrap gap-3 items-center">
     <input name="q" value="{{ q or '' }}" placeholder="Search username, email, phone..."
-           class="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
-    <label class="flex items-center gap-2 text-sm text-zinc-300"><input type="checkbox" name="negative" value="1" {% if filter_neg %}checked{% endif %}> Negative balance</label>
-    <button class="bg-indigo-600 px-5 py-2.5 rounded-xl text-sm font-semibold">Search</button>
+           class="flex-1 min-w-[200px] bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm">
+    <label class="flex items-center gap-2 text-sm text-zinc-300">
+      <input type="checkbox" name="negative" value="1" {% if filter_neg %}checked{% endif %} class="rounded">
+      Negative balance
+    </label>
+    <button class="bg-indigo-600 hover:bg-indigo-500 px-5 py-3 rounded-xl text-sm font-semibold transition">Search</button>
   </form>
 
   <div class="glass rounded-3xl overflow-hidden">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-800 text-left text-zinc-400">
+    <table class="w-full text-base">
+      <thead class="bg-slate-800/90 text-left text-zinc-400 text-sm">
         <tr>
-          <th class="p-4">User</th>
-          <th class="p-4">Membership</th>
-          <th class="p-4">Balance</th>
-          <th class="p-4">Status</th>
-          <th class="p-4"></th>
+          <th class="p-5">User</th>
+          <th class="p-5">Membership</th>
+          <th class="p-5">Balance</th>
+          <th class="p-5">Status</th>
+          <th class="p-5 text-right">Action</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/5">
         {% for user in users.items %}
-        <tr class="hover:bg-white/[0.03]">
-          <td class="p-4">
-            <p class="font-semibold">{{ user.username }}{% if user.is_admin %} <span class="text-amber-400 text-[10px]">ADMIN</span>{% endif %}</p>
-            <p class="text-xs text-zinc-500">{{ user.email }} · {{ user.phone or '—' }}</p>
+        <tr class="hover:bg-white/[0.03] transition">
+          <td class="p-5">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/30 to-violet-600/30 border border-white/10 flex items-center justify-center text-lg font-black text-indigo-200 shrink-0">
+                {{ (user.username or '?')[0]|upper }}
+              </div>
+              <div class="min-w-0">
+                <p class="text-lg font-bold tracking-tight">
+                  {{ user.username }}
+                  {% if user.is_admin %}<span class="ml-1 text-[10px] align-middle rounded-md bg-amber-500/20 text-amber-300 px-1.5 py-0.5">ADMIN</span>{% endif %}
+                </p>
+                <p class="text-sm text-zinc-400 mt-0.5">{{ user.full_name or '—' }}</p>
+                <p class="text-xs text-zinc-500 mt-0.5">{{ user.email }}{% if user.phone %} · {{ user.phone }}{% endif %}</p>
+              </div>
+            </div>
           </td>
-          <td class="p-4">{{ user.membership.name if user.membership else '—' }}</td>
-          <td class="p-4 font-semibold {% if (user.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
-            {{ money(current_user, user.available_balance) }}
+          <td class="p-5">
+            <span class="inline-flex items-center rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-sm font-semibold">
+              {{ user.membership.name if user.membership else '—' }}
+            </span>
           </td>
-          <td class="p-4 text-xs">
-            {% if user.is_blocked %}<span class="text-rose-300">Blocked</span>
-            {% elif user.is_active %}<span class="text-emerald-300">Active</span>
-            {% else %}<span class="text-zinc-500">Inactive</span>{% endif %}
+          <td class="p-5">
+            <p class="text-lg font-black {% if (user.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+              {{ money(current_user, user.available_balance) }}
+            </p>
           </td>
-          <td class="p-4 text-right">
-            <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="text-indigo-400 text-sm font-medium">Open →</a>
+          <td class="p-5">
+            {% if user.is_blocked %}
+            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-rose-300">
+              <span class="w-2 h-2 rounded-full bg-rose-400"></span> Blocked
+            </span>
+            {% elif user.is_active %}
+            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Active
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500">
+              <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Inactive
+            </span>
+            {% endif %}
+          </td>
+          <td class="p-5 text-right">
+            <a href="{{ url_for('admin.view_user', user_id=user.id) }}"
+               class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-900/40 hover:scale-[1.03] hover:shadow-indigo-700/40 active:scale-[0.98] transition">
+              Open
+              <i class="fa-solid fa-arrow-right text-xs opacity-90"></i>
+            </a>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="p-10 text-center text-zinc-500">No users</td></tr>
+        <tr><td colspan="5" class="p-12 text-center text-zinc-500">No users found</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -58,9 +98,9 @@
 
   {% if users.pages > 1 %}
   <div class="flex justify-center gap-2">
-    {% if users.has_prev %}<a href="{{ url_for('admin.users', page=users.prev_num, q=q) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Prev</a>{% endif %}
-    <span class="text-sm text-zinc-400 py-1.5">{{ users.page }}/{{ users.pages }}</span>
-    {% if users.has_next %}<a href="{{ url_for('admin.users', page=users.next_num, q=q) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Next</a>{% endif %}
+    {% if users.has_prev %}<a href="{{ url_for('admin.users', page=users.prev_num, q=q) }}" class="px-4 py-2 rounded-xl bg-white/5 text-sm font-medium">Prev</a>{% endif %}
+    <span class="text-sm text-zinc-400 py-2">{{ users.page }} / {{ users.pages }}</span>
+    {% if users.has_next %}<a href="{{ url_for('admin.users', page=users.next_num, q=q) }}" class="px-4 py-2 rounded-xl bg-white/5 text-sm font-medium">Next</a>{% endif %}
   </div>
   {% endif %}
 </div>

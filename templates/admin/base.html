@@ -2,45 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}Admin{% endblock %} · Taskmill</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root { --sidebar-w: 17rem; }
     body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
+    body.nav-open { overflow: hidden; }
     .glass {
-      background: rgba(15,23,42,.72);
+      background: rgba(15,23,42,.8);
       backdrop-filter: blur(18px);
       border: 1px solid rgba(255,255,255,.07);
     }
-    .sidebar { width: 16rem; }
-    .sidebar-link {
-      display: flex; align-items: center; gap: .75rem;
-      padding: .65rem .85rem; border-radius: .75rem;
-      color: #94a3b8; transition: .15s ease;
+    .sidebar {
+      width: var(--sidebar-w);
+      transition: transform .28s ease;
     }
-    .sidebar-link i { width: 1.15rem; text-align: center; }
-    .sidebar-link:hover { background: rgba(99,102,241,.12); color: #e2e8f0; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: .8rem;
+      padding: .72rem .9rem; border-radius: .85rem;
+      color: #94a3b8; transition: .15s ease;
+      border: 1px solid transparent;
+    }
+    .sidebar-link i { width: 1.2rem; text-align: center; }
+    .sidebar-link:hover {
+      background: rgba(99,102,241,.14);
+      color: #e2e8f0;
+      border-color: rgba(99,102,241,.2);
+    }
     .sidebar-link.active {
-      background: linear-gradient(135deg, rgba(99,102,241,.9), rgba(139,92,246,.75));
+      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(139,92,246,.8));
       color: white;
+      box-shadow: 0 8px 22px rgba(99,102,241,.28);
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 40;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.show { display: block; }
+    @media (max-width: 1023px) {
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        z-index: 50;
+        width: min(86vw, 20rem);
+        transform: translateX(-105%);
+        box-shadow: 16px 0 48px rgba(0,0,0,.45);
+      }
+      .sidebar.open { transform: translateX(0); }
+    }
+    @media (min-width: 1024px) {
+      .sidebar-backdrop { display: none !important; }
+      #closeMobileSidebar, #openMobileSidebar { display: none !important; }
     }
   </style>
 </head>
 <body class="min-h-screen">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="flex min-h-screen">
 
-  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0">
+  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0" id="adminSidebar">
     <div class="p-5 flex items-center gap-3 border-b border-white/5">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-black">T</div>
-      <div>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-black shrink-0">T</div>
+      <div class="flex-1 min-w-0">
         <p class="font-black text-lg leading-none">Taskmill</p>
         <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>
       </div>
+      <button type="button" id="closeMobileSidebar"
+              class="lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10"
+              aria-label="Close menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="adminNav">
       {% set links = [
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
@@ -83,18 +123,25 @@
   </aside>
 
   <div class="flex-1 flex flex-col min-w-0">
-    <header class="glass border-b border-white/10 px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-20">
-      <div>
-        <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
-        <h1 class="text-xl font-bold">{% block page_title %}Dashboard{% endblock %}</h1>
+    <header class="glass border-b border-white/10 px-4 md:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
+      <div class="flex items-center gap-3 min-w-0">
+        <button type="button" id="openMobileSidebar"
+                class="lg:hidden w-11 h-11 rounded-xl bg-white/5 border border-white/10 shrink-0"
+                aria-label="Open menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="min-w-0">
+          <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
+          <h1 class="text-lg md:text-xl font-bold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">Pending ops</a>
         <a href="{{ url_for('dashboard.index') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">View site</a>
       </div>
     </header>
 
-    <main class="flex-1 p-6 md:p-8">
+    <main class="flex-1 p-4 md:p-8">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="mb-4 space-y-2">
@@ -112,6 +159,35 @@
   </div>
 </div>
 
+<script>
+(function(){
+  var side = document.getElementById('adminSidebar');
+  var backdrop = document.getElementById('sidebarBackdrop');
+  var openBtn = document.getElementById('openMobileSidebar');
+  var closeBtn = document.getElementById('closeMobileSidebar');
+  function openNav(){
+    side.classList.add('open');
+    backdrop.classList.add('show');
+    document.body.classList.add('nav-open');
+  }
+  function closeNav(){
+    side.classList.remove('open');
+    backdrop.classList.remove('show');
+    document.body.classList.remove('nav-open');
+  }
+  if (openBtn) openBtn.addEventListener('click', openNav);
+  if (closeBtn) closeBtn.addEventListener('click', closeNav);
+  if (backdrop) backdrop.addEventListener('click', closeNav);
+  document.querySelectorAll('#adminNav a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.matchMedia('(max-width: 1023px)').matches) closeNav();
+    });
+  });
+  window.addEventListener('resize', function(){
+    if (!window.matchMedia('(max-width: 1023px)').matches) closeNav();
+  });
+})();
+</script>
 {% block scripts %}{% endblock %}
 <script>
 (function(){
@@ -136,10 +212,8 @@
         setBadge('chat', d.chat);
         setBadge('pending_deposits', d.pending_deposits);
         setBadge('pending_withdrawals', d.pending_withdrawals);
-        setBadge('pending_tasks', d.pending_tasks);
         setBadge('total', d.total);
-      })
-      .catch(function(){});
+      }).catch(function(){});
   }
   tick();
   setInterval(tick, 8000);
