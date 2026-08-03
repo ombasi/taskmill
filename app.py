@@ -25,51 +25,49 @@ from models.payment_setting import PaymentSetting
 
 
 
-def _ensure_notification_broadcast_column()
-
-            try:
-                from sqlalchemy import text, inspect as sa_insp
-                insp3 = sa_insp(db.engine)
-                if "login_history" in insp3.get_table_names():
-                    lcols = [c["name"] for c in insp3.get_columns("login_history")]
-                    if "location" not in lcols:
-                        db.session.execute(text("ALTER TABLE login_history ADD COLUMN location VARCHAR(255)"))
-                        db.session.commit()
-                        print("Added login_history.location")
-            except Exception as e:
-                print("login_history.location:", e)
-                try:
-                    db.session.rollback()
-                except Exception:
-                    pass
-:
-    """Add notifications.is_broadcast if missing (Postgres + SQLite)."""
+def _ensure_schema_columns():
+    """Add missing columns used by newer features (safe on Postgres + SQLite)."""
     from sqlalchemy import text, inspect
     try:
         insp = inspect(db.engine)
-        if "notifications" not in insp.get_table_names():
-            db.create_all()
-            return
-        cols = [c["name"] for c in insp.get_columns("notifications")]
-        if "is_broadcast" in cols:
-            return
-        dialect = db.engine.dialect.name
-        if dialect == "postgresql":
-            db.session.execute(text(
-                "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_broadcast BOOLEAN DEFAULT FALSE"
-            ))
-        else:
-            db.session.execute(text(
-                "ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"
-            ))
-        db.session.commit()
-        print("Added notifications.is_broadcast")
+        tables = insp.get_table_names()
+
+        # notifications.is_broadcast
+        if "notifications" in tables:
+            cols = [c["name"] for c in insp.get_columns("notifications")]
+            if "is_broadcast" not in cols:
+                dialect = db.engine.dialect.name
+                if dialect == "postgresql":
+                    db.session.execute(text(
+                        "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_broadcast BOOLEAN DEFAULT FALSE"
+                    ))
+                else:
+                    db.session.execute(text(
+                        "ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"
+                    ))
+                db.session.commit()
+                print("Added notifications.is_broadcast")
+
+        # login_history.location
+        if "login_history" in tables:
+            lcols = [c["name"] for c in insp.get_columns("login_history")]
+            if "location" not in lcols:
+                db.session.execute(text(
+                    "ALTER TABLE login_history ADD COLUMN location VARCHAR(255)"
+                ))
+                db.session.commit()
+                print("Added login_history.location")
     except Exception as e:
-        print("ensure is_broadcast:", e)
+        print("ensure schema columns:", e)
         try:
             db.session.rollback()
         except Exception:
             pass
+
+
+def _ensure_notification_broadcast_column():
+    """Backward-compatible alias used by API routes."""
+    _ensure_schema_columns()
 
 
 def create_app():
@@ -126,7 +124,7 @@ def create_app():
 
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
-        _ensure_notification_broadcast_column()
+        _ensure_schema_columns()
         try:
             import models.spin  # noqa: F401
         except Exception as e:
@@ -249,7 +247,7 @@ def create_app():
         unread_notifications = 0
         try:
             if current_user.is_authenticated:
-                _ensure_notification_broadcast_column()
+                _ensure_schema_columns()
                 unread_notifications = Notification.query.filter_by(
                     user_id=current_user.id,
                     is_read=False
