@@ -12,18 +12,19 @@
     body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
     body.nav-open { overflow: hidden; }
     .glass {
-      background: rgba(15,23,42,.8);
+      background: rgba(15,23,42,.88);
       backdrop-filter: blur(18px);
       border: 1px solid rgba(255,255,255,.07);
     }
     .sidebar {
       width: var(--sidebar-w);
-      transition: transform .28s ease;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
     }
     .sidebar-link {
       display: flex; align-items: center; gap: .8rem;
       padding: .72rem .9rem; border-radius: .85rem;
-      color: #94a3b8; transition: .15s ease;
+      color: #94a3b8; transition: background .2s ease, color .2s ease, border-color .2s ease;
       border: 1px solid transparent;
     }
     .sidebar-link i { width: 1.2rem; text-align: center; }
@@ -38,32 +39,71 @@
       box-shadow: 0 8px 22px rgba(99,102,241,.28);
     }
     .sidebar-backdrop {
-      display: none;
       position: fixed; inset: 0;
       background: rgba(0,0,0,.55);
       z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
       backdrop-filter: blur(2px);
     }
-    .sidebar-backdrop.show { display: block; }
+    .sidebar-backdrop.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    /* Green blinking / pulse light */
+    .pulse-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: #4ade80;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+      animation: pulse-green 1.4s ease-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+    /* Mobile drawer */
     @media (max-width: 1023px) {
       .sidebar {
         position: fixed;
         top: 0; left: 0; bottom: 0;
         z-index: 50;
-        width: min(86vw, 20rem);
+        width: min(88vw, 20rem);
         transform: translateX(-105%);
-        box-shadow: 16px 0 48px rgba(0,0,0,.45);
+        box-shadow: 16px 0 48px rgba(0,0,0,.5);
       }
-      .sidebar.open { transform: translateX(0); }
+      .sidebar.open {
+        transform: translateX(0);
+      }
     }
     @media (min-width: 1024px) {
       .sidebar-backdrop { display: none !important; }
-      #closeMobileSidebar, #openMobileSidebar { display: none !important; }
+      #closeMobileSidebar { display: none !important; }
+      /* Keep hamburger hidden on large screens — sidebar always visible */
+      #openMobileSidebar { display: none !important; }
     }
+    /* Hamburger always easy to hit */
+    .menu-btn {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: background .2s ease, transform .15s ease;
+    }
+    .menu-btn:hover { background: rgba(255,255,255,.1); }
+    .menu-btn:active { transform: scale(0.96); }
   </style>
 </head>
 <body class="min-h-screen">
-<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
 <div class="flex min-h-screen">
 
   <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0" id="adminSidebar">
@@ -73,10 +113,8 @@
         <p class="font-black text-lg leading-none">Taskmill</p>
         <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>
       </div>
-      <button type="button" id="closeMobileSidebar"
-              class="lg:hidden w-10 h-10 rounded-xl bg-white/5 border border-white/10"
-              aria-label="Close menu">
-        <i class="fa-solid fa-xmark"></i>
+      <button type="button" id="closeMobileSidebar" class="menu-btn" aria-label="Close menu">
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 
@@ -123,12 +161,11 @@
   </aside>
 
   <div class="flex-1 flex flex-col min-w-0">
-    <header class="glass border-b border-white/10 px-4 md:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
+    <header class="glass border-b border-white/10 px-3 sm:px-5 md:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
       <div class="flex items-center gap-3 min-w-0">
-        <button type="button" id="openMobileSidebar"
-                class="lg:hidden w-11 h-11 rounded-xl bg-white/5 border border-white/10 shrink-0"
-                aria-label="Open menu">
-          <i class="fa-solid fa-bars"></i>
+        <!-- Hamburger: visible below lg -->
+        <button type="button" id="openMobileSidebar" class="menu-btn lg:hidden shrink-0" aria-label="Open menu">
+          <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <div class="min-w-0">
           <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
@@ -136,8 +173,15 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">Pending ops</a>
-        <a href="{{ url_for('dashboard.index') }}" class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">View site</a>
+        <a href="{{ url_for('admin.deposits', status='Pending') }}"
+           class="inline-flex items-center gap-2 text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>Pending ops</span>
+        </a>
+        <a href="{{ url_for('dashboard.index') }}"
+           class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+          View site
+        </a>
       </div>
     </header>
 
@@ -165,26 +209,52 @@
   var backdrop = document.getElementById('sidebarBackdrop');
   var openBtn = document.getElementById('openMobileSidebar');
   var closeBtn = document.getElementById('closeMobileSidebar');
-  function openNav(){
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 1023px)').matches;
+  }
+  function openNav() {
+    if (!side) return;
     side.classList.add('open');
-    backdrop.classList.add('show');
+    if (backdrop) {
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden', 'false');
+    }
     document.body.classList.add('nav-open');
   }
-  function closeNav(){
+  function closeNav() {
+    if (!side) return;
     side.classList.remove('open');
-    backdrop.classList.remove('show');
+    if (backdrop) {
+      backdrop.classList.remove('show');
+      backdrop.setAttribute('aria-hidden', 'true');
+    }
     document.body.classList.remove('nav-open');
   }
-  if (openBtn) openBtn.addEventListener('click', openNav);
-  if (closeBtn) closeBtn.addEventListener('click', closeNav);
+
+  if (openBtn) openBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    openNav();
+  });
+  if (closeBtn) closeBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    closeNav();
+  });
   if (backdrop) backdrop.addEventListener('click', closeNav);
-  document.querySelectorAll('#adminNav a').forEach(function(a){
-    a.addEventListener('click', function(){
-      if (window.matchMedia('(max-width: 1023px)').matches) closeNav();
+
+  document.querySelectorAll('#adminNav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (isMobile()) closeNav();
     });
   });
-  window.addEventListener('resize', function(){
-    if (!window.matchMedia('(max-width: 1023px)').matches) closeNav();
+
+  window.addEventListener('resize', function() {
+    if (!isMobile()) closeNav();
+  });
+
+  // Escape key closes drawer
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeNav();
   });
 })();
 </script>
