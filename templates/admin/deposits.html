@@ -5,6 +5,18 @@
 
 {% block content %}
 
+<div class="glass rounded-2xl p-4 mb-6 flex flex-wrap gap-2 items-center">
+  <a href="{{ url_for('admin.deposits') }}" class="px-3 py-1.5 rounded-lg text-sm {% if not status %}bg-indigo-600{% else %}bg-white/5{% endif %}">All</a>
+  <a href="{{ url_for('admin.deposits', status='Pending') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Pending' %}bg-amber-600{% else %}bg-white/5{% endif %}">Pending</a>
+  <a href="{{ url_for('admin.deposits', status='Approved') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Approved' %}bg-emerald-600{% else %}bg-white/5{% endif %}">Approved</a>
+  <a href="{{ url_for('admin.deposits', status='Rejected') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Rejected' %}bg-rose-600{% else %}bg-white/5{% endif %}">Rejected</a>
+</div>
+
+<div class="mb-4 text-sm text-zinc-400">
+  Select pending deposits and use bulk approve (checkboxes on each row if enabled).
+</div>
+
+
 <div class="space-y-8">
 
     <!-- Header -->
@@ -53,7 +65,9 @@
 
     <div class="glass rounded-3xl overflow-hidden">
 
-        <table class="w-full">
+        <form method="POST" action="{{ url_for('admin.bulk_approve_deposits') }}">
+<button type="submit" class="mb-4 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-sm font-semibold">Bulk Approve Selected</button>
+<table class="w-full">
 
             <thead class="bg-slate-800">
 
@@ -85,7 +99,7 @@
 
             <tr class="border-t border-slate-700 hover:bg-slate-800">
 
-                <td class="p-4">
+                <td class="bulk-cb"><input type="checkbox" name="deposit_ids" value="{{ deposit.id }}" class="mr-2"></td><td class="p-4">
 
                     <a
                         href="{{ deposit.receipt }}"

@@ -1404,21 +1404,17 @@ def approve_deposit(deposit_id):
     except Exception:
         pass
 
-    # Delete proof file to save storage
+    # Keep deposit row for admin history / accountability
+    deposit.status = "Approved"
     try:
-        if deposit.proof_image:
-            import os
-            from flask import current_app
-            path = os.path.join(
-                current_app.static_folder, "uploads", "deposits", str(deposit.proof_image)
-            )
-            if os.path.isfile(path):
-                os.remove(path)
-    except Exception as e:
-        print("proof delete:", e)
-
-    # Remove deposit row after processing (history is in wallet_transactions)
-    db.session.delete(deposit)
+        deposit.approved_by = current_user.id
+    except Exception:
+        pass
+    try:
+        from datetime import datetime
+        deposit.approved_at = datetime.utcnow()
+    except Exception:
+        pass
     db.session.commit()
 
     flash("Deposit approved, credited, and archived (removed from deposits list).", "success")
@@ -1496,14 +1492,14 @@ def approve_withdrawal(withdrawal_id):
         return redirect(url_for("admin.withdrawals"))
     ok = WalletService.approve_withdrawal(withdrawal, current_user)
     if ok:
-        # Archive: remove withdrawal row (ledger remains in wallet_transactions)
+        # Keep row for admin history (status set inside WalletService or here)
         try:
-            db.session.delete(withdrawal)
+            if withdrawal.status == "Pending":
+                withdrawal.status = "Approved"
             db.session.commit()
-            flash("Withdrawal approved and archived (removed from list).", "success")
-        except Exception as e:
-            print("wd delete", e)
-            flash("Withdrawal approved.", "success")
+        except Exception:
+            pass
+        flash("Withdrawal approved. Kept in history.", "success")
     else:
         flash("Could not approve withdrawal.", "danger")
     return redirect(url_for("admin.withdrawals"))
@@ -2383,18 +2379,13 @@ def bulk_approve_deposits():
                 balance_before=before,
                 balance_after=float(user.available_balance),
             ))
-            # delete proof
+            deposit.status = "Approved"
             try:
-                if deposit.proof_image:
-                    import os
-                    path = os.path.join(
-                        current_app.static_folder, "uploads", "deposits", str(deposit.proof_image)
-                    )
-                    if os.path.isfile(path):
-                        os.remove(path)
+                from datetime import datetime
+                deposit.approved_at = datetime.utcnow()
+                deposit.approved_by = current_user.id
             except Exception:
                 pass
-            db.session.delete(deposit)
             try:
                 from services.notification_service import NotificationService
                 NotificationService.send(user, "Deposit Approved", f"UGX {amount:,.0f} credited.")
