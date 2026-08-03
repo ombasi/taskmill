@@ -182,7 +182,7 @@ def withdraw():
         except ValueError:
             amount = 0
 
-        pin = (request.form.get("withdraw_pin") or "").strip()
+        pin = (request.form.get("withdraw_pin") or request.form.get("pin") or "").strip()
         if not current_user.has_withdraw_pin():
             flash("Set a withdraw PIN in Profile before withdrawing.", "warning")
             return redirect(url_for("profile.set_withdraw_pin"))

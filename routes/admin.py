@@ -1164,11 +1164,12 @@ def send_notification(user_id):
 @login_required
 @admin_required
 def reset_withdraw_pin(user_id):
-    """Admin resets withdraw PIN to default 1234. User should change it."""
+    """Admin resets withdraw PIN to default 1234."""
     user = User.query.get_or_404(user_id)
     user.set_withdraw_pin("1234")
+    db.session.add(user)
     db.session.commit()
-    flash("Withdraw PIN reset to 1234. Ask the user to change it after login.", "success")
+    flash("Withdraw PIN reset to 1234. User must enter 1234 on withdraw.", "success")
     return redirect(url_for("admin.view_user", user_id=user.id))
 
 @admin_bp.route("/products")
