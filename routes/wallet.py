@@ -76,8 +76,8 @@ from models.deposit import Deposit
 @csrf_protect
 def deposit():
 
-    payment_settings = PaymentSetting.query.filter_by(
-        active=True
+    payment_settings = PaymentSetting.query.filter_by(active=True).order_by(
+        PaymentSetting.method.asc()
     ).all()
 
     if request.method == "POST":
@@ -154,8 +154,8 @@ def deposit():
             url_for("wallet.deposit")
         )
 
-    from utils.payment_methods import methods_for_country
-    pay_methods = methods_for_country(getattr(current_user, "country", None))
+    from utils.payment_methods import active_deposit_methods
+    pay_methods = active_deposit_methods(getattr(current_user, "country", None))
     return render_template(
         "wallet/deposit.html",
         payment_methods=pay_methods,

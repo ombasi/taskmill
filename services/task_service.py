@@ -44,80 +44,100 @@ class TaskService:
     MINIMUM_START_BALANCE = 15000  # Default Starter; higher tiers use membership.minimum_deposit
     WITHDRAW_RESERVE = 15000  # Must remain after withdrawal
 
+    # Daily non-combo profit targets (UGX). Hard cap = target + 500.
+    DAILY_PROFIT_TARGETS = {
+        "Starter": 5000.0,
+        "Silver": 10000.0,
+        "Gold": 30000.0,
+        "VIP": 100000.0,
+    }
+    DAILY_PROFIT_SLACK = 500.0  # allowed excess above target
+
+    @staticmethod
+    def daily_profit_target(user):
+        m = getattr(user, "membership", None)
+        name = (m.name if m else "Starter") or "Starter"
+        return float(TaskService.DAILY_PROFIT_TARGETS.get(name, 5000.0))
+
+    @staticmethod
+    def today_non_combo_commission(user):
+        """Sum of commissions already earned today on normal (non-combo) tasks."""
+        from datetime import datetime
+        from sqlalchemy import func
+        today = datetime.utcnow().date()
+        try:
+            total = (
+                db.session.query(func.coalesce(func.sum(Task.commission), 0))
+                .filter(
+                    Task.user_id == user.id,
+                    Task.status == "completed",
+                    Task.task_set != 99,
+                    func.date(Task.completed_at) == today,
+                )
+                .scalar()
+            )
+            return float(total or 0)
+        except Exception:
+            return 0.0
+
     @staticmethod
     def calculate_commission(user, product_price, is_combo=False, task_set=None):
         """
-        Commission driven by membership % and balance.
-        No product-price cap from membership.
-        Starter targets ~UGX 2,500 set 1 + ~UGX 3,000 set 2 (~5,000/day without combo).
-        Higher memberships use higher % and higher set targets.
+        Normal tasks: size commissions so the day totals ~ membership target
+        (Starter 5k, Silver 10k, Gold 30k, VIP 100k), hard-capped at target + 500.
+        Combo tasks are uncapped by the daily target.
         """
-        m = user.membership
-        price = max(0.0, float(product_price or 0))
-        balance = max(0.0, float(user.available_balance or 0))
-        name = (m.name if m else "Starter")
+        price = float(product_price or 0)
+        m = getattr(user, "membership", None)
+        name = (m.name if m else "Starter") or "Starter"
 
-        # Membership commission rates (normal / combo)
-        rates = {
-            "Starter": (5.0, 8.0),
-            "Silver": (7.0, 10.0),
-            "Gold": (9.0, 12.0),
-            "VIP": (12.0, 15.0),
-        }
-        normal_r, combo_r = rates.get(name, (5.0, 8.0))
-        # Prefer DB values if admin set them higher
-        if m and not is_combo:
-            db_r = float(getattr(m, "commission_percent", None) or 0)
-            rate = max(db_r, normal_r) if db_r else normal_r
-        elif m and is_combo:
-            db_r = float(getattr(m, "combo_commission_percent", None) or 0)
-            rate = max(db_r, combo_r) if db_r else combo_r
-        else:
-            rate = combo_r if is_combo else normal_r
-
-        # Balance multiplier
-        if balance >= 500_000:
-            bal_mult = 2.2
-        elif balance >= 200_000:
-            bal_mult = 1.9
-        elif balance >= 100_000:
-            bal_mult = 1.6
-        elif balance >= 50_000:
-            bal_mult = 1.4
-        elif balance >= 25_000:
-            bal_mult = 1.25
-        elif balance >= 15_000:
-            bal_mult = 1.1
-        else:
-            bal_mult = 1.0
-
-        from_price = price * (rate / 100.0) * bal_mult
-
-        # Per-set floors so Starter hits ~2500 / ~3000 across the set
-        tasks_per_set, daily_sets, _ = TaskService._limits(user)
-        tasks_per_set = max(1, int(tasks_per_set))
-        set_targets = {
-            # (set1 total, set2 total) daily without combo
-            "Starter": (2500.0, 3000.0),
-            "Silver": (4000.0, 5000.0),
-            "Gold": (6000.0, 7500.0),
-            "VIP": (10000.0, 12000.0),
-        }
-        s1, s2 = set_targets.get(name, (2500.0, 3000.0))
-        current_set = int(task_set or (int(user.daily_sets_completed or 0) + 1))
-        set_total = s2 if current_set >= 2 else s1
-        floor_per_task = (set_total / tasks_per_set) * bal_mult
-
+        # Combo: percentage of product, no daily target cap
         if is_combo:
-            commission = max(from_price, floor_per_task * 1.2)
+            rates = {
+                "Starter": 8.0,
+                "Silver": 10.0,
+                "Gold": 12.0,
+                "VIP": 15.0,
+            }
+            rate = rates.get(name, 8.0)
+            if m:
+                db_r = float(getattr(m, "combo_commission_percent", None) or 0)
+                if db_r > 0:
+                    rate = db_r
+            return round(max(price * (rate / 100.0), 0.0), 0)
+
+        target = TaskService.daily_profit_target(user)
+        hard_cap = target + TaskService.DAILY_PROFIT_SLACK
+        earned = TaskService.today_non_combo_commission(user)
+        remaining_budget = max(0.0, hard_cap - earned)
+
+        tasks_per_set, daily_sets, total_tasks = TaskService._limits(user)
+        total_tasks = max(1, int(total_tasks))
+        done = int(getattr(user, "tasks_completed_today", 0) or 0)
+        left = max(1, total_tasks - done)
+
+        # Ideal per-task share of the *target* (not the slack), then clamp to remaining
+        ideal = target / total_tasks
+        # Slight set weighting: second set a bit higher if 2 sets
+        current_set = int(task_set or (int(getattr(user, "daily_sets_completed", 0) or 0) + 1))
+        if daily_sets >= 2 and current_set >= 2:
+            ideal = ideal * 1.08
         else:
-            commission = max(from_price, floor_per_task)
+            ideal = ideal * 0.95
+
+        # Spread remaining budget across remaining tasks
+        share = remaining_budget / left
+        commission = min(ideal, share, remaining_budget)
+
+        # Tiny variance so not every task is identical (±8%)
+        import random
+        commission = commission * random.uniform(0.92, 1.08)
+        commission = min(commission, remaining_budget)
+
+        if remaining_budget <= 0:
+            return 0.0
 
         return round(max(commission, 0.0), 0)
-
-
-
-
 
     @staticmethod
     def _limits(user):
