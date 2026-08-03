@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Deposit submitted{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto text-center space-y-6 py-6">
+  <div class="mx-auto w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl">
+    <i class="fa-solid fa-circle-check"></i>
+  </div>
+  <div>
+    <h1 class="text-2xl md:text-3xl font-black">Deposit submitted</h1>
+    <p class="text-zinc-400 text-sm mt-2">Your request is pending admin review.</p>
+  </div>
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 text-left space-y-3 text-sm">
+    <div class="flex justify-between"><span class="text-zinc-500">Amount</span><span class="font-bold text-emerald-400">{{ money(current_user, deposit.amount) }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Method</span><span>{{ deposit.payment_method or '—' }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Reference</span><span class="font-mono text-xs">{{ deposit.transaction_id or deposit.id }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Status</span><span class="text-amber-300">{{ deposit.status }}</span></div>
+  </div>
+  <div class="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 text-left text-sm text-zinc-300 space-y-2">
+    <p class="text-xs uppercase tracking-wider text-indigo-300 font-semibold">What happens next</p>
+    <ol class="list-decimal pl-4 space-y-1.5 text-zinc-400">
+      <li>Admin verifies your payment proof</li>
+      <li>Funds are credited to Available balance</li>
+      <li>You get an in-app notification when approved</li>
+      <li>Then you can start or continue tasks</li>
+    </ol>
+  </div>
+  <div class="flex flex-col sm:flex-row gap-2">
+    <a href="{{ url_for('wallet.index') }}" class="flex-1 rounded-2xl bg-white text-zinc-900 font-bold py-3">Go to wallet</a>
+    <a href="{{ url_for('task.index') }}" class="flex-1 rounded-2xl border border-white/15 py-3 font-semibold">Tasks</a>
+  </div>
+</div>
+{% endblock %}

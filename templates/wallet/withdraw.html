@@ -36,6 +36,30 @@
   </div>
   {% endif %}
 
+  
+  {% if checklist %}
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+    <h2 class="font-bold text-sm mb-3">Withdrawal checklist</h2>
+    <ul class="space-y-2">
+      {% for item in checklist.items %}
+      <li class="flex items-start gap-3 text-sm">
+        <span class="mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0
+          {% if item.ok %}bg-emerald-500/20 text-emerald-400{% else %}bg-rose-500/20 text-rose-400{% endif %}">
+          <i class="fa-solid {% if item.ok %}fa-check{% else %}fa-xmark{% endif %}"></i>
+        </span>
+        <div>
+          <p class="font-medium {% if item.ok %}text-zinc-200{% else %}text-zinc-400{% endif %}">{{ item.label }}</p>
+          <p class="text-[11px] text-zinc-500">{{ item.detail }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if not checklist.all_ok %}
+    <p class="text-xs text-amber-300/90 mt-4">Fix the red items before submitting a withdrawal.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
   <form method="POST" class="grid lg:grid-cols-5 gap-5">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

@@ -146,13 +146,10 @@ def deposit():
         db.session.commit()
 
         flash(
-            "Deposit submitted successfully. Awaiting approval.",
-            "success"
+            "Deposit submitted. Next: wait for admin approval — your balance updates automatically when approved.",
+            "success",
         )
-
-        return redirect(
-            url_for("wallet.deposit")
-        )
+        return redirect(url_for("wallet.deposit_submitted", deposit_id=deposit.id))
 
     from utils.payment_methods import active_deposit_methods
     pay_methods = active_deposit_methods(getattr(current_user, "country", None))
@@ -206,7 +203,8 @@ def withdraw():
 
         return redirect(url_for("wallet.index"))
 
-    return render_template("wallet/withdraw.html")
+    checklist = TaskService.withdraw_checklist(current_user)
+    return render_template("wallet/withdraw.html", checklist=checklist)
 
 @wallet_bp.route("/referrals")
 @login_required

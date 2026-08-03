@@ -518,7 +518,55 @@ class TaskService:
         return True
 
     @staticmethod
+    def withdraw_checklist(user):
+        """Structured checklist for the withdraw page UI."""
+        TaskService.ensure_daily_reset(user)
+        tasks_per_set, daily_sets, total = TaskService._limits(user)
+        required_sets = min(2, daily_sets)
+        sets_done = int(user.daily_sets_completed or 0)
+        bal = float(user.available_balance or 0)
+        reserve = float(TaskService.WITHDRAW_RESERVE)
+        has_pin = bool(getattr(user, "has_withdraw_pin", lambda: False)())
+        if not hasattr(user, "has_withdraw_pin"):
+            has_pin = bool(getattr(user, "withdraw_pin_hash", None))
+        items = [
+            {
+                "key": "balance",
+                "label": "Balance is not negative",
+                "ok": bal >= 0,
+                "detail": f"Current: UGX {bal:,.0f}",
+            },
+            {
+                "key": "negative_day",
+                "label": "No combo negative hold today",
+                "ok": not bool(getattr(user, "negative_today", False)),
+                "detail": "Clear combo hold first" if getattr(user, "negative_today", False) else "Clear",
+            },
+            {
+                "key": "sets",
+                "label": f"Complete {required_sets} task set(s) today",
+                "ok": sets_done >= required_sets,
+                "detail": f"{sets_done} / {required_sets} sets done",
+            },
+            {
+                "key": "reserve",
+                "label": f"Keep at least UGX {reserve:,.0f} after withdraw",
+                "ok": bal > reserve,
+                "detail": f"Withdrawable up to UGX {max(0, bal - reserve):,.0f}",
+            },
+            {
+                "key": "pin",
+                "label": "Withdraw PIN set",
+                "ok": has_pin,
+                "detail": "Set PIN in Profile" if not has_pin else "PIN ready",
+            },
+        ]
+        all_ok = all(i["ok"] for i in items)
+        return {"items": items, "all_ok": all_ok, "sets_done": sets_done, "required_sets": required_sets}
+
+    @staticmethod
     def can_withdraw(user):
+
         """
         Withdraw only when:
         - at least 2 sets completed today (or membership daily_sets if lower)
@@ -577,7 +625,46 @@ class TaskService:
         db.session.commit()
 
     @staticmethod
+    def activity_streak(user):
+        """Days in a row with at least one completed task (best-effort)."""
+        from datetime import datetime, timedelta, date
+        from sqlalchemy import func
+        try:
+            days = (
+                db.session.query(func.date(Task.completed_at))
+                .filter(
+                    Task.user_id == user.id,
+                    Task.status == "completed",
+                    Task.completed_at.isnot(None),
+                )
+                .distinct()
+                .all()
+            )
+            dayset = {d[0] if not isinstance(d, date) else d for d in days}
+            # normalize
+            norm = set()
+            for d in dayset:
+                if d is None:
+                    continue
+                if hasattr(d, "date"):
+                    norm.add(d.date())
+                else:
+                    norm.add(d)
+            streak = 0
+            cur = date.today()
+            # allow today or yesterday to start streak
+            if cur not in norm and (cur - timedelta(days=1)) in norm:
+                cur = cur - timedelta(days=1)
+            while cur in norm:
+                streak += 1
+                cur = cur - timedelta(days=1)
+            return streak
+        except Exception:
+            return int(getattr(user, "tasks_completed_today", 0) or 0) > 0 and 1 or 0
+
+    @staticmethod
     def progress(user):
+
         TaskService.ensure_daily_reset(user)
         tasks_per_set, daily_sets, total = TaskService._limits(user)
         done = int(user.tasks_completed_today or 0)

@@ -33,6 +33,7 @@ def index():
     _ensure_membership(current_user)
     TaskService.ensure_daily_reset(current_user)
     progress = TaskService.progress(current_user)
+    streak = TaskService.activity_streak(current_user)
 
     completed = Task.query.filter_by(user_id=current_user.id, status="completed").count()
     pending = Task.query.filter_by(user_id=current_user.id, status="assigned").count()
@@ -117,6 +118,7 @@ def index():
         max_sets=1,
         current_set=1,
         progress=progress,
+        streak=streak,
         combo=combo,
         total_earned=total_earned,
         total_withdrawn=abs(total_withdrawn),

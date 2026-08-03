@@ -1,5 +1,35 @@
 {% extends "admin/base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard
+  <div class="glass rounded-3xl p-5 mt-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+      <h3 class="font-bold text-lg">Pending ops queue</h3>
+      <span class="text-xs text-zinc-500">Act fast — users are waiting</span>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 hover:bg-amber-500/15 transition">
+        <p class="text-xs text-amber-200/80">Deposits</p>
+        <p class="text-3xl font-black text-amber-300 mt-1">{{ pending_deposits|default(0) }}</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Review & approve →</p>
+      </a>
+      <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 hover:bg-rose-500/15 transition">
+        <p class="text-xs text-rose-200/80">Withdrawals</p>
+        <p class="text-3xl font-black text-rose-300 mt-1">{{ pending_withdrawals|default(0) }}</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Pay out →</p>
+      </a>
+      <a href="{{ url_for('chat.admin_inbox') }}" class="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4 hover:bg-sky-500/15 transition">
+        <p class="text-xs text-sky-200/80">Unread chats</p>
+        <p class="text-3xl font-black text-sky-300 mt-1">{{ unread_chats|default(0) }}</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Reply →</p>
+      </a>
+      <a href="{{ url_for('admin.users', negative='1') }}" class="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4 hover:bg-violet-500/15 transition">
+        <p class="text-xs text-violet-200/80">Negative balances</p>
+        <p class="text-3xl font-black text-violet-300 mt-1">{{ negative_count|default(0) }}</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Review users →</p>
+      </a>
+    </div>
+  </div>
+
+{% endblock %}
 {% block page_title %}Command center{% endblock %}
 {% block content %}
 <div class="space-y-6">

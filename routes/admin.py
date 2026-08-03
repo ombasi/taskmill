@@ -197,6 +197,14 @@ def dashboard():
         .all()
     )
 
+    unread_chats = 0
+    try:
+        from models.chat import ChatMessage
+        unread_chats = ChatMessage.query.filter_by(is_from_admin=False, is_read=False).count()
+    except Exception:
+        pass
+    negative_count = User.query.filter(User.available_balance < 0).count()
+
     return render_template(
         "admin/dashboard.html",
         total_users=total_users,
@@ -205,11 +213,13 @@ def dashboard():
         pending_deposit_list=pending_deposit_list,
         pending_withdrawal_list=pending_withdrawal_list,
         negative_users=negative_users,
+        negative_count=negative_count,
         open_combos=open_combos,
         total_products=total_products,
         active_tasks=active_tasks,
         completed_tasks=completed_tasks,
         pending_deposits=pending_deposits,
+        unread_chats=unread_chats,
         pending_withdrawals=pending_withdrawals,
         deposits_today=float(deposits_today or 0),
         withdrawals_today=float(withdrawals_today or 0),
