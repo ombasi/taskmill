@@ -24,6 +24,37 @@ except Exception as _spin_err:
 from models.payment_setting import PaymentSetting
 
 
+
+def _ensure_notification_broadcast_column():
+    """Add notifications.is_broadcast if missing (Postgres + SQLite)."""
+    from sqlalchemy import text, inspect
+    try:
+        insp = inspect(db.engine)
+        if "notifications" not in insp.get_table_names():
+            db.create_all()
+            return
+        cols = [c["name"] for c in insp.get_columns("notifications")]
+        if "is_broadcast" in cols:
+            return
+        dialect = db.engine.dialect.name
+        if dialect == "postgresql":
+            db.session.execute(text(
+                "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_broadcast BOOLEAN DEFAULT FALSE"
+            ))
+        else:
+            db.session.execute(text(
+                "ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"
+            ))
+        db.session.commit()
+        print("Added notifications.is_broadcast")
+    except Exception as e:
+        print("ensure is_broadcast:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 def create_app():
 
     app = Flask(__name__)
@@ -78,6 +109,7 @@ def create_app():
 
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
+        _ensure_notification_broadcast_column()
         try:
             import models.spin  # noqa: F401
         except Exception as e:
@@ -197,21 +229,22 @@ def create_app():
 
     @app.context_processor
     def inject_notifications():
-
-        if current_user.is_authenticated:
-
-            unread_notifications = Notification.query.filter_by(
-                user_id=current_user.id,
-                is_read=False
-            ).count()
-
-        else:
-
+        unread_notifications = 0
+        try:
+            if current_user.is_authenticated:
+                _ensure_notification_broadcast_column()
+                unread_notifications = Notification.query.filter_by(
+                    user_id=current_user.id,
+                    is_read=False
+                ).count()
+        except Exception as e:
+            print("inject_notifications:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             unread_notifications = 0
-
-        return dict(
-            unread_notifications=unread_notifications
-        )
+        return dict(unread_notifications=unread_notifications)
 
     from helpers.currency import money
     from utils.security import inject_csrf

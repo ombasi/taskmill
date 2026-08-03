@@ -89,6 +89,12 @@ def notifications():
 @api_bp.route("/badges")
 @login_required
 def badges():
+    try:
+        from app import _ensure_notification_broadcast_column
+        _ensure_notification_broadcast_column()
+    except Exception:
+        pass
+
     """Live counts for nav badges (polled every few seconds)."""
     from models.notification import Notification
     from models.chat import ChatMessage
@@ -157,6 +163,12 @@ def badges():
 @api_bp.route("/popups")
 @login_required
 def popups():
+    try:
+        from app import _ensure_notification_broadcast_column
+        _ensure_notification_broadcast_column()
+    except Exception:
+        pass
+
     """Unread toasts + active broadcasts for the current user."""
     from models.notification import Notification
     q = Notification.query.filter_by(user_id=current_user.id, is_read=False)
