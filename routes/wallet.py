@@ -81,14 +81,25 @@ def deposit():
     ).all()
 
     if request.method == "POST":
+        try:
+            amount = float(request.form.get("amount") or 0)
+        except (TypeError, ValueError):
+            flash("Enter a valid deposit amount.", "danger")
+            return redirect(url_for("wallet.deposit"))
+        if amount <= 0:
+            flash("Deposit amount must be greater than zero.", "danger")
+            return redirect(url_for("wallet.deposit"))
 
-        amount = float(request.form["amount"])
+        payment_method = (request.form.get("payment_method") or "").strip()
+        if not payment_method:
+            flash("Select a payment method.", "danger")
+            return redirect(url_for("wallet.deposit"))
 
-        payment_method = request.form["payment_method"]
-
-        provider = request.form["provider"]
-
-        transaction_id = request.form["transaction_id"]
+        provider = (request.form.get("provider") or payment_method or "Other").strip()
+        transaction_id = (request.form.get("transaction_id") or "").strip()
+        if not transaction_id:
+            flash("Enter the transaction ID / reference.", "danger")
+            return redirect(url_for("wallet.deposit"))
 
         notes = request.form.get("notes")
 
@@ -191,7 +202,7 @@ def withdraw():
         if withdrawal:
             flash("Withdrawal request submitted. Funds held pending admin approval.", "success")
         else:
-            flash("Invalid amount, or you must leave UGX 15,000 in the wallet for next day tasks.", "danger")
+            flash("Cannot withdraw: insufficient balance after the UGX 15,000 reserve, or invalid amount.", "danger")
 
         return redirect(url_for("wallet.index"))
 

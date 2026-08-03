@@ -1,5 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Deposit{% endblock %}
+{% block title %}Deposit<script>
+(function(){
+  var sel = document.getElementById('payMethod');
+  var hid = document.getElementById('providerField');
+  function sync(){ if (hid && sel) hid.value = sel.value || ''; }
+  if (sel) { sel.addEventListener('change', sync); sync(); }
+})();
+</script>
+{% endblock %}
 {% block content %}
 <div class="max-w-5xl mx-auto space-y-5">
 
@@ -41,6 +49,7 @@
 
         <div>
           <label class="text-xs text-zinc-400">Payment method</label>
+          <input type="hidden" name="provider" id="providerField" value="">
           <select name="payment_method" required id="payMethod"
                   class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 focus:border-indigo-500 outline-none">
             <option value="">Select method</option>
