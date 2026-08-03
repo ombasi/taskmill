@@ -49,6 +49,11 @@ class LoginHistory(db.Model):
         nullable=True
     )
 
+    location = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     status = db.Column(
         db.String(20),
         default="Online"

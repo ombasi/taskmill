@@ -426,8 +426,8 @@ def view_user(user_id):
         login_history = (
             LoginHistory.query
             .filter_by(user_id=user.id)
-            .order_by(LoginHistory.id.desc())
-            .limit(20)
+            .order_by(LoginHistory.login_time.desc(), LoginHistory.id.desc())
+            .limit(50)
             .all()
         )
     except Exception as e:

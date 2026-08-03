@@ -116,6 +116,7 @@
       <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-tasks">Tasks</button>
       <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-deps">Deposits</button>
       <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-wds">Withdrawals</button>
+      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-login">Login history</button>
     </div>
 
     <div id="tab-wallet" class="tab-content space-y-2 max-h-80 overflow-y-auto">
@@ -150,6 +151,46 @@
       </div>
       {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No withdrawals</p>{% endfor %}
     </div>
+
+    <div id="tab-login" class="tab-content hidden">
+      <div class="overflow-x-auto max-h-96">
+        <table class="w-full text-sm">
+          <thead class="text-left text-zinc-500 text-xs uppercase tracking-wider">
+            <tr>
+              <th class="py-2 pr-3">When</th>
+              <th class="py-2 pr-3">IP</th>
+              <th class="py-2 pr-3">Location</th>
+              <th class="py-2 pr-3">Device</th>
+              <th class="py-2 pr-3">OS</th>
+              <th class="py-2 pr-3">Browser</th>
+              <th class="py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            {% for row in login_history|default([]) %}
+            <tr class="hover:bg-white/[0.03]">
+              <td class="py-2.5 pr-3 text-zinc-300 whitespace-nowrap">
+                {% if row.login_time %}{{ row.login_time.strftime('%d %b %Y · %H:%M') }}{% else %}—{% endif %}
+              </td>
+              <td class="py-2.5 pr-3 font-mono text-xs">{{ row.ip_address or '—' }}</td>
+              <td class="py-2.5 pr-3">{{ row.location or '—' }}</td>
+              <td class="py-2.5 pr-3">{{ row.device or '—' }}</td>
+              <td class="py-2.5 pr-3">{{ row.operating_system or '—' }}</td>
+              <td class="py-2.5 pr-3 max-w-[140px] truncate" title="{{ row.browser or '' }}">{{ row.browser or '—' }}</td>
+              <td class="py-2.5">
+                <span class="text-[11px] rounded-full px-2 py-0.5 {% if row.status == 'Online' %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
+                  {{ row.status or '—' }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="py-10 text-center text-zinc-500">No login history yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 

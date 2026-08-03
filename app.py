@@ -25,7 +25,24 @@ from models.payment_setting import PaymentSetting
 
 
 
-def _ensure_notification_broadcast_column():
+def _ensure_notification_broadcast_column()
+
+            try:
+                from sqlalchemy import text, inspect as sa_insp
+                insp3 = sa_insp(db.engine)
+                if "login_history" in insp3.get_table_names():
+                    lcols = [c["name"] for c in insp3.get_columns("login_history")]
+                    if "location" not in lcols:
+                        db.session.execute(text("ALTER TABLE login_history ADD COLUMN location VARCHAR(255)"))
+                        db.session.commit()
+                        print("Added login_history.location")
+            except Exception as e:
+                print("login_history.location:", e)
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+:
     """Add notifications.is_broadcast if missing (Postgres + SQLite)."""
     from sqlalchemy import text, inspect
     try:

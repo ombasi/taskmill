@@ -132,6 +132,72 @@ class AuthService:
         return user
 
     @staticmethod
+
+    @staticmethod
+    def _parse_user_agent(ua: str):
+        """Rough device / browser / OS from User-Agent."""
+        ua = ua or ""
+        u = ua.lower()
+        # Device
+        if "ipad" in u:
+            device = "iPad"
+        elif "iphone" in u:
+            device = "iPhone"
+        elif "android" in u and "mobile" in u:
+            device = "Android phone"
+        elif "android" in u:
+            device = "Android tablet"
+        elif "mobile" in u:
+            device = "Mobile"
+        else:
+            device = "Desktop"
+        # OS
+        if "windows nt 10" in u or "windows nt 11" in u:
+            os_name = "Windows 10/11"
+        elif "windows" in u:
+            os_name = "Windows"
+        elif "mac os x" in u or "macintosh" in u:
+            os_name = "macOS"
+        elif "android" in u:
+            os_name = "Android"
+        elif "iphone" in u or "ipad" in u or "ios" in u:
+            os_name = "iOS"
+        elif "linux" in u:
+            os_name = "Linux"
+        else:
+            os_name = "Unknown"
+        # Browser
+        if "edg/" in u:
+            browser = "Edge"
+        elif "chrome/" in u and "edg/" not in u:
+            browser = "Chrome"
+        elif "firefox/" in u:
+            browser = "Firefox"
+        elif "safari/" in u and "chrome/" not in u:
+            browser = "Safari"
+        elif "opr/" in u or "opera" in u:
+            browser = "Opera"
+        else:
+            browser = (ua[:40] + "…") if len(ua) > 40 else (ua or "Unknown")
+        return device, os_name, browser
+
+    @staticmethod
+    def _lookup_location(ip: str):
+        if not ip or ip in ("127.0.0.1", "::1", "localhost"):
+            return "Local / private"
+        try:
+            from utils.location import detect_location
+            data = detect_location(ip)
+            if not data or data.get("status") == "fail":
+                return None
+            city = data.get("city") or ""
+            region = data.get("regionName") or data.get("region") or ""
+            country = data.get("country") or ""
+            parts = [p for p in (city, region, country) if p]
+            return ", ".join(parts) if parts else None
+        except Exception:
+            return None
+
     def login_success(user, ip_address=None):
         """Update last IP on user + append login_history (always)."""
         from models.login_history import LoginHistory
@@ -147,15 +213,34 @@ class AuthService:
         if ip:
             user.ip_address = ip
 
+        device, os_name, browser = AuthService._parse_user_agent(ua)
+        location = AuthService._lookup_location(ip) if ip else None
+
         entry = LoginHistory(
             user_id=user.id,
             ip_address=ip,
-            browser=ua or None,
-            device=(ua[:100] if ua else None),
+            browser=browser,
+            device=device,
+            operating_system=os_name,
             status="Online",
         )
+        if hasattr(entry, "location"):
+            entry.location = location
         if hasattr(entry, "login_time"):
             entry.login_time = datetime.utcnow()
+
+        # Alert on IP change
+        try:
+            prev = getattr(user, "ip_address", None)
+            if ip and prev and prev != ip:
+                from services.notification_service import NotificationService
+                NotificationService.send(
+                    user,
+                    "New login",
+                    f"New login from IP {ip}. If this wasn't you, change your password.",
+                )
+        except Exception:
+            pass
 
         try:
             db.session.add(user)
