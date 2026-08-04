@@ -310,4 +310,28 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
   });
 });
 </script>
+
+  <div class="glass rounded-3xl p-5 mt-4">
+    <h3 class="font-bold mb-3">Staff notes</h3>
+    <form method="POST" action="{{ url_for('admin.add_user_note', user_id=user.id) }}" class="space-y-2 mb-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="body" rows="2" required placeholder="Add a note for handover..."
+                class="w-full rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-sm"></textarea>
+      <button class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold">Save note</button>
+    </form>
+    <div class="space-y-2 max-h-48 overflow-y-auto">
+      {% for n in user_notes|default([]) %}
+      <div class="rounded-xl bg-black/25 border border-white/5 p-3 text-sm">
+        <p class="text-zinc-200">{{ n.body }}</p>
+        <p class="text-[11px] text-zinc-500 mt-1">
+          {{ n.author.username if n.author else n.author_id }}
+          · {% if n.created_at %}{{ n.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}
+        </p>
+      </div>
+      {% else %}
+      <p class="text-xs text-zinc-500">No notes yet</p>
+      {% endfor %}
+    </div>
+  </div>
+
 {% endblock %}

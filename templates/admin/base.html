@@ -187,6 +187,7 @@
       {% set links = [
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
+        ('admin.agents_hub', 'fa-sitemap', 'Agents'),
         ('admin.products', 'fa-box', 'Products'),
         ('admin.combos', 'fa-bolt', 'Combos'),
         ('admin.deposits', 'fa-arrow-down', 'Deposits'),
@@ -205,6 +206,10 @@
       {% set links = [
         ('admin.users', 'fa-users', 'My team'),
         ('admin.combos', 'fa-bolt', 'Combos'),
+        ('admin.deposits', 'fa-arrow-down', 'Team deposits'),
+        ('admin.withdrawals', 'fa-arrow-up', 'Team withdrawals'),
+        ('admin.team_report', 'fa-chart-pie', 'Team report'),
+        ('chat.admin_inbox', 'fa-comments', 'Team chat'),
       ] %}
       {% endif %}
       {% for ep, icon, label in links %}

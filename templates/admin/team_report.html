@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}Team report{% endblock %}
+{% block page_title %}Team report{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <form method="GET" class="glass rounded-2xl p-4 flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="text-xs text-zinc-400">From</label>
+      <input type="date" name="from" value="{{ date_from }}" class="block mt-1 rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="text-xs text-zinc-400">To</label>
+      <input type="date" name="to" value="{{ date_to }}" class="block mt-1 rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-sm">
+    </div>
+    {% if request.args.get('agent_id') %}<input type="hidden" name="agent_id" value="{{ request.args.get('agent_id') }}">{% endif %}
+    <button class="bg-indigo-600 px-5 py-2.5 rounded-xl text-sm font-semibold">Apply</button>
+  </form>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Team size</p><p class="text-2xl font-black">{{ team_count }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Team balance</p><p class="text-xl font-black text-emerald-400">{{ money(current_user, total_balance) }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Pending deposits</p><p class="text-2xl font-black text-amber-300">{{ dep_pending }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Deposits (range)</p><p class="text-xl font-black">{{ money(current_user, dep_sum) }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Tasks completed</p><p class="text-2xl font-black">{{ tasks_done }}</p></div>
+  </div>
+
+  <div class="glass rounded-3xl p-5 max-w-md">
+    <h3 class="font-bold mb-3">Membership mix</h3>
+    <canvas id="pieMem" height="200"></canvas>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+new Chart(document.getElementById('pieMem'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ pie_labels|tojson }},
+    datasets: [{ data: {{ pie_values|tojson }}, backgroundColor: ['#6366f1','#14b8a6','#f59e0b','#f43f5e','#a855f7'] }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } } }
+});
+</script>
+{% endblock %}

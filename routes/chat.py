@@ -29,10 +29,13 @@ MAX_CHAT_FILE_MB = 5
 
 
 def admin_required_view():
-    if not current_user.is_authenticated or not current_user.is_admin:
+    if not current_user.is_authenticated:
         flash("Admins only.", "danger")
         return False
-    return True
+    if getattr(current_user, "is_admin", False) or getattr(current_user, "is_agent", False):
+        return True
+    flash("Admins only.", "danger")
+    return False
 
 
 def _allowed(filename):
@@ -147,8 +150,15 @@ def admin_inbox():
     user_ids = list(last_map.keys())
     users = User.query.filter(User.id.in_(user_ids)).all() if user_ids else []
     users_by_id = {u.id: u for u in users}
+    # Agents only see downline chats
+    allowed_ids = None
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        from routes.admin import get_downline_ids
+        allowed_ids = get_downline_ids(current_user.id)
     conversations = []
     for uid, last_at in sorted(last_map.items(), key=lambda x: x[1] or 0, reverse=True):
+        if allowed_ids is not None and uid not in allowed_ids:
+            continue
         u = users_by_id.get(uid)
         if u:
             conversations.append((u, last_at, unread_map.get(uid, 0)))
@@ -163,6 +173,11 @@ def admin_thread(user_id):
         return redirect(url_for("dashboard.index"))
 
     user = User.query.get_or_404(user_id)
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        from routes.admin import get_downline_ids, can_manage_user
+        if not can_manage_user(current_user, user):
+            flash("You can only chat with users in your referral tree.", "danger")
+            return redirect(url_for("chat.admin_inbox"))
 
     if request.method == "POST":
         text, att, err = _parse_message_and_file()

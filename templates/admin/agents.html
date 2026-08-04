@@ -1,0 +1,117 @@
+{% extends "admin/base.html" %}
+{% block title %}Agents{% endblock %}
+{% block page_title %}Team leaders{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="grid lg:grid-cols-3 gap-4">
+    <div class="glass rounded-3xl p-5 lg:col-span-2">
+      <h3 class="font-bold mb-3">Team size by agent</h3>
+      <canvas id="barTeams" height="120"></canvas>
+    </div>
+    <div class="glass rounded-3xl p-5">
+      <h3 class="font-bold mb-3">Share of network</h3>
+      <canvas id="pieTeams" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="glass rounded-3xl p-5">
+    <h3 class="font-bold mb-3">Pending deposits in each team</h3>
+    <canvas id="barDeps" height="100"></canvas>
+  </div>
+
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="p-4 border-b border-white/5 font-bold">Agents</div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-800/80 text-left text-zinc-400">
+        <tr>
+          <th class="p-4">Agent</th>
+          <th class="p-4">Team size</th>
+          <th class="p-4">Team balance</th>
+          <th class="p-4">Pending deposits</th>
+          <th class="p-4">Tasks done</th>
+          <th class="p-4"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        {% for r in rows %}
+        <tr>
+          <td class="p-4 font-semibold">
+            <a href="{{ url_for('admin.view_user', user_id=r.agent.id) }}" class="text-indigo-400">{{ r.agent.username }}</a>
+            <p class="text-xs text-zinc-500">{{ r.agent.referral_code or '—' }}</p>
+          </td>
+          <td class="p-4">{{ r.team }}</td>
+          <td class="p-4 text-emerald-400 font-semibold">{{ money(current_user, r.balance) }}</td>
+          <td class="p-4 text-amber-300">{{ r.pending_deposits }}</td>
+          <td class="p-4">{{ r.tasks }}</td>
+          <td class="p-4 text-right">
+            <a href="{{ url_for('admin.team_report', agent_id=r.agent.id) }}" class="text-sm text-indigo-400 font-medium">Report →</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="p-10 text-center text-zinc-500">No team leaders yet. Promote a user from their profile.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="p-4 border-b border-white/5 font-bold">Agent activity log</div>
+    <div class="max-h-96 overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-800/80 text-left text-zinc-400 sticky top-0">
+          <tr>
+            <th class="p-3">When</th>
+            <th class="p-3">Agent</th>
+            <th class="p-3">Module</th>
+            <th class="p-3">Action</th>
+            <th class="p-3">Target</th>
+            <th class="p-3">Detail</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          {% for log in logs %}
+          <tr>
+            <td class="p-3 text-xs text-zinc-500 whitespace-nowrap">{% if log.created_at %}{{ log.created_at.strftime('%d %b %H:%M') }}{% endif %}</td>
+            <td class="p-3">{{ log.admin.username if log.admin else log.admin_id }}</td>
+            <td class="p-3">{{ log.module }}</td>
+            <td class="p-3 font-medium">{{ log.action }}</td>
+            <td class="p-3">{{ log.target or '—' }}</td>
+            <td class="p-3 text-xs text-zinc-400 max-w-xs truncate" title="{{ log.description or '' }}">{{ log.description or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="p-8 text-center text-zinc-500">No agent actions logged yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){
+  var labels = {{ bar_labels|tojson }};
+  var teams = {{ bar_teams|tojson }};
+  var deps = {{ bar_deps|tojson }};
+  var pieL = {{ pie_labels|tojson }};
+  var pieV = {{ pie_values|tojson }};
+  if (window.Chart) {
+    new Chart(document.getElementById('barTeams'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label: 'Team size', data: teams, backgroundColor: 'rgba(99,102,241,0.7)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+    new Chart(document.getElementById('barDeps'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label: 'Pending deposits', data: deps, backgroundColor: 'rgba(251,191,36,0.7)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+    new Chart(document.getElementById('pieTeams'), {
+      type: 'pie',
+      data: { labels: pieL, datasets: [{ data: pieV, backgroundColor: ['#6366f1','#14b8a6','#f59e0b','#f43f5e','#a855f7','#22c55e'] }] },
+      options: { plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } } }
+    });
+  }
+})();
+</script>
+{% endblock %}

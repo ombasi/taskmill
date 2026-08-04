@@ -85,6 +85,14 @@ def admin_required(f):
                 "admin.reset_spin",
                 "admin.assign_combo_from_manager",
                 "admin.combos",
+                "admin.deposits",
+                "admin.withdrawals",
+                "admin.toggle_block",
+                "admin.toggle_active",
+                "admin.add_user_note",
+                "admin.team_report",
+                "chat.admin_inbox",
+                "chat.admin_thread",
             }
             if ep not in allowed:
                 flash("Team leaders can only manage users in their referral tree.", "warning")
@@ -143,7 +151,28 @@ def can_manage_user(actor, target_user):
     return int(target_user.id) in downline
 
 
+def log_staff_action(module, action, target="", description=""):
+    """Log admin/agent action for main admin audit trail."""
+    try:
+        from utils.audit import log_admin_action
+        log_admin_action(
+            current_user,
+            module=module,
+            action=action,
+            target=str(target)[:255],
+            description=(description or "")[:2000],
+        )
+        db.session.commit()
+    except Exception as e:
+        print("log_staff_action:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 def assert_can_manage(user_id):
+
     """Abort/redirect if current user cannot manage this user."""
     target = User.query.get_or_404(user_id)
     if can_manage_user(current_user, target):
@@ -608,6 +637,7 @@ def view_user(user_id):
         login_history=login_history or [],
         last_ip=last_ip or "—",
         spin_prizes=_safe_list(lambda: __import__("models.spin", fromlist=["SpinPrize"]).SpinPrize.query.filter_by(active=True).all()),
+        user_notes=_safe_list(lambda: __import__("models.user_note", fromlist=["UserNote"]).UserNote.query.filter_by(user_id=user.id).order_by(__import__("models.user_note", fromlist=["UserNote"]).UserNote.created_at.desc()).limit(30).all()),
     )
 
 # ==========================================================
@@ -617,6 +647,8 @@ def view_user(user_id):
 @login_required
 @admin_required
 def toggle_block(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
     user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
         flash(
@@ -626,6 +658,12 @@ def toggle_block(user_id):
         return redirect(url_for("admin.users"))
     user.is_blocked = not user.is_blocked
     db.session.commit()
+    log_staff_action(
+        "users",
+        "block" if user.is_blocked else "unblock",
+        target=user.username,
+        description=f"User #{user.id} {'blocked' if user.is_blocked else 'unblocked'} by {current_user.username}",
+    )
     flash(
         f"{user.username} has been {'blocked' if user.is_blocked else 'unblocked'}.",
         "success"
@@ -826,6 +864,7 @@ def credit_wallet(user_id):
 
     db.session.commit()
 
+    log_staff_action("wallet", "credit", target=str(user_id), description=f"Credit by {current_user.username}")
     flash("Wallet credited successfully.", "success")
 
     return redirect(
@@ -874,6 +913,7 @@ def deduct_wallet(user_id):
 
     db.session.commit()
 
+    log_staff_action("wallet", "deduct", target=str(user_id), description=f"Deduct by {current_user.username}")
     flash("Wallet deducted successfully.", "success")
 
     return redirect(
@@ -1505,6 +1545,12 @@ def deposits():
     page = request.args.get("page", 1, type=int)
     status = request.args.get("status", "")
     query = Deposit.query
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        downline = get_downline_ids(current_user.id)
+        query = query.filter(Deposit.user_id.in_(list(downline) or [-1]))
+        # Agents only see Pending for support
+        if not status:
+            status = "Pending"
     if status:
         query = query.filter(
             Deposit.status == status
@@ -1625,6 +1671,11 @@ def withdrawals():
     page = request.args.get("page", 1, type=int)
     status = request.args.get("status", "")
     query = Withdrawal.query
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        downline = get_downline_ids(current_user.id)
+        query = query.filter(Withdrawal.user_id.in_(list(downline) or [-1]))
+        if not status:
+            status = "Pending"
     if status:
         query = query.filter(Withdrawal.status == status)
     withdrawals = query.order_by(
@@ -2840,4 +2891,163 @@ def create_user():
     return render_template(
         "admin/create_user.html",
         memberships=memberships,
+    )
+
+
+# ==========================================================
+# USER NOTES (agent + admin)
+# ==========================================================
+@admin_bp.route("/users/<int:user_id>/notes", methods=["POST"])
+@login_required
+@admin_required
+def add_user_note(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+    body = (request.form.get("body") or "").strip()
+    if not body:
+        flash("Note cannot be empty.", "warning")
+        return redirect(url_for("admin.view_user", user_id=user_id))
+    try:
+        from models.user_note import UserNote
+        note = UserNote(user_id=user_id, author_id=current_user.id, body=body[:4000])
+        db.session.add(note)
+        db.session.commit()
+        log_staff_action("users", "note", target=str(user_id), description=body[:200])
+        flash("Note saved.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Could not save note: {e}", "danger")
+    return redirect(url_for("admin.view_user", user_id=user_id))
+
+
+# ==========================================================
+# TEAM REPORT (agent)
+# ==========================================================
+@admin_bp.route("/team-report")
+@login_required
+@admin_required
+def team_report():
+    from datetime import datetime as dt, timedelta
+    from sqlalchemy import func
+    today = dt.utcnow().date()
+    try:
+        date_from = dt.strptime(request.args.get("from") or today.isoformat(), "%Y-%m-%d").date()
+    except ValueError:
+        date_from = today
+    try:
+        date_to = dt.strptime(request.args.get("to") or today.isoformat(), "%Y-%m-%d").date()
+    except ValueError:
+        date_to = today
+
+    if getattr(current_user, "is_admin", False) and not request.args.get("agent_id"):
+        # full admin without filter — redirect to agents hub
+        return redirect(url_for("admin.agents_hub"))
+
+    root_id = current_user.id
+    if getattr(current_user, "is_admin", False):
+        root_id = request.args.get("agent_id", type=int) or current_user.id
+
+    downline = get_downline_ids(root_id)
+    ids = list(downline) or [-1]
+
+    team_count = len(downline)
+    bal = db.session.query(func.coalesce(func.sum(User.available_balance), 0)).filter(User.id.in_(ids)).scalar() or 0
+    dep_pending = Deposit.query.filter(Deposit.user_id.in_(ids), Deposit.status == "Pending").count()
+    dep_sum = db.session.query(func.coalesce(func.sum(Deposit.amount), 0)).filter(
+        Deposit.user_id.in_(ids), Deposit.status == "Approved",
+        func.date(Deposit.created_at) >= date_from, func.date(Deposit.created_at) <= date_to,
+    ).scalar() or 0
+    wd_sum = db.session.query(func.coalesce(func.sum(Withdrawal.amount), 0)).filter(
+        Withdrawal.user_id.in_(ids), Withdrawal.status.in_(["Approved", "Paid"]),
+        func.date(Withdrawal.created_at) >= date_from, func.date(Withdrawal.created_at) <= date_to,
+    ).scalar() or 0
+    tasks_done = Task.query.filter(
+        Task.user_id.in_(ids), Task.status == "completed",
+        func.date(Task.completed_at) >= date_from, func.date(Task.completed_at) <= date_to,
+    ).count()
+
+    # membership breakdown for pie
+    mem_rows = (
+        db.session.query(Membership.name, func.count(User.id))
+        .join(User, User.membership_id == Membership.id)
+        .filter(User.id.in_(ids))
+        .group_by(Membership.name)
+        .all()
+    )
+    pie_labels = [r[0] for r in mem_rows] or ["None"]
+    pie_values = [int(r[1]) for r in mem_rows] or [0]
+
+    return render_template(
+        "admin/team_report.html",
+        team_count=team_count,
+        total_balance=float(bal),
+        dep_pending=dep_pending,
+        dep_sum=float(dep_sum),
+        wd_sum=float(wd_sum),
+        tasks_done=tasks_done,
+        date_from=date_from.isoformat(),
+        date_to=date_to.isoformat(),
+        pie_labels=pie_labels,
+        pie_values=pie_values,
+    )
+
+
+# ==========================================================
+# AGENTS HUB (full admin) — list, logs, charts
+# ==========================================================
+@admin_bp.route("/agents")
+@login_required
+@admin_required
+def agents_hub():
+    if not getattr(current_user, "is_admin", False):
+        return redirect(url_for("admin.team_report"))
+
+    from sqlalchemy import func
+    from models.audit_log import AuditLog
+
+    agents = User.query.filter_by(is_agent=True).order_by(User.username.asc()).all()
+    rows = []
+    bar_labels, bar_teams, bar_deps = [], [], []
+    for a in agents:
+        dl = get_downline_ids(a.id)
+        ids = list(dl) or [-1]
+        team_n = len(dl)
+        bal = db.session.query(func.coalesce(func.sum(User.available_balance), 0)).filter(User.id.in_(ids)).scalar() or 0
+        deps = Deposit.query.filter(Deposit.user_id.in_(ids), Deposit.status == "Pending").count()
+        tasks = Task.query.filter(Task.user_id.in_(ids), Task.status == "completed").count()
+        rows.append({
+            "agent": a,
+            "team": team_n,
+            "balance": float(bal),
+            "pending_deposits": deps,
+            "tasks": tasks,
+        })
+        bar_labels.append(a.username)
+        bar_teams.append(team_n)
+        bar_deps.append(deps)
+
+    # Recent agent actions only
+    agent_ids = [a.id for a in agents]
+    logs = []
+    if agent_ids:
+        logs = (
+            AuditLog.query.filter(AuditLog.admin_id.in_(agent_ids))
+            .order_by(AuditLog.created_at.desc())
+            .limit(80)
+            .all()
+        )
+
+    # Pie: share of team sizes
+    pie_labels = bar_labels[:] or ["No agents"]
+    pie_values = bar_teams[:] or [1]
+
+    return render_template(
+        "admin/agents.html",
+        rows=rows,
+        logs=logs,
+        bar_labels=bar_labels,
+        bar_teams=bar_teams,
+        bar_deps=bar_deps,
+        pie_labels=pie_labels,
+        pie_values=pie_values,
     )
