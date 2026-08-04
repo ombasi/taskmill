@@ -2,6 +2,29 @@
 {% block title %}{{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
+
+    {% if current_user.is_admin %}
+    <div class="flex flex-wrap gap-2 mb-4">
+      {% if user.is_agent %}
+      <form method="POST" action="{{ url_for('admin.remove_agent', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-semibold">Remove team leader</button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('admin.make_agent', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="rounded-xl bg-teal-600 hover:bg-teal-500 px-4 py-2 text-sm font-semibold"
+                onclick="return confirm('Make this user a team leader? They will only manage users under their referral code.')">
+          Make team leader (agent)
+        </button>
+      </form>
+      {% endif %}
+      {% if user.is_agent %}
+      <span class="inline-flex items-center rounded-xl bg-teal-500/15 text-teal-300 border border-teal-500/30 px-3 py-1.5 text-xs font-bold">TEAM LEADER</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
 <div class="space-y-6">
 
   {# Profile header #}

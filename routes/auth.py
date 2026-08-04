@@ -101,6 +101,8 @@ def login():
 
         if user.is_admin:
             return redirect(url_for("admin.dashboard"))
+        if getattr(user, "is_agent", False):
+            return redirect(url_for("admin.users"))
 
         return redirect(url_for("dashboard.index"))
 

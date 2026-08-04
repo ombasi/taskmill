@@ -260,6 +260,12 @@ class User(db.Model, UserMixin):
         default=False
     )
 
+    # Team leader / agent: can manage only own referral downline in admin
+    is_agent = db.Column(
+        db.Boolean,
+        default=False
+    )
+
     is_active = db.Column(
         db.Boolean,
         default=True

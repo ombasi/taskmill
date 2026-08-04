@@ -2,6 +2,12 @@
 {% block title %}Users{% endblock %}
 {% block page_title %}Users{% endblock %}
 {% block content %}
+{% if current_user.is_agent and not current_user.is_admin %}
+<div class="rounded-2xl border border-teal-500/30 bg-teal-500/10 px-4 py-3 text-sm text-teal-100 mb-4">
+  <strong>Team leader mode</strong> — you only see users who signed up under your referral tree (pyramid).
+</div>
+{% endif %}
+
 <div class="space-y-6">
   <div class="flex flex-wrap gap-3 items-center justify-between">
     <div class="flex flex-wrap gap-2">
@@ -49,7 +55,7 @@
               <div class="min-w-0">
                 <p class="text-lg font-bold tracking-tight">
                   {{ user.username }}
-                  {% if user.is_admin %}<span class="ml-1 text-[10px] align-middle rounded-md bg-amber-500/20 text-amber-300 px-1.5 py-0.5">ADMIN</span>{% endif %}
+                  {% if user.is_admin %}<span class="ml-1 text-[10px] align-middle rounded-md bg-amber-500/20 text-amber-300 px-1.5 py-0.5">ADMIN</span>{% endif %}{% if user.is_agent %}<span class="ml-1 text-[10px] align-middle rounded-md bg-teal-500/20 text-teal-300 px-1.5 py-0.5">AGENT</span>{% endif %}
                 </p>
                 <p class="text-sm text-zinc-400 mt-0.5">{{ user.full_name or '—' }}</p>
                 <p class="text-xs text-zinc-500 mt-0.5">{{ user.email }}{% if user.phone %} · {{ user.phone }}{% endif %}</p>

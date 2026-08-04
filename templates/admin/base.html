@@ -183,6 +183,7 @@
     </div>
 
     <nav class="nav-scroll flex-1 px-3 py-4 space-y-1" id="adminNav">
+      {% if current_user.is_admin %}
       {% set links = [
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
@@ -200,6 +201,12 @@
         ('admin.spin_prizes', 'fa-gift', 'Lucky Spin'),
         ('admin.settings', 'fa-gear', 'Settings'),
       ] %}
+      {% else %}
+      {% set links = [
+        ('admin.users', 'fa-users', 'My team'),
+        ('admin.combos', 'fa-bolt', 'Combos'),
+      ] %}
+      {% endif %}
       {% for ep, icon, label in links %}
       <a href="{{ url_for(ep) }}" title="{{ label }}"
          class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">

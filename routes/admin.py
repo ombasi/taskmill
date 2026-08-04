@@ -54,20 +54,102 @@ admin_bp = Blueprint(
 # ADMIN REQUIRED
 # ==========================================================
 def admin_required(f):
+    """Full admin OR team agent (agents limited to whitelist + own downline)."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
-        if not current_user.is_admin:
-            flash(
-                "Administrator access required.",
-                "danger"
-            )
-            return redirect(
-                url_for("dashboard.index")
-            )
+        is_full = bool(getattr(current_user, "is_admin", False))
+        is_agent = bool(getattr(current_user, "is_agent", False))
+        if not is_full and not is_agent:
+            flash("Administrator access required.", "danger")
+            return redirect(url_for("dashboard.index"))
+        # Agents: only certain endpoints
+        if is_agent and not is_full:
+            ep = (request.endpoint or "")
+            allowed = {
+                "admin.users",
+                "admin.view_user",
+                "admin.credit_wallet",
+                "admin.deduct_wallet",
+                "admin.reset_password",
+                "admin.reset_tasks",
+                "admin.reset_combo",
+                "admin.unlock_set2",
+                "admin.reset_withdraw_pin",
+                "admin.change_membership",
+                "admin.assign_combo",
+                "admin.trigger_combo",
+                "admin.remove_combo",
+                "admin.grant_spin",
+                "admin.reset_spin",
+                "admin.assign_combo_from_manager",
+                "admin.combos",
+            }
+            if ep not in allowed:
+                flash("Team leaders can only manage users in their referral tree.", "warning")
+                return redirect(url_for("admin.users"))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def full_admin_required(f):
+    """Strict full administrator only (not agents)."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for("auth.login"))
+        if not getattr(current_user, "is_admin", False):
+            flash("Full administrator access required.", "danger")
+            return redirect(url_for("admin.users") if getattr(current_user, "is_agent", False) else url_for("dashboard.index"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def get_downline_ids(root_user_id, max_depth=25):
+    """All user ids in referral pyramid under root (not including root)."""
+    ids = set()
+    frontier = [int(root_user_id)]
+    depth = 0
+    while frontier and depth < max_depth:
+        children = (
+            User.query.filter(User.referred_by_id.in_(frontier))
+            .with_entities(User.id)
+            .all()
+        )
+        child_ids = [c[0] for c in children]
+        # avoid cycles
+        child_ids = [i for i in child_ids if i not in ids and i != root_user_id]
+        if not child_ids:
+            break
+        ids.update(child_ids)
+        frontier = child_ids
+        depth += 1
+    return ids
+
+
+def can_manage_user(actor, target_user):
+    """Full admin: anyone. Agent: only users in their referral downline."""
+    if not actor or not target_user:
+        return False
+    if getattr(actor, "is_admin", False):
+        return True
+    if not getattr(actor, "is_agent", False):
+        return False
+    # Agents cannot manage full admins or other agents outside tree
+    if getattr(target_user, "is_admin", False):
+        return False
+    downline = get_downline_ids(actor.id)
+    return int(target_user.id) in downline
+
+
+def assert_can_manage(user_id):
+    """Abort/redirect if current user cannot manage this user."""
+    target = User.query.get_or_404(user_id)
+    if can_manage_user(current_user, target):
+        return target
+    flash("You can only manage users who joined under your referral tree.", "danger")
+    return None
 
 
 # ==========================================================
@@ -90,6 +172,9 @@ def _combo_max_for_user(user):
 @login_required
 @admin_required
 def dashboard():
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        return redirect(url_for("admin.users"))
+
     total_users = User.query.count()
     active_users = User.query.filter_by(
         is_active=True
@@ -244,6 +329,13 @@ def users():
     filter_membership = request.args.get("membership_id", type=int)
 
     query = User.query
+    # Agents only see their referral pyramid
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        downline = get_downline_ids(current_user.id)
+        if downline:
+            query = query.filter(User.id.in_(list(downline)))
+        else:
+            query = query.filter(User.id == -1)  # empty
     if q:
         like = f"%{q}%"
         query = query.filter(
@@ -570,6 +662,9 @@ from werkzeug.security import generate_password_hash
 @login_required
 @admin_required
 def reset_password(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
     new_password = "12345678"
     user.set_password(new_password)
@@ -586,6 +681,43 @@ def reset_password(user_id):
 # ==========================================================
 # MAKE ADMIN
 # ==========================================================
+
+@admin_bp.route("/users/<int:user_id>/make-agent", methods=["POST"])
+@login_required
+@admin_required
+def make_agent(user_id):
+    """Promote user to team leader (agent): manages only their referral tree."""
+    if not getattr(current_user, "is_admin", False):
+        flash("Full admin only.", "danger")
+        return redirect(url_for("admin.users"))
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash("Cannot change your own agent role here.", "warning")
+        return redirect(url_for("admin.view_user", user_id=user.id))
+    user.is_agent = True
+    # Agents are not full admins
+    # keep is_admin as-is only if already admin — prefer agent-only
+    if user.is_admin:
+        flash("User is a full admin. Demote admin first if you want agent-only access.", "warning")
+    db.session.commit()
+    flash(f"{user.username} is now a team leader (agent). They only see their referral tree.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
+
+@admin_bp.route("/users/<int:user_id>/remove-agent", methods=["POST"])
+@login_required
+@admin_required
+def remove_agent(user_id):
+    if not getattr(current_user, "is_admin", False):
+        flash("Full admin only.", "danger")
+        return redirect(url_for("admin.users"))
+    user = User.query.get_or_404(user_id)
+    user.is_agent = False
+    db.session.commit()
+    flash(f"Agent role removed from {user.username}.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
+
 @admin_bp.route("/users/<int:user_id>/make-admin")
 @login_required
 @admin_required
@@ -662,6 +794,9 @@ def delete_user(user_id):
 @login_required
 @admin_required
 def credit_wallet(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
 
     user = User.query.get_or_404(user_id)
 
@@ -704,6 +839,9 @@ def credit_wallet(user_id):
 @login_required
 @admin_required
 def deduct_wallet(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
 
     user = User.query.get_or_404(user_id)
 
@@ -754,7 +892,15 @@ def combos():
 
     page = request.args.get("page", 1, type=int)
 
-    combos = Combo.query.order_by(
+    query = Combo.query
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        downline = get_downline_ids(current_user.id)
+        if downline:
+            query = query.filter(Combo.user_id.in_(list(downline)))
+        else:
+            query = query.filter(Combo.user_id == -1)
+
+    combos = query.order_by(
         Combo.created_at.desc()
     ).paginate(
         page=page,
@@ -854,6 +1000,9 @@ def assign_combo_from_manager():
 @login_required
 @admin_required
 def assign_combo(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     """
     Admin enters target combo amount (how much the product should cost).
     System picks a product within ±3000 UGX of that target.
@@ -1030,6 +1179,10 @@ def edit_combo(id):
 @login_required
 @admin_required
 def trigger_combo(combo_id):
+    _c = Combo.query.get_or_404(combo_id)
+    if assert_can_manage(_c.user_id) is None:
+        return redirect(url_for("admin.users"))
+
     """Manual trigger — same logic as auto-trigger at configured task number."""
     combo = Combo.query.get_or_404(combo_id)
     user = combo.user
@@ -1087,6 +1240,9 @@ def remove_combo(user_id):
 @login_required
 @admin_required
 def reset_tasks(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
     Task.query.filter_by(user_id=user.id, status="assigned").update({"status": "cancelled"})
     user.tasks_completed_today = 0
@@ -1108,6 +1264,9 @@ def reset_tasks(user_id):
 @login_required
 @admin_required
 def reset_combo(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
 
     user.combo_active = False
@@ -1127,6 +1286,9 @@ def reset_combo(user_id):
 @login_required
 @admin_required
 def reset_spin(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
 
     user.daily_spins_used = 0
@@ -1139,6 +1301,9 @@ def reset_spin(user_id):
 @login_required
 @admin_required
 def unlock_set2(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     from services.task_service import TaskService
     user = User.query.get_or_404(user_id)
     ok, msg = TaskService.admin_unlock_set2(user)
@@ -1174,6 +1339,9 @@ def send_notification(user_id):
 @login_required
 @admin_required
 def reset_withdraw_pin(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     """Admin resets withdraw PIN to default 1234."""
     user = User.query.get_or_404(user_id)
     user.set_withdraw_pin("1234")
@@ -1703,6 +1871,9 @@ def edit_membership(id):
 @login_required
 @admin_required
 def change_membership(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
 
     user = User.query.get_or_404(user_id)
 
@@ -2583,6 +2754,9 @@ def spin_prize_delete(prize_id):
 @login_required
 @admin_required
 def grant_spin(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
     from models.spin import SpinGrant, SpinPrize
     user = User.query.get_or_404(user_id)
     spins = request.form.get("spins", type=int) or 1
@@ -2645,6 +2819,7 @@ def create_user():
             phone=phone or None,
             full_name=full_name or username,
             is_admin=(role == "admin"),
+            is_agent=(role == "agent"),
             is_active=True,
             is_blocked=False,
             membership_id=membership_id,

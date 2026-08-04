@@ -57,6 +57,23 @@ def _ensure_schema_columns():
                 ))
                 db.session.commit()
                 print("Added login_history.location")
+
+        # users.is_agent
+        if "users" in tables:
+            ucols = [c["name"] for c in insp.get_columns("users")]
+            if "is_agent" not in ucols:
+                dialect = db.engine.dialect.name
+                if dialect == "postgresql":
+                    db.session.execute(text(
+                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_agent BOOLEAN DEFAULT FALSE"
+                    ))
+                else:
+                    db.session.execute(text(
+                        "ALTER TABLE users ADD COLUMN is_agent BOOLEAN DEFAULT 0"
+                    ))
+                db.session.commit()
+                print("Added users.is_agent")
+
     except Exception as e:
         print("ensure schema columns:", e)
         try:
