@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Two-factor{% endblock %}
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl">
+    <h1 class="text-2xl font-black mb-2">Authenticator code</h1>
+    <p class="text-sm text-zinc-400 mb-6">Open Google Authenticator, Authy, or Microsoft Authenticator and enter the 6-digit code.</p>
+    <form method="POST" class="space-y-4">
+      <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required
+             class="w-full text-center text-3xl tracking-[0.4em] font-bold rounded-2xl bg-black/40 border border-white/10 py-4"
+             placeholder="000000">
+      <button class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 font-bold">Verify</button>
+    </form>
+    <p class="text-xs text-zinc-500 mt-4 text-center"><a href="{{ url_for('auth.login') }}" class="text-indigo-400">Back to login</a></p>
+  </div>
+</div>
+{% endblock %}

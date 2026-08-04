@@ -90,11 +90,11 @@ def login():
             flash("Enter the 6-digit code from your authenticator app.", "info")
             return redirect(url_for("auth.two_factor"))
 
-        # Admins without 2FA yet — force setup
-        if getattr(user, "is_admin", False) and not getattr(user, "totp_enabled", False):
+        # Admins and agents without 2FA yet — force setup
+        if (getattr(user, "is_admin", False) or getattr(user, "is_agent", False)) and not getattr(user, "totp_enabled", False):
             login_user(user, remember=remember)
             AuthService.login_success(user, AuthService.get_client_ip())
-            flash("Please set up authenticator app 2FA for your admin account.", "warning")
+            flash("Please set up authenticator app 2FA for your staff account.", "warning")
             return redirect(url_for("auth.setup_2fa"))
 
         login_user(user, remember=remember)
@@ -292,7 +292,12 @@ def setup_2fa():
 
     secret = session["totp_setup_secret"]
     uri = provisioning_uri(secret, current_user.username, issuer="Taskmill")
-    qr = qr_data_url(uri)
+    qr = None
+    try:
+        qr = qr_data_url(uri)
+    except Exception as e:
+        print("qr_data_url:", e)
+        flash("QR image unavailable — enter the manual key in your authenticator app.", "warning")
 
     if request.method == "POST":
         code = request.form.get("code") or ""
@@ -311,6 +316,7 @@ def setup_2fa():
         "auth/setup_2fa.html",
         secret=secret,
         qr_data_url=qr,
+        otpauth_uri=uri,
         enabled=bool(getattr(current_user, "totp_enabled", False)),
     )
 

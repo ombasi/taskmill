@@ -93,6 +93,10 @@ def admin_required(f):
                 "admin.team_report",
                 "chat.admin_inbox",
                 "chat.admin_thread",
+                "admin.flag_deposit",
+                "admin.freeze_wallet",
+                "admin.export_team_users_csv",
+                "admin.referral_leaderboard",
             }
             if ep not in allowed:
                 flash("Team leaders can only manage users in their referral tree.", "warning")
@@ -151,7 +155,43 @@ def can_manage_user(actor, target_user):
     return int(target_user.id) in downline
 
 
+def _reset_agent_limits_if_needed(actor):
+    from datetime import datetime as dt
+    today = dt.utcnow().strftime("%Y-%m-%d")
+    if getattr(actor, "agent_limits_day", None) != today:
+        actor.agent_credit_used_today = 0.0
+        actor.agent_debit_used_today = 0.0
+        actor.agent_limits_day = today
+
+
+def _agent_can_credit(actor, amount):
+    if getattr(actor, "is_admin", False):
+        return True, None
+    if not getattr(actor, "is_agent", False):
+        return False, "Not allowed"
+    _reset_agent_limits_if_needed(actor)
+    lim = float(getattr(actor, "agent_credit_limit_daily", 0) or 0)
+    used = float(getattr(actor, "agent_credit_used_today", 0) or 0)
+    if lim > 0 and used + amount > lim:
+        return False, f"Daily credit limit exceeded (limit {lim:,.0f}, used {used:,.0f})."
+    return True, None
+
+
+def _agent_can_debit(actor, amount):
+    if getattr(actor, "is_admin", False):
+        return True, None
+    if not getattr(actor, "is_agent", False):
+        return False, "Not allowed"
+    _reset_agent_limits_if_needed(actor)
+    lim = float(getattr(actor, "agent_debit_limit_daily", 0) or 0)
+    used = float(getattr(actor, "agent_debit_used_today", 0) or 0)
+    if lim > 0 and used + amount > lim:
+        return False, f"Daily debit limit exceeded (limit {lim:,.0f}, used {used:,.0f})."
+    return True, None
+
+
 def log_staff_action(module, action, target="", description=""):
+
     """Log admin/agent action for main admin audit trail."""
     try:
         from utils.audit import log_admin_action
@@ -2929,6 +2969,10 @@ def add_user_note(user_id):
 def team_report():
     from datetime import datetime as dt, timedelta
     from sqlalchemy import func
+    from models.membership import Membership
+    from models.deposit import Deposit
+    from models.withdraw import Withdrawal
+    from models.task import Task
     today = dt.utcnow().date()
     try:
         date_from = dt.strptime(request.args.get("from") or today.isoformat(), "%Y-%m-%d").date()
@@ -3026,16 +3070,24 @@ def agents_hub():
         bar_teams.append(team_n)
         bar_deps.append(deps)
 
-    # Recent agent actions only
+    # Recent agent actions only (table may not exist on older DBs)
     agent_ids = [a.id for a in agents]
     logs = []
     if agent_ids:
-        logs = (
-            AuditLog.query.filter(AuditLog.admin_id.in_(agent_ids))
-            .order_by(AuditLog.created_at.desc())
-            .limit(80)
-            .all()
-        )
+        try:
+            logs = (
+                AuditLog.query.filter(AuditLog.admin_id.in_(agent_ids))
+                .order_by(AuditLog.created_at.desc())
+                .limit(80)
+                .all()
+            )
+        except Exception as e:
+            print("agents_hub audit_logs:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            logs = []
 
     # Pie: share of team sizes
     pie_labels = bar_labels[:] or ["No agents"]
@@ -3051,3 +3103,73 @@ def agents_hub():
         pie_labels=pie_labels,
         pie_values=pie_values,
     )
+
+
+@admin_bp.route("/deposits/<int:deposit_id>/flag", methods=["POST"])
+@login_required
+@admin_required
+def flag_deposit(deposit_id):
+    d = Deposit.query.get_or_404(deposit_id)
+    if assert_can_manage(d.user_id) is None:
+        return redirect(url_for("admin.deposits"))
+    note = (request.form.get("note") or "Verified by team leader").strip()[:255]
+    d.flagged_by_id = current_user.id
+    if hasattr(d, "flag_note"):
+        d.flag_note = note
+    db.session.commit()
+    log_staff_action("deposits", "flag", target=str(deposit_id), description=note)
+    flash("Deposit flagged for main admin review.", "success")
+    return redirect(url_for("admin.deposits", status="Pending"))
+
+
+@admin_bp.route("/users/<int:user_id>/freeze-wallet", methods=["POST"])
+@login_required
+@admin_required
+def freeze_wallet(user_id):
+    if assert_can_manage(user_id) is None and not current_user.is_admin:
+        return redirect(url_for("admin.users"))
+    user = User.query.get_or_404(user_id)
+    user.wallet_frozen = not bool(getattr(user, "wallet_frozen", False))
+    db.session.commit()
+    log_staff_action("wallet", "freeze" if user.wallet_frozen else "unfreeze", target=user.username)
+    flash(f"Wallet {'frozen' if user.wallet_frozen else 'unfrozen'}.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
+
+@admin_bp.route("/export/team-users.csv")
+@login_required
+@admin_required
+def export_team_users_csv():
+    import csv
+    from io import StringIO
+    from flask import Response
+    if getattr(current_user, "is_admin", False):
+        q = User.query.filter_by(is_admin=False)
+    else:
+        ids = list(get_downline_ids(current_user.id)) or [-1]
+        q = User.query.filter(User.id.in_(ids))
+    buf = StringIO()
+    w = csv.writer(buf)
+    w.writerow(["id", "username", "email", "phone", "balance", "membership", "blocked", "created_at"])
+    for u in q.order_by(User.id.asc()).limit(5000):
+        w.writerow([
+            u.id, u.username, u.email, u.phone or "",
+            u.available_balance or 0,
+            u.membership.name if u.membership else "",
+            u.is_blocked, u.created_at,
+        ])
+    return Response(buf.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=team_users.csv"})
+
+
+@admin_bp.route("/leaderboard")
+@login_required
+@admin_required
+def referral_leaderboard():
+    leaders = (
+        User.query.filter(User.referral_count > 0)
+        .order_by(User.referral_count.desc())
+        .limit(50)
+        .all()
+    )
+    return render_template("admin/leaderboard.html", leaders=leaders)
