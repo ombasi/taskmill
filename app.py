@@ -139,17 +139,95 @@ def create_app():
     os.makedirs(app.config.get("UPLOAD_FOLDER", "static/uploads"), exist_ok=True)
     os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
 
+    @app.before_request
+    def _maintenance_gate():
+        from flask import request as req
+        from flask_login import current_user as cu
+        # allow static, login, 2fa
+        if req.endpoint and (req.endpoint.startswith("static") or req.endpoint in (
+            "auth.login", "auth.two_factor", "auth.setup_2fa", "auth.logout"
+        )):
+            return None
+        try:
+            from models.settings import Settings
+            s = Settings.query.first()
+            if s and getattr(s, "maintenance", False):
+                if not (cu.is_authenticated and getattr(cu, "is_admin", False)):
+                    from flask import render_template
+                    return render_template("maintenance.html"), 503
+        except Exception:
+            pass
+        return None
+
+
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():
         _ensure_schema_columns()
         try:
             import models.spin  # noqa: F401
+            import models.audit_log  # noqa: F401
+            import models.user_note  # noqa: F401
+            import models.promo  # noqa: F401
         except Exception as e:
             print("model import:", e)
         try:
             db.create_all()
         except Exception as e:
             print("create_all:", e)
+
+        # Ensure 2FA / agent columns on users (SQLite + Postgres)
+        try:
+            from sqlalchemy import text, inspect
+            insp = inspect(db.engine)
+            if "users" in insp.get_table_names():
+                cols = {c["name"] for c in insp.get_columns("users")}
+                dialect = db.engine.dialect.name
+                bool_def = "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"
+                for name, typ in [
+                    ("is_agent", bool_def),
+                    ("totp_secret", "VARCHAR(64)"),
+                    ("totp_enabled", bool_def),
+                    ("wallet_frozen", bool_def),
+                    ("agent_credit_limit_daily", "FLOAT DEFAULT 500000"),
+                    ("agent_debit_limit_daily", "FLOAT DEFAULT 500000"),
+                    ("agent_credit_used_today", "FLOAT DEFAULT 0"),
+                    ("agent_debit_used_today", "FLOAT DEFAULT 0"),
+                    ("agent_limits_day", "VARCHAR(10)"),
+                    ("checklist_done", bool_def),
+                ]:
+                    if name not in cols:
+                        try:
+                            if dialect == "postgresql":
+                                db.session.execute(text(
+                                    f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {name} {typ}"
+                                ))
+                            else:
+                                db.session.execute(text(
+                                    f"ALTER TABLE users ADD COLUMN {name} {typ}"
+                                ))
+                            db.session.commit()
+                            print("Added users." + name)
+                        except Exception as e:
+                            db.session.rollback()
+                            print("col", name, e)
+            if "deposits" in insp.get_table_names():
+                cols = {c["name"] for c in insp.get_columns("deposits")}
+                for name, typ in [("flagged_by_id", "INTEGER"), ("flag_note", "VARCHAR(255)")]:
+                    if name not in cols:
+                        try:
+                            if dialect == "postgresql":
+                                db.session.execute(text(
+                                    f"ALTER TABLE deposits ADD COLUMN IF NOT EXISTS {name} {typ}"
+                                ))
+                            else:
+                                db.session.execute(text(f"ALTER TABLE deposits ADD COLUMN {name} {typ}"))
+                            db.session.commit()
+                            print("Added deposits." + name)
+                        except Exception as e:
+                            db.session.rollback()
+                            print("dep col", name, e)
+        except Exception as e:
+            print("ensure 2fa columns:", e)
         # Safe add-column for existing DBs (SQLite + Postgres)
         try:
             from sqlalchemy import text, inspect

@@ -266,6 +266,23 @@ class User(db.Model, UserMixin):
         default=False
     )
 
+    # TOTP 2FA (authenticator app) — required for admins once enabled
+    totp_secret = db.Column(db.String(64), nullable=True)
+    totp_enabled = db.Column(db.Boolean, default=False)
+
+    # Soft freeze wallet (disputes / risk)
+    wallet_frozen = db.Column(db.Boolean, default=False)
+
+    # Agent daily limits (UGX); 0 = unlimited
+    agent_credit_limit_daily = db.Column(db.Float, default=500000.0)
+    agent_debit_limit_daily = db.Column(db.Float, default=500000.0)
+    agent_credit_used_today = db.Column(db.Float, default=0.0)
+    agent_debit_used_today = db.Column(db.Float, default=0.0)
+    agent_limits_day = db.Column(db.String(10), nullable=True)  # YYYY-MM-DD
+
+    # Onboarding checklist
+    checklist_done = db.Column(db.Boolean, default=False)
+
     is_active = db.Column(
         db.Boolean,
         default=True
