@@ -226,9 +226,16 @@ def withdraw():
             flash(reason, "warning")
             return redirect(url_for("wallet.withdraw"))
         try:
-            amount = float(request.form.get("amount") or 0)
+            amount_local = float(request.form.get("amount") or 0)
         except ValueError:
-            amount = 0
+            amount_local = 0
+
+        # User enters amount in their display currency → store/process as UGX
+        try:
+            from utils.fx import to_ugx
+            amount = to_ugx(amount_local, getattr(current_user, "currency", None) or "UGX")
+        except Exception:
+            amount = amount_local
 
         pin = (request.form.get("withdraw_pin") or request.form.get("pin") or "").strip()
         if not current_user.has_withdraw_pin():
@@ -262,7 +269,37 @@ def withdraw():
         return redirect(url_for("wallet.index"))
 
     checklist = TaskService.withdraw_checklist(current_user)
-    return render_template("wallet/withdraw.html", checklist=checklist)
+    reserve = 15000.0
+    bal = float(current_user.available_balance or 0)
+    max_wd_ugx = max(0.0, bal - reserve)
+    min_wd_ugx = 1000.0  # base minimum in UGX
+    try:
+        from utils.fx import ugx_to
+        cur = getattr(current_user, "currency", None) or "UGX"
+        max_wd_local = ugx_to(max_wd_ugx, cur)
+        min_wd_local = ugx_to(min_wd_ugx, cur)
+        # sensible steps: whole units for UGX-like, cents for EUR/USD
+        if cur in ("EUR", "USD", "GBP", "CAD", "AUD", "CHF"):
+            step = 0.01
+            min_wd_local = max(0.01, round(min_wd_local, 2))
+            max_wd_local = max(0.0, round(max_wd_local, 2))
+        else:
+            step = 1
+            min_wd_local = max(1, int(round(min_wd_local)))
+            max_wd_local = max(0, int(round(max_wd_local)))
+    except Exception:
+        max_wd_local = max_wd_ugx
+        min_wd_local = min_wd_ugx
+        step = 100
+    return render_template(
+        "wallet/withdraw.html",
+        checklist=checklist,
+        min_wd_local=min_wd_local,
+        max_wd_local=max_wd_local,
+        amount_step=step,
+        reserve=reserve,
+        max_wd=max_wd_ugx,
+    )
 
 @wallet_bp.route("/referrals")
 @login_required

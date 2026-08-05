@@ -124,9 +124,17 @@
     <div class="lg:col-span-3 space-y-4 rounded-3xl border border-white/10 bg-zinc-900/40 p-5 md:p-6">
       <div>
         <label class="text-xs text-zinc-400">Amount</label>
-        <input type="number" name="amount" step="100" min="1000" max="{{ max_wd|int }}" required
-               placeholder="Max {{ money(current_user, max_wd) }}"
+        <input type="number" name="amount"
+               step="{{ amount_step|default(1) }}"
+               min="{{ min_wd_local|default(1) }}"
+               max="{{ max_wd_local|default(0) }}"
+               required
+               placeholder="Max {{ money(current_user, max_wd|default(0)) }}"
                class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500">
+        <p class="text-[11px] text-zinc-500 mt-1">
+          Min {{ money(current_user, 1000) }} · Max {{ money(current_user, max_wd|default(0)) }}
+          (enter amount in {{ current_user.currency or 'UGX' }})
+        </p>
       </div>
       {% if current_user.has_withdraw_pin is defined and not current_user.has_withdraw_pin() %}
       <div class="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm">
