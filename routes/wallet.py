@@ -168,6 +168,50 @@ def deposit():
 # =====================================================
 # WITHDRAW
 # =====================================================
+
+@wallet_bp.route("/payout-method", methods=["POST"])
+@login_required
+@csrf_protect
+def set_payout_method():
+    """User may set payout destination once. Further changes require admin."""
+    from extensions import db
+    from datetime import datetime
+
+    if getattr(current_user, "payout_method", None) and getattr(current_user, "payout_account_number", None):
+        flash("Your payout method is already set. Contact admin to change it.", "warning")
+        return redirect(url_for("wallet.withdraw"))
+
+    method = (request.form.get("payment_method") or request.form.get("payout_method") or "").strip()
+    account_name = (request.form.get("account_name") or "").strip()
+    account_number = (request.form.get("account_number") or "").strip()
+    provider = (request.form.get("provider") or method or "").strip()
+
+    if not method or not account_number:
+        flash("Payment method and account / phone number are required.", "danger")
+        return redirect(url_for("wallet.withdraw"))
+
+    current_user.payout_method = method
+    current_user.payout_account_name = account_name or current_user.full_name
+    current_user.payout_account_number = account_number
+    current_user.payout_provider = provider
+    current_user.payout_confirmed = False
+    current_user.payout_set_at = datetime.utcnow()
+    db.session.commit()
+
+    try:
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            current_user.id,
+            "Payout method submitted",
+            f"{method} · {account_number} — waiting for admin confirmation.",
+        )
+    except Exception:
+        pass
+
+    flash("Payout method submitted. Admin will confirm it before you can withdraw.", "success")
+    return redirect(url_for("wallet.withdraw"))
+
+
 @wallet_bp.route("/withdraw", methods=["GET", "POST"])
 @login_required
 @csrf_protect
@@ -193,13 +237,20 @@ def withdraw():
             flash("Incorrect withdraw PIN.", "danger")
             return redirect(url_for("wallet.withdraw"))
 
+        if not (getattr(current_user, "payout_method", None) and getattr(current_user, "payout_account_number", None)):
+            flash("Add a payout method first.", "warning")
+            return redirect(url_for("wallet.withdraw"))
+        if not getattr(current_user, "payout_confirmed", False):
+            flash("Your payout method is waiting for admin confirmation.", "warning")
+            return redirect(url_for("wallet.withdraw"))
+
         withdrawal = WalletService.create_withdrawal(
             current_user,
             amount,
-            request.form.get("payment_method") or "MTN Mobile Money",
-            request.form.get("account_name") or "",
-            request.form.get("account_number") or "",
-            request.form.get("provider") or "MTN",
+            current_user.payout_method,
+            current_user.payout_account_name or current_user.full_name or "",
+            current_user.payout_account_number,
+            current_user.payout_provider or current_user.payout_method,
         )
 
         if withdrawal:

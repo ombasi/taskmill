@@ -1,5 +1,25 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ user.username }}{% endblock %}
+{% block title %}{{ user.username }}
+{# --- Payout method --- #}
+<div class="glass rounded-3xl p-6 mb-6">
+  <h3 class="font-bold text-lg mb-4">Payout method</h3>
+  <form method="POST" action="{{ url_for('admin.update_user_payout', user_id=user.id) }}" class="grid md:grid-cols-2 gap-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <input name="payout_method" value="{{ user.payout_method or '' }}" placeholder="Method" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+    <input name="payout_provider" value="{{ user.payout_provider or '' }}" placeholder="Provider" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+    <input name="payout_account_name" value="{{ user.payout_account_name or '' }}" placeholder="Account name" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+    <input name="payout_account_number" value="{{ user.payout_account_number or '' }}" placeholder="Account / phone / wallet" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+    <label class="flex items-center gap-2 text-sm md:col-span-2">
+      <input type="checkbox" name="payout_confirmed" value="1" {% if user.payout_confirmed %}checked{% endif %}> Confirmed for withdrawals
+    </label>
+    <div class="md:col-span-2 flex flex-wrap gap-3">
+      <button type="submit" name="action" value="save" class="bg-indigo-600 px-5 py-2.5 rounded-xl font-semibold text-sm">Save / change</button>
+      <button type="submit" name="action" value="confirm" class="bg-emerald-600 px-5 py-2.5 rounded-xl font-semibold text-sm">Confirm method</button>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
 

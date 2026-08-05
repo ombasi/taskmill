@@ -5,6 +5,8 @@
 {% set reserve = 15000 %}
 {% set max_wd = (bal|float) - reserve %}
 {% if max_wd < 0 %}{% set max_wd = 0 %}{% endif %}
+{% set has_payout = current_user.payout_method and current_user.payout_account_number %}
+{% set payout_ok = has_payout and current_user.payout_confirmed %}
 
 <div class="max-w-5xl mx-auto space-y-5">
 
@@ -14,7 +16,7 @@
       <div>
         <p class="text-[11px] uppercase tracking-[0.2em] text-rose-300 font-semibold">Wallet</p>
         <h1 class="text-2xl md:text-4xl font-black mt-1">Withdraw</h1>
-        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Cash out to mobile money or bank. You must leave {{ money(current_user, reserve|default(15000)) }} for the next day’s tasks.</p>
+        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Cash out to your saved payout method. Leave {{ money(current_user, reserve) }} for the next day’s tasks.</p>
       </div>
       <div class="grid grid-cols-2 gap-2 min-w-[220px]">
         <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
@@ -29,14 +31,6 @@
     </div>
   </div>
 
-  {% if (bal|float) < reserve %}
-  <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 flex flex-wrap items-center justify-between gap-2">
-    <span>You need at least {{ money(current_user, reserve) }} in your wallet to keep a reserve. Deposit first if balance is low.</span>
-    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-amber-400 text-zinc-900 text-xs font-bold px-3 py-1.5">Deposit</a>
-  </div>
-  {% endif %}
-
-  
   {% if checklist %}
   <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
     <h2 class="font-bold text-sm mb-3">Withdrawal checklist</h2>
@@ -60,46 +54,80 @@
   </div>
   {% endif %}
 
-  <form method="POST" class="grid lg:grid-cols-5 gap-5">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {# --- Payout method card --- #}
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-4">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <h2 class="font-bold text-sm uppercase tracking-wider text-zinc-300">Payout method</h2>
+      {% if payout_ok %}
+      <span class="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Confirmed</span>
+      {% elif has_payout %}
+      <span class="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-200">Pending admin confirmation</span>
+      {% else %}
+      <span class="text-xs px-3 py-1 rounded-full bg-zinc-700 text-zinc-300">Not set</span>
+      {% endif %}
+    </div>
 
-    <div class="lg:col-span-3 rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-5">
-      <h2 class="font-bold text-lg">Withdrawal request</h2>
-
+    {% if has_payout %}
+    <div class="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm space-y-1">
+      <p><span class="text-zinc-500">Method:</span> <strong>{{ current_user.payout_method }}</strong></p>
+      <p><span class="text-zinc-500">Name:</span> {{ current_user.payout_account_name or "—" }}</p>
+      <p><span class="text-zinc-500">Account:</span> {{ current_user.payout_account_number }}</p>
+      {% if not payout_ok %}
+      <p class="text-amber-300/90 text-xs mt-2">Waiting for admin to confirm. You cannot withdraw until confirmed.</p>
+      {% endif %}
+      <p class="text-xs text-zinc-500 mt-2">To change this method, contact admin via chat / support.</p>
+    </div>
+    {% else %}
+    <p class="text-sm text-zinc-400">Add your payout destination once. Admin must confirm it before withdrawals work.</p>
+    <form method="POST" action="{{ url_for('wallet.set_payout_method') }}" class="grid md:grid-cols-2 gap-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
-        <label class="text-xs text-zinc-400">Amount ({{ current_user.currency or 'UGX' }})</label>
-        <div class="relative mt-1.5">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-semibold">{{ current_user.currency_symbol or 'UGX' }}</span>
-          <input type="number" name="amount" id="wdAmount" step="100" min="1000"
-                 max="{{ '%.0f'|format(max_wd) }}" required placeholder="Enter amount"
-                 class="w-full rounded-2xl bg-zinc-950 border border-white/10 pl-16 pr-4 py-3.5 text-lg font-bold focus:border-rose-500 outline-none">
-        </div>
-        <button type="button" onclick="document.getElementById('wdAmount').value='{{ '%.0f'|format(max_wd) }}'"
-                class="mt-2 text-xs text-indigo-400 hover:underline">Use max {{ money(current_user, max_wd) }}</button>
-      </div>
-
-      <div>
-        <label class="text-xs text-zinc-400">Payout method</label>
-        <select name="payment_method" required
-                class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500">
-          <option value="MTN Mobile Money">MTN Mobile Money</option>
-          <option value="Airtel Money">Airtel Money</option>
-          <option value="Bank Transfer">Bank Transfer</option>
+        <label class="text-xs text-zinc-400">Payment method</label>
+        <select name="payment_method" required class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
+          <option value="">Select…</option>
+          <option>MTN Mobile Money</option>
+          <option>Airtel Money</option>
+          <option>M-Pesa</option>
+          <option>Bank Transfer</option>
+          <option>USDT (TRC20)</option>
+          <option>USDT (ERC20)</option>
+          <option>Bitcoin (BTC)</option>
+          <option>Ethereum (ETH)</option>
         </select>
       </div>
-
+      <div>
+        <label class="text-xs text-zinc-400">Provider (optional)</label>
+        <input type="text" name="provider" placeholder="e.g. MTN" class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
+      </div>
       <div>
         <label class="text-xs text-zinc-400">Account name</label>
-        <input type="text" name="account_name" required placeholder="Name on the account"
-               class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500">
+        <input type="text" name="account_name" value="{{ current_user.full_name }}" class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
       </div>
-
       <div>
-        <label class="text-xs text-zinc-400">Phone / account number</label>
-        <input type="text" name="account_number" required placeholder="07XXXXXXXX"
+        <label class="text-xs text-zinc-400">Phone / account / wallet</label>
+        <input type="text" name="account_number" required placeholder="07XXXXXXXX or wallet address"
+               class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
+      </div>
+      <div class="md:col-span-2">
+        <button type="submit" class="w-full md:w-auto rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-3 font-bold">
+          Save payout method
+        </button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  {# --- Withdraw form only if payout confirmed --- #}
+  {% if payout_ok %}
+  <form method="POST" class="grid lg:grid-cols-5 gap-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <div class="lg:col-span-3 space-y-4 rounded-3xl border border-white/10 bg-zinc-900/40 p-5 md:p-6">
+      <div>
+        <label class="text-xs text-zinc-400">Amount</label>
+        <input type="number" name="amount" step="100" min="1000" max="{{ max_wd|int }}" required
+               placeholder="Max {{ money(current_user, max_wd) }}"
                class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500">
       </div>
-
       {% if current_user.has_withdraw_pin is defined and not current_user.has_withdraw_pin() %}
       <div class="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm">
         Set a withdraw PIN first.
@@ -113,25 +141,28 @@
                class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500 tracking-widest">
       </div>
       {% endif %}
-
       <button type="submit"
               class="w-full rounded-2xl bg-gradient-to-r from-rose-600 to-orange-600 hover:brightness-110 py-3.5 font-bold shadow-lg shadow-rose-900/30">
         Submit withdrawal
       </button>
     </div>
-
     <div class="lg:col-span-2 space-y-4">
       <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-3 text-sm text-zinc-400">
         <p class="text-rose-300 font-semibold text-xs uppercase tracking-wider">Rules</p>
         <ul class="space-y-2">
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Leave at least {{ money(current_user, reserve|default(15000)) }} in the wallet</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Complete required tasks before withdrawing (when enforced)</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Clear any combo negative balance first</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Funds held until admin marks paid</li>
+          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Leave at least {{ money(current_user, reserve) }} in the wallet</li>
+          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Complete required task sets</li>
+          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Clear any combo negative balance</li>
+          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Paid only to your confirmed payout method</li>
         </ul>
       </div>
       <a href="{{ url_for('wallet.index') }}" class="block text-center text-sm text-indigo-400 hover:underline py-2">← Back to wallet</a>
     </div>
   </form>
+  {% else %}
+  <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 text-sm text-zinc-400">
+    Withdraw form unlocks after your payout method is set and confirmed by admin.
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

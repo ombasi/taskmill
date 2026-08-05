@@ -239,6 +239,14 @@ class User(db.Model, UserMixin):
     )
 
     # Withdraw security PIN (4-6 digits, hashed)
+    # Saved withdrawal destination (user sets once; admin confirms / can change)
+    payout_method = db.Column(db.String(100), nullable=True)
+    payout_account_name = db.Column(db.String(150), nullable=True)
+    payout_account_number = db.Column(db.String(150), nullable=True)
+    payout_provider = db.Column(db.String(100), nullable=True)
+    payout_confirmed = db.Column(db.Boolean, default=False)
+    payout_set_at = db.Column(db.DateTime, nullable=True)
+
     withdraw_pin_hash = db.Column(
         db.String(255),
         nullable=True

@@ -529,12 +529,22 @@ class TaskService:
         has_pin = bool(getattr(user, "has_withdraw_pin", lambda: False)())
         if not hasattr(user, "has_withdraw_pin"):
             has_pin = bool(getattr(user, "withdraw_pin_hash", None))
+        def _m(amount):
+            try:
+                from helpers.currency import money
+                return money(user, amount)
+            except Exception:
+                return f"UGX {float(amount or 0):,.0f}"
+
+        has_payout = bool(getattr(user, "payout_method", None) and getattr(user, "payout_account_number", None))
+        payout_ok = has_payout and bool(getattr(user, "payout_confirmed", False))
+
         items = [
             {
                 "key": "balance",
                 "label": "Balance is not negative",
                 "ok": bal >= 0,
-                "detail": f"Current: UGX {bal:,.0f}",
+                "detail": f"Current: {_m(bal)}",
             },
             {
                 "key": "negative_day",
@@ -550,15 +560,24 @@ class TaskService:
             },
             {
                 "key": "reserve",
-                "label": f"Keep at least UGX {reserve:,.0f} after withdraw",
+                "label": f"Keep at least {_m(reserve)} after withdraw",
                 "ok": bal > reserve,
-                "detail": f"Withdrawable up to UGX {max(0, bal - reserve):,.0f}",
+                "detail": f"Withdrawable up to {_m(max(0, bal - reserve))}",
             },
             {
                 "key": "pin",
                 "label": "Withdraw PIN set",
                 "ok": has_pin,
                 "detail": "Set PIN in Profile" if not has_pin else "PIN ready",
+            },
+            {
+                "key": "payout",
+                "label": "Payout method confirmed",
+                "ok": payout_ok,
+                "detail": (
+                    f"{user.payout_method}: {user.payout_account_number}" if payout_ok
+                    else ("Awaiting admin confirmation" if has_payout else "Add a payout method below")
+                ),
             },
         ]
         all_ok = all(i["ok"] for i in items)
@@ -573,6 +592,11 @@ class TaskService:
         - no negative_today
         - available_balance >= 0
         """
+
+        if not (getattr(user, "payout_method", None) and getattr(user, "payout_account_number", None)):
+            return False, "Add a payout method on the withdraw page first."
+        if not getattr(user, "payout_confirmed", False):
+            return False, "Payout method is waiting for admin confirmation."
         TaskService.ensure_daily_reset(user)
         tasks_per_set, daily_sets, total = TaskService._limits(user)
         required_sets = min(2, daily_sets)
