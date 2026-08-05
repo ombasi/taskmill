@@ -441,6 +441,7 @@ def users():
 @admin_required
 def payment_settings():
 
+
     settings = PaymentSetting.query.order_by(
         PaymentSetting.method.asc()
     ).all()
@@ -455,18 +456,17 @@ def payment_settings():
 @admin_required
 def add_payment_setting():
 
+    method = (request.form.get("method") or "").strip()
+    if not method:
+        flash("Method name is required.", "danger")
+        return redirect(url_for("admin.payment_settings"))
     setting = PaymentSetting(
-
-        method=request.form["method"],
-
-        provider=request.form["provider"],
-
-        account_name=request.form["account_name"],
-
-        account_number=request.form["account_number"],
-
-        instructions=request.form["instructions"]
-
+        method=method,
+        provider=(request.form.get("provider") or method).strip(),
+        account_name=(request.form.get("account_name") or "").strip(),
+        account_number=(request.form.get("account_number") or "").strip(),
+        instructions=(request.form.get("instructions") or "").strip(),
+        active=True,
     )
 
     db.session.add(setting)
@@ -489,15 +489,11 @@ def edit_payment_setting(id):
 
     setting = PaymentSetting.query.get_or_404(id)
 
-    setting.method = request.form["method"]
-
-    setting.provider = request.form["provider"]
-
-    setting.account_name = request.form["account_name"]
-
-    setting.account_number = request.form["account_number"]
-
-    setting.instructions = request.form["instructions"]
+    setting.method = (request.form.get("method") or setting.method).strip()
+    setting.provider = (request.form.get("provider") or setting.provider or "").strip()
+    setting.account_name = (request.form.get("account_name") or "").strip()
+    setting.account_number = (request.form.get("account_number") or "").strip()
+    setting.instructions = (request.form.get("instructions") or "").strip()
 
     db.session.commit()
 
@@ -549,6 +545,21 @@ def delete_payment_setting(id):
 # ==========================================================
 # VIEW USER
 # ==========================================================
+
+@admin_bp.route("/payment-settings/ensure-crypto", methods=["POST"])
+@login_required
+@admin_required
+def ensure_crypto_payments():
+    """Add TRC20 / ERC20 / BTC / ETH rows if missing (admin can then set addresses)."""
+    from utils.payment_methods import ensure_crypto_payment_methods
+    n = ensure_crypto_payment_methods()
+    if n:
+        flash(f"Added {n} crypto payment method(s). Update the wallet addresses below.", "success")
+    else:
+        flash("Crypto methods already exist. Edit addresses below.", "info")
+    return redirect(url_for("admin.payment_settings"))
+
+
 @admin_bp.route("/users/<int:user_id>")
 @login_required
 @admin_required

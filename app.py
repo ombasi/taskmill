@@ -175,6 +175,12 @@ def create_app():
         except Exception as e:
             print("create_all:", e)
 
+        try:
+            from utils.payment_methods import ensure_crypto_payment_methods
+            ensure_crypto_payment_methods()
+        except Exception as e:
+            print("ensure crypto payments:", e)
+
         # Ensure 2FA / agent columns on users (SQLite + Postgres)
         try:
             from sqlalchemy import text, inspect

@@ -83,3 +83,59 @@ def active_deposit_methods(country: str = None):
 
 
 PAYMENT_METHODS = DEFAULT_METHODS + CRYPTO_METHODS
+
+
+CRYPTO_PAYMENT_DEFAULTS = [
+    {
+        "method": "USDT (TRC20)",
+        "provider": "Tether TRC20",
+        "account_name": "USDT TRC20 Wallet",
+        "account_number": "REPLACE_WITH_YOUR_TRC20_ADDRESS",
+        "instructions": "Send only USDT on TRON (TRC20). Wrong network = lost funds. Paste TxID after payment.",
+    },
+    {
+        "method": "USDT (ERC20)",
+        "provider": "Tether ERC20",
+        "account_name": "USDT ERC20 Wallet",
+        "account_number": "REPLACE_WITH_YOUR_ERC20_ADDRESS",
+        "instructions": "Send only USDT on Ethereum (ERC20). Wrong network = lost funds. Paste TxID after payment.",
+    },
+    {
+        "method": "Bitcoin (BTC)",
+        "provider": "Bitcoin",
+        "account_name": "BTC Wallet",
+        "account_number": "REPLACE_WITH_YOUR_BTC_ADDRESS",
+        "instructions": "Send BTC only to this address. Confirm network fees. Paste TxID after payment.",
+    },
+    {
+        "method": "Ethereum (ETH)",
+        "provider": "Ethereum",
+        "account_name": "ETH Wallet",
+        "account_number": "REPLACE_WITH_YOUR_ETH_ADDRESS",
+        "instructions": "Send ETH only on Ethereum mainnet. Paste TxID after payment.",
+    },
+]
+
+
+def ensure_crypto_payment_methods():
+    """Create crypto rows if missing so admin can edit addresses anytime."""
+    from models.payment_setting import PaymentSetting
+    from extensions import db
+    created = 0
+    for row in CRYPTO_PAYMENT_DEFAULTS:
+        exists = PaymentSetting.query.filter_by(method=row["method"]).first()
+        if exists:
+            continue
+        db.session.add(PaymentSetting(
+            method=row["method"],
+            provider=row["provider"],
+            account_name=row["account_name"],
+            account_number=row["account_number"],
+            instructions=row["instructions"],
+            active=True,
+        ))
+        created += 1
+    if created:
+        db.session.commit()
+        print(f"Payment settings: added {created} crypto method(s)")
+    return created
