@@ -739,6 +739,22 @@ from werkzeug.security import generate_password_hash
 @admin_bp.route("/users/<int:user_id>/reset-password", methods=["POST"])
 @login_required
 @admin_required
+def reset_password(user_id):
+    if assert_can_manage(user_id) is None:
+        return redirect(url_for("admin.users"))
+
+    user = User.query.get_or_404(user_id)
+    new_password = "12345678"
+    user.set_password(new_password)
+    user.must_change_password = True
+    db.session.commit()
+    flash(
+        f"Password reset for {user.username}. Temporary password: {new_password}. "
+        "User will be forced to change it on next login.",
+        "success"
+    )
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
 
 @admin_bp.route("/users/<int:user_id>/payout", methods=["POST"])
 @login_required
@@ -762,7 +778,6 @@ def update_user_payout(user_id):
                 pass
         return redirect(url_for("admin.view_user", user_id=user.id))
 
-    # save / change
     user.payout_method = (request.form.get("payout_method") or user.payout_method or "").strip()
     user.payout_account_name = (request.form.get("payout_account_name") or "").strip()
     user.payout_account_number = (request.form.get("payout_account_number") or "").strip()
@@ -778,22 +793,6 @@ def update_user_payout(user_id):
         log_action(current_user.id, "update_payout", "users", str(user.id), f"{user.payout_method} {user.payout_account_number}")
     except Exception:
         pass
-    return redirect(url_for("admin.view_user", user_id=user.id))
-
-def reset_password(user_id):
-    if assert_can_manage(user_id) is None:
-        return redirect(url_for("admin.users"))
-
-    user = User.query.get_or_404(user_id)
-    new_password = "12345678"
-    user.set_password(new_password)
-    user.must_change_password = True
-    db.session.commit()
-    flash(
-        f"Password reset for {user.username}. Temporary password: {new_password}. "
-        "User will be forced to change it on next login.",
-        "success"
-    )
     return redirect(url_for("admin.view_user", user_id=user.id))
 
 

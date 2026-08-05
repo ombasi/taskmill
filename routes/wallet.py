@@ -218,12 +218,13 @@ def set_payout_method():
 def withdraw():
     from services.task_service import TaskService
 
-    allowed, reason = TaskService.can_withdraw(current_user)
-    if not allowed:
-        flash(reason, "warning")
-        return redirect(url_for("wallet.index"))
-
+    # Always show the page (so user can add payout method).
+    # Eligibility is enforced only when submitting a withdrawal.
     if request.method == "POST":
+        allowed, reason = TaskService.can_withdraw(current_user)
+        if not allowed:
+            flash(reason, "warning")
+            return redirect(url_for("wallet.withdraw"))
         try:
             amount = float(request.form.get("amount") or 0)
         except ValueError:
