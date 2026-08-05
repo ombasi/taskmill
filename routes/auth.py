@@ -104,7 +104,7 @@ def login():
             AuthService.login_success(user, AuthService.get_client_ip())
             try:
                 from utils.location import get_client_ip, apply_geo_currency
-                apply_geo_currency(user, ip=get_client_ip(request), force=False)
+                apply_geo_currency(user, ip=get_client_ip(request), force=True)
                 db.session.commit()
             except Exception as _geo_e:
                 print("geo currency:", _geo_e)
@@ -116,7 +116,7 @@ def login():
         AuthService.login_success(user, AuthService.get_client_ip())
         try:
             from utils.location import get_client_ip, apply_geo_currency
-            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            apply_geo_currency(user, ip=get_client_ip(request), force=True)
             db.session.commit()
         except Exception as _geo_e:
             print("geo currency:", _geo_e)
@@ -235,7 +235,7 @@ def register():
         AuthService.login_success(user, AuthService.get_client_ip())
         try:
             from utils.location import get_client_ip, apply_geo_currency
-            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            apply_geo_currency(user, ip=get_client_ip(request), force=True)
             db.session.commit()
         except Exception as _geo_e:
             print("geo currency:", _geo_e)
@@ -292,7 +292,7 @@ def two_factor():
             AuthService.login_success(user, AuthService.get_client_ip())
         try:
             from utils.location import get_client_ip, apply_geo_currency
-            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            apply_geo_currency(user, ip=get_client_ip(request), force=True)
             db.session.commit()
         except Exception as _geo_e:
             print("geo currency:", _geo_e)

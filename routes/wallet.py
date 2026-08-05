@@ -155,7 +155,7 @@ def deposit():
             "Deposit submitted. Next: wait for admin approval — your balance updates automatically when approved.",
             "success",
         )
-        return redirect(url_for("wallet.deposit_submitted", deposit_id=deposit.id))
+        return redirect(url_for("wallet.index"))
 
     from utils.payment_methods import active_deposit_methods
     pay_methods = active_deposit_methods(getattr(current_user, "country", None))
