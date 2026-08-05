@@ -87,6 +87,41 @@ def _ensure_notification_broadcast_column():
     _ensure_schema_columns()
 
 
+
+def _ensure_payout_columns(db):
+    """Add payout_* columns if missing (SQLite + Postgres). Safe to call every boot."""
+    try:
+        from sqlalchemy import text, inspect
+        insp = inspect(db.engine)
+        if "users" not in insp.get_table_names():
+            return
+        cols = {c["name"] for c in insp.get_columns("users")}
+        dialect = db.engine.dialect.name
+        specs = [
+            ("payout_method", "VARCHAR(100)"),
+            ("payout_account_name", "VARCHAR(150)"),
+            ("payout_account_number", "VARCHAR(150)"),
+            ("payout_provider", "VARCHAR(100)"),
+            ("payout_confirmed", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
+            ("payout_set_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+        ]
+        for name, typ in specs:
+            if name in cols:
+                continue
+            try:
+                if dialect == "postgresql":
+                    db.session.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {name} {typ}"))
+                else:
+                    db.session.execute(text(f"ALTER TABLE users ADD COLUMN {name} {typ}"))
+                db.session.commit()
+                print("Added users." + name)
+            except Exception as e:
+                db.session.rollback()
+                print("ensure payout", name, e)
+    except Exception as e:
+        print("ensure_payout_columns:", e)
+
+
 def create_app():
 
     app = Flask(__name__)
