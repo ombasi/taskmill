@@ -25,6 +25,14 @@ def _max_dob():
     except ValueError:
         return date_cls(today.year - 20, today.month, 28).isoformat()
 
+def _world_countries():
+    try:
+        from utils.world_currencies import all_country_names
+        return all_country_names()
+    except Exception:
+        return ["Uganda", "Kenya", "Tanzania", "Germany", "United States", "Canada", "United Kingdom", "Nigeria"]
+
+
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -94,12 +102,24 @@ def login():
         if (getattr(user, "is_admin", False) or getattr(user, "is_agent", False)) and not getattr(user, "totp_enabled", False):
             login_user(user, remember=remember)
             AuthService.login_success(user, AuthService.get_client_ip())
+            try:
+                from utils.location import get_client_ip, apply_geo_currency
+                apply_geo_currency(user, ip=get_client_ip(request), force=False)
+                db.session.commit()
+            except Exception as _geo_e:
+                print("geo currency:", _geo_e)
             flash("Please set up authenticator app 2FA for your staff account.", "warning")
             return redirect(url_for("auth.setup_2fa"))
 
         login_user(user, remember=remember)
 
         AuthService.login_success(user, AuthService.get_client_ip())
+        try:
+            from utils.location import get_client_ip, apply_geo_currency
+            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            db.session.commit()
+        except Exception as _geo_e:
+            print("geo currency:", _geo_e)
 
         # Fix users who registered without membership
         if not user.membership_id:
@@ -165,33 +185,33 @@ def register():
 
         if password != confirm:
             flash("Passwords do not match.", "danger")
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
         if not country:
             flash("Please select your country.", "danger")
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
         if sex not in ("Male", "Female", "Other"):
             flash("Please select your sex.", "danger")
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
         if not accept_terms:
             flash("You must accept the Terms & Conditions.", "danger")
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
         dob = _parse_dob(dob_raw)
         if not dob or _age(dob) < 20:
             flash("You must be at least 20 years old to register.", "danger")
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
         if User.query.filter_by(username=username).first():
 
             flash("Username already exists.", "danger")
 
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
         if User.query.filter_by(email=email).first():
 
             flash("Email already exists.", "danger")
 
-            return render_template("register.html", max_dob=_max_dob())
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
         user = AuthService.register(
             username=username,
@@ -213,12 +233,18 @@ def register():
 
         login_user(user)
         AuthService.login_success(user, AuthService.get_client_ip())
+        try:
+            from utils.location import get_client_ip, apply_geo_currency
+            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            db.session.commit()
+        except Exception as _geo_e:
+            print("geo currency:", _geo_e)
 
         flash("Registration successful.", "success")
 
         return redirect(url_for("dashboard.index"))
 
-    return render_template("register.html", max_dob=_max_dob())
+    return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
 
 # ==========================================
@@ -264,6 +290,12 @@ def two_factor():
             session.pop("pending_2fa_uid", None)
             login_user(user, remember=remember)
             AuthService.login_success(user, AuthService.get_client_ip())
+        try:
+            from utils.location import get_client_ip, apply_geo_currency
+            apply_geo_currency(user, ip=get_client_ip(request), force=False)
+            db.session.commit()
+        except Exception as _geo_e:
+            print("geo currency:", _geo_e)
             flash("2FA verified. Welcome.", "success")
             if user.is_admin:
                 return redirect(url_for("admin.dashboard"))

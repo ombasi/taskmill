@@ -86,6 +86,12 @@ def deposit():
         except (TypeError, ValueError):
             flash("Enter a valid deposit amount.", "danger")
             return redirect(url_for("wallet.deposit"))
+        # User enters amount in their local currency → store UGX
+        try:
+            from utils.fx import to_ugx
+            amount = to_ugx(amount, getattr(current_user, "currency", None) or "UGX")
+        except Exception as _fx:
+            print("deposit fx:", _fx)
         if amount <= 0:
             flash("Deposit amount must be greater than zero.", "danger")
             return redirect(url_for("wallet.deposit"))

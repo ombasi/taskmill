@@ -1,22 +1,7 @@
-COUNTRIES = {
 
-    "Uganda": ("UGX", "UGX", "🇺🇬"),
+"""Legacy COUNTRIES map — prefer utils.world_currencies."""
+from utils.world_currencies import COUNTRY_CURRENCY as COUNTRIES, currency_for_country, all_country_names
 
-    "Kenya": ("KES", "KSh", "🇰🇪"),
-
-    "Tanzania": ("TZS", "TSh", "🇹🇿"),
-
-    "Rwanda": ("RWF", "FRw", "🇷🇼"),
-
-    "Nigeria": ("NGN", "₦", "🇳🇬"),
-
-    "Ghana": ("GHS", "GH₵", "🇬🇭"),
-
-    "South Africa": ("ZAR", "R", "🇿🇦"),
-
-    "United States": ("USD", "$", "🇺🇸"),
-
-    "United Kingdom": ("GBP", "£", "🇬🇧"),
-
-    "Canada": ("CAD", "$", "🇨🇦")
-}
+def money(user, amount):
+    from helpers.currency import money as _m
+    return _m(user, amount)
