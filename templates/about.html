@@ -1,43 +1,111 @@
 {% extends "base.html" %}
-{% block title %}About{% endblock %}
+{% block title %}About Taskmill{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-10">
-  <header class="text-center border-b border-white/10 pb-10">
-    <p class="text-[11px] tracking-[0.3em] uppercase text-zinc-500">Our story</p>
-    <h1 class="mt-2 text-3xl md:text-5xl font-serif font-semibold">About Taskmill</h1>
-    <p class="mt-4 text-zinc-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-      Taskmill helps people earn through structured product review tasks — with a clear wallet,
-      membership tiers, and transparent support.
+<div class="max-w-5xl mx-auto space-y-10 pb-16">
+
+  <section class="relative overflow-hidden rounded-[2rem] border border-white/10 p-8 md:p-12"
+           style="background: radial-gradient(90% 80% at 10% 0%, rgba(99,102,241,.35), transparent 55%), radial-gradient(70% 60% at 100% 20%, rgba(168,85,247,.25), transparent 50%), #0b1020;">
+    <p class="text-[11px] uppercase tracking-[0.25em] text-indigo-300 font-semibold">About us</p>
+    <h1 class="mt-3 text-3xl md:text-5xl font-black tracking-tight max-w-2xl">
+      Taskmill — structured earning through product work
+    </h1>
+    <p class="mt-4 text-zinc-300 max-w-2xl text-base md:text-lg leading-relaxed">
+      Taskmill is a task-earning platform where members complete product reviews, grow a transparent wallet,
+      and withdraw in their local currency. We combine clear rules, membership tiers, and real support so
+      everyday effort can turn into reliable income.
     </p>
-  </header>
-
-  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-center">
-    {% for n, l in [('500+','Projects'),('98%','Satisfaction'),('15+','Years focus'),('50+','Markets')] %}
-    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-      <p class="text-2xl font-black text-white">{{ n }}</p>
-      <p class="text-xs text-zinc-500 mt-1 uppercase tracking-wider">{{ l }}</p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard.index') }}" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-6 py-3 text-sm font-bold transition">Go to dashboard</a>
+      <a href="{{ url_for('task.index') }}" class="rounded-2xl border border-white/15 hover:bg-white/5 px-6 py-3 text-sm font-semibold transition">Start tasks</a>
+      {% else %}
+      <a href="{{ url_for('auth.register') }}" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-6 py-3 text-sm font-bold transition">Create account</a>
+      <a href="{{ url_for('auth.login') }}" class="rounded-2xl border border-white/15 hover:bg-white/5 px-6 py-3 text-sm font-semibold transition">Log in</a>
+      {% endif %}
     </div>
-    {% endfor %}
-  </div>
+  </section>
 
-  <div class="grid md:grid-cols-2 gap-6">
+  <section class="grid md:grid-cols-3 gap-4">
     <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-      <h2 class="font-serif text-xl font-semibold mb-3">Mission</h2>
-      <p class="text-sm text-zinc-400 leading-relaxed">To help users participate in product optimization workflows with fair commissions, clear rules, and reliable payouts.</p>
+      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mb-4"><i class="fa-solid fa-list-check"></i></div>
+      <h3 class="font-bold text-lg">Daily product tasks</h3>
+      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Review products in structured sets. Earn commission on every successful submission — matched to your membership.</p>
     </div>
     <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-      <h2 class="font-serif text-xl font-semibold mb-3">Values</h2>
-      <ul class="text-sm text-zinc-400 space-y-2">
-        <li>· Clarity in balances and holds</li>
-        <li>· Membership-based progression</li>
-        <li>· Responsive human support</li>
-        <li>· Integrity against fraud</li>
-      </ul>
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mb-4"><i class="fa-solid fa-wallet"></i></div>
+      <h3 class="font-bold text-lg">Transparent wallet</h3>
+      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Deposits, earnings, and withdrawals with a clear reserve for the next day. Balances shown in your local currency.</p>
     </div>
-  </div>
+    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
+      <div class="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-300 flex items-center justify-center mb-4"><i class="fa-solid fa-users"></i></div>
+      <h3 class="font-bold text-lg">Team & referrals</h3>
+      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Invite others with your code, grow together, and get help from support and team leaders when you need it.</p>
+    </div>
+  </section>
 
-  <div class="text-center">
-    <a href="{{ url_for('auth.register') }}" class="inline-flex rounded-full bg-white text-zinc-900 px-8 py-3 text-sm font-bold hover:bg-zinc-100">Get started</a>
-  </div>
+  <section class="rounded-[2rem] border border-indigo-500/25 overflow-hidden"
+           style="background: linear-gradient(135deg, rgba(79,70,229,.2), rgba(15,23,42,.95) 45%, rgba(168,85,247,.12));">
+    <div class="p-8 md:p-10">
+      <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Word from the CEO</p>
+      <h2 class="mt-2 text-2xl md:text-3xl font-black">A message of encouragement</h2>
+      <blockquote class="mt-6 text-zinc-200 text-base md:text-lg leading-relaxed border-l-4 border-indigo-500 pl-5 md:pl-6">
+        <p class="mb-4">
+          Every great journey begins with a single step — and on Taskmill, that step is completing your first task with care.
+          I built this platform so that <strong class="text-white">discipline, honesty, and consistency</strong> are rewarded,
+          not empty promises. Whether you are opening your first set today or leading a growing team, your effort is seen.
+        </p>
+        <p class="mb-4">
+          There will be days when the balance dips, when a combo challenges you, or when progress feels slow.
+          That is part of the path. Clear the hold, finish the set, keep your reserve, and move forward.
+          <strong class="text-white">Results compound for those who show up.</strong>
+        </p>
+        <p>
+          Stay focused. Follow the process. Support one another. We are proud of every member who chooses integrity
+          and growth — and we are committed to making Taskmill a place where hard work is respected and paid fairly.
+          Thank you for trusting us with your time. The best chapters are still ahead.
+        </p>
+      </blockquote>
+      <div class="mt-8 flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-xl font-black text-indigo-100">T</div>
+        <div>
+          <p class="font-bold text-lg">CEO, Taskmill</p>
+          <p class="text-sm text-indigo-200/70">Founder &amp; Chief Executive Officer</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-2xl font-black mb-5">What we stand for</h2>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
+        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-shield-halved text-indigo-400"></i> Integrity</h3>
+        <p class="text-sm text-zinc-400 mt-2">Clear rules for tasks, deposits, and withdrawals. No hidden games with your balance.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
+        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400"></i> Growth</h3>
+        <p class="text-sm text-zinc-400 mt-2">Membership paths from Starter to VIP so your earning power can scale with commitment.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
+        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-handshake text-amber-400"></i> Partnership</h3>
+        <p class="text-sm text-zinc-400 mt-2">Agents, referrals, and support exist to lift the whole network — not only the top.</p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
+        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-globe text-sky-400"></i> Inclusion</h3>
+        <p class="text-sm text-zinc-400 mt-2">Multi-country, multi-currency experience so members can work in the language of their wallet.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="text-center rounded-3xl border border-white/10 bg-zinc-900/50 p-8">
+    <h2 class="text-xl font-bold">Ready when you are</h2>
+    <p class="text-zinc-400 text-sm mt-2 max-w-lg mx-auto">Complete today’s sets, keep your reserve, and withdraw when the checklist is green. We’re with you.</p>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('task.index') }}" class="inline-flex mt-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-3 font-bold text-sm hover:brightness-110 transition">Start tasks</a>
+    {% else %}
+    <a href="{{ url_for('auth.register') }}" class="inline-flex mt-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-3 font-bold text-sm hover:brightness-110 transition">Join Taskmill</a>
+    {% endif %}
+  </section>
+
 </div>
 {% endblock %}

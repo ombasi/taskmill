@@ -202,6 +202,7 @@ History
 
 <a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300 relative pr-4">Chat<span data-badge="chat" class="absolute -top-1 right-0 min-w-[1rem] h-4 px-1 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></a>
 <a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">Support</a>
+<a href="{{ url_for('dashboard.about') }}" class="tm-nav-link hover:text-indigo-300">About</a>
 
 <a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">
 
@@ -436,6 +437,7 @@ Support
 <div class="space-y-3 text-zinc-400">
 <a href="{{ url_for('dashboard.contact') }}" class="block hover:text-indigo-400">Contact support</a>
 <a href="{{ url_for('chat.inbox') if current_user.is_authenticated else url_for('auth.login') }}" class="block hover:text-indigo-400">Live chat</a>
+<a href="{{ url_for('dashboard.about') }}" class="block hover:text-indigo-400">About</a>
 <a href="{{ url_for('dashboard.faq') }}" class="block hover:text-indigo-400">FAQs</a>
 <a href="{{ url_for('dashboard.terms') }}" class="block hover:text-indigo-400">Terms &amp; Conditions</a>
 </div>
