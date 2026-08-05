@@ -30,7 +30,7 @@
         <h1 class="text-2xl md:text-4xl font-black tracking-tight leading-tight">
           Good to see you, <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-white to-purple-300">{{ first }}</span>
         </h1>
-        <p class="mt-2 text-sm text-zinc-400 max-w-md">Review products, grow commission, withdraw when you’re ready. Leave UGX 15,000 for the next day.</p>
+        <p class="mt-2 text-sm text-zinc-400 max-w-md">Review products, grow commission, withdraw when you’re ready. Leave {{ money(current_user, 15000) }} for the next day.</p>
 
         <div class="mt-4 flex flex-wrap gap-2">
           <a href="{{ url_for('task.index') }}" class="tm-btn inline-flex items-center gap-2 rounded-2xl bg-white text-zinc-900 px-5 py-2.5 text-sm font-bold shadow-lg shadow-indigo-500/20">
@@ -126,7 +126,7 @@
       <span class="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center"><i class="fa-solid fa-shield-halved"></i></span>
       <div>
         <p class="text-sm font-semibold text-amber-100">Finish setup</p>
-        <p class="text-xs text-amber-100/70">{% if needs_pin %}Set a withdraw PIN to cash out.{% else %}Keep at least UGX 15,000 to start tasks.{% endif %}</p>
+        <p class="text-xs text-amber-100/70">{% if needs_pin %}Set a withdraw PIN to cash out.{% else %}Keep at least {{ money(current_user, 15000) }} to start tasks.{% endif %}</p>
       </div>
     </div>
     <a href="{% if needs_pin %}{{ url_for('profile.set_withdraw_pin') }}{% else %}{{ url_for('wallet.deposit') }}{% endif %}"
