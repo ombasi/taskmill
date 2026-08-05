@@ -1,254 +1,146 @@
 {% extends "admin/base.html" %}
-
 {% block title %}Payment Settings{% endblock %}
-
 {% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
 
-<div class="max-w-7xl mx-auto">
+  <div class="glass rounded-3xl p-8">
+    <h1 class="text-3xl md:text-4xl font-bold">Payment Settings</h1>
+    <p class="text-zinc-400 mt-2">Manage deposit methods and wallet addresses (including crypto).</p>
+  </div>
 
-    <div class="glass rounded-3xl p-8 mb-8">
-
-        <div class="flex justify-between items-center">
-
-            <div>
-
-                <h1 class="text-4xl font-bold">
-
-                    Payment Settings
-
-                </h1>
-
-                <p class="text-zinc-400 mt-2">
-
-                    Manage all deposit methods.
-
-                </p>
-
+  <!-- EXISTING METHODS -->
+  <div class="glass rounded-3xl p-6 md:p-8 overflow-x-auto">
+    <h2 class="text-xl font-bold mb-6">Active methods</h2>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-zinc-400 border-b border-white/10">
+          <th class="p-3">Method</th>
+          <th class="p-3">Provider</th>
+          <th class="p-3">Account / Wallet</th>
+          <th class="p-3">Status</th>
+          <th class="p-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for setting in settings %}
+        <tr class="border-b border-white/5 align-top">
+          <td class="p-3 font-semibold">{{ setting.method }}</td>
+          <td class="p-3 text-zinc-300">{{ setting.provider or "—" }}</td>
+          <td class="p-3">
+            <div class="text-zinc-200">{{ setting.account_name or "—" }}</div>
+            <div class="text-xs text-zinc-500 break-all mt-1">{{ setting.account_number or "—" }}</div>
+          </td>
+          <td class="p-3">
+            {% if setting.active %}
+            <span class="bg-green-600/90 px-3 py-1 rounded-full text-xs">Active</span>
+            {% else %}
+            <span class="bg-red-600/90 px-3 py-1 rounded-full text-xs">Disabled</span>
+            {% endif %}
+          </td>
+          <td class="p-3">
+            <div class="flex flex-wrap justify-center gap-2">
+              <button type="button"
+                onclick="document.getElementById('edit-{{ setting.id }}').classList.toggle('hidden')"
+                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-xs font-semibold">
+                Edit
+              </button>
+              <a href="{{ url_for('admin.toggle_payment_setting', id=setting.id) }}"
+                 class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg text-xs font-semibold">
+                Toggle
+              </a>
+              <form action="{{ url_for('admin.delete_payment_setting', id=setting.id) }}" method="POST" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                <button type="submit" onclick="return confirm('Delete this payment method?')"
+                        class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-xs font-semibold">
+                  Delete
+                </button>
+              </form>
             </div>
+          </td>
+        </tr>
+        <tr id="edit-{{ setting.id }}" class="hidden bg-zinc-900/50">
+          <td colspan="5" class="p-4">
+            <form action="{{ url_for('admin.edit_payment_setting', id=setting.id) }}" method="POST" class="space-y-4">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+              <div class="grid md:grid-cols-2 gap-4">
+                <input name="method" value="{{ setting.method }}" required
+                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Method">
+                <input name="provider" value="{{ setting.provider or '' }}"
+                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Provider">
+                <input name="account_name" value="{{ setting.account_name or '' }}"
+                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Account name">
+                <input name="account_number" value="{{ setting.account_number or '' }}"
+                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Wallet / phone / account">
+              </div>
+              <textarea name="instructions" rows="3"
+                        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"
+                        placeholder="Instructions">{{ setting.instructions or '' }}</textarea>
+              <div class="flex gap-3">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-xl font-semibold text-sm">
+                  Save changes
+                </button>
+                <button type="button" onclick="document.getElementById('edit-{{ setting.id }}').classList.add('hidden')"
+                        class="bg-zinc-700 hover:bg-zinc-600 px-6 py-2.5 rounded-xl text-sm">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="p-6 text-center text-zinc-500">No payment methods yet. Add one below.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-        </div>
+  <!-- ADD PAYMENT -->
+  <div class="glass rounded-3xl p-8">
+    <h2 class="text-2xl font-bold mb-6">Add payment method</h2>
+    <form action="{{ url_for('admin.add_payment_setting') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div class="grid md:grid-cols-2 gap-5">
+        <input name="method" list="method-presets" placeholder="Method e.g. USDT (TRC20)" required
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+        <input name="provider" placeholder="Provider" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+        <input name="account_name" placeholder="Account name"
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+        <input name="account_number" placeholder="Wallet address / phone / account number"
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+      </div>
+      <textarea name="instructions" rows="4" placeholder="Instructions for the user..."
+                class="w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"></textarea>
 
-    </div>
+      <div>
+        <label class="block mb-2 text-sm text-zinc-400">Payment logo</label>
+        <input type="file" name="logo" accept="image/*"
+               class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+      </div>
+      <div>
+        <label class="block mb-2 text-sm text-zinc-400">QR code</label>
+        <input type="file" name="qr_code" accept="image/*"
+               class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+      </div>
 
-    
-    <form action="{{ url_for('admin.ensure_crypto_payments') }}" method="POST" class="mb-6">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-        <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm">
-            + Add / Ensure Crypto methods (USDT TRC20, ERC20, BTC, ETH)
-        </button>
-        <p class="text-xs text-zinc-400 mt-2">Creates rows if missing. Then edit each row to set your live wallet address.</p>
-    <datalist id="method-presets">
-  <option value="USDT (TRC20)">
-  <option value="USDT (ERC20)">
-  <option value="Bitcoin (BTC)">
-  <option value="Ethereum (ETH)">
-  <option value="MTN Mobile Money">
-  <option value="Airtel Money">
-  <option value="M-Pesa">
-  <option value="Bank Transfer">
-  <option value="SEPA Bank Transfer">
-</datalist>
-</form>
+      <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold">
+        Add payment method
+      </button>
 
-    <!-- ADD PAYMENT -->
-
-    <div class="glass rounded-3xl p-8 mb-10">
-
-        <h2 class="text-2xl font-bold mb-6">
-
-            Add Payment Method
-
-        </h2>
-
-        <form
-            action="{{ url_for('admin.add_payment_setting') }}"
-            method="POST">
-
-            <div class="grid md:grid-cols-2 gap-5">
-
-                <input
-                    name="method"
-                    list="method-presets"
-                    placeholder="Method e.g. USDT (TRC20)"
-                    required
-                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-
-                <input
-                    name="provider"
-                    placeholder="Provider"
-                    required
-                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-
-                <input
-                    name="account_name"
-                    placeholder="Account Name"
-                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-
-                <input
-                    name="account_number"
-                    placeholder="Wallet address / phone / account number"
-                    class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-
-            </div>
-
-            <textarea
-                name="instructions"
-                rows="4"
-                placeholder="Instructions..."
-                class="w-full mt-5 rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"></textarea>
-
-            <button
-                class="mt-6 bg-indigo-600 hover:bg-indigo-700 px-8 py-3 rounded-xl">
-
-                Add Payment Method
-
-            </button>
-            <div class="mb-5">
-
-    <label class="block mb-2">
-
-        Payment Logo
-
-    </label>
-
-    <input
-        type="file"
-        name="logo"
-        accept="image/*"
-        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+      <datalist id="method-presets">
+        <option value="USDT (TRC20)">
+        <option value="USDT (ERC20)">
+        <option value="Bitcoin (BTC)">
+        <option value="Ethereum (ETH)">
+        <option value="MTN Mobile Money">
+        <option value="Airtel Money">
+        <option value="M-Pesa">
+        <option value="Bank Transfer">
+        <option value="SEPA Bank Transfer">
+      </datalist>
+    </form>
+  </div>
 
 </div>
-
-<div class="mb-5">
-
-    <label class="block mb-2">
-
-        QR Code
-
-    </label>
-
-    <input
-        type="file"
-        name="qr_code"
-        accept="image/*"
-        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
-
-</div>
-
-        </form>
-
-    </div>
-
-    <!-- TABLE -->
-
-    <div class="glass rounded-3xl overflow-hidden">
-
-        <table class="w-full">
-
-            <thead class="bg-zinc-900">
-
-                <tr>
-
-                    <th class="p-4 text-left">Method</th>
-
-                    <th class="p-4 text-left">Provider</th>
-
-                    <th class="p-4 text-left">Account</th>
-
-                    <th class="p-4 text-left">Status</th>
-
-                    <th class="p-4 text-center">Actions</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-            {% for setting in settings %}
-
-                <tr class="border-t border-zinc-800">
-
-                    <td class="p-4">
-
-                        {{ setting.method }}
-
-                    </td>
-
-                    <td class="p-4">
-
-                        {{ setting.provider }}
-
-                    </td>
-
-                    <td class="p-4">
-
-                        {{ setting.account_number }}
-
-                    </td>
-
-                    <td class="p-4">
-
-                        {% if setting.active %}
-
-                            <span class="bg-green-600 px-3 py-1 rounded-full">
-
-                                Active
-
-                            </span>
-
-                        {% else %}
-
-                            <span class="bg-red-600 px-3 py-1 rounded-full">
-
-                                Disabled
-
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-                    <td class="p-4">
-
-                        <div class="flex justify-center gap-2">
-
-                            <a
-                                href="{{ url_for('admin.toggle_payment_setting', id=setting.id) }}"
-                                class="bg-yellow-600 px-4 py-2 rounded-lg">
-
-                                Toggle
-
-                            </a>
-
-                            <form
-                                action="{{ url_for('admin.delete_payment_setting', id=setting.id) }}"
-                                method="POST">
-
-                                <button
-                                    onclick="return confirm('Delete payment method?')"
-                                    class="bg-red-600 px-4 py-2 rounded-lg">
-
-                                    Delete
-
-                                </button>
-
-                            </form>
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-            {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
-
 {% endblock %}
