@@ -205,7 +205,7 @@ def withdraw():
         if withdrawal:
             flash("Withdrawal request submitted. Funds held pending admin approval.", "success")
         else:
-            flash("Cannot withdraw: insufficient balance after the UGX 15,000 reserve, or invalid amount.", "danger")
+            flash("Cannot withdraw: insufficient balance after the required reserve, or invalid amount.", "danger")
 
         return redirect(url_for("wallet.index"))
 

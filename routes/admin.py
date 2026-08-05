@@ -226,15 +226,8 @@ def assert_can_manage(user_id):
 # ==========================================================
 
 def _combo_max_for_user(user):
-    """Max combo product price by membership (UGX). High enough for real combo hits."""
-    name = (user.membership.name if user.membership else "Starter").lower()
-    caps = {
-        "starter": 150000,
-        "silver": 350000,
-        "gold": 600000,
-        "vip": 1000000,
-    }
-    return caps.get(name, 150000)
+    """No membership cap on combo — high-value products allowed for all tiers."""
+    return None  # unlimited
 
 
 @admin_bp.route("/")
@@ -628,33 +621,29 @@ def view_user(user_id):
 
     combo_products = []
     try:
-        max_combo = float(_combo_max_for_user(user) or 150000)
+        # No membership price cap — show highest-value products first
         bal = float(user.available_balance or 0)
-        min_price = 0.0
-        if bal > 0:
-            min_price = min(bal * 0.5, max_combo * 0.1)
+        min_price = max(0.0, bal * 0.3) if bal > 0 else 0.0
         combo_products = (
             Product.query
             .filter(
                 Product.active.is_(True),
                 Product.price > 0,
-                Product.price <= max_combo,
                 Product.price >= min_price,
             )
             .order_by(Product.price.desc())
-            .limit(200)
+            .limit(300)
             .all()
         )
-        if len(combo_products) < 10:
+        if len(combo_products) < 15:
             combo_products = (
                 Product.query
                 .filter(
                     Product.active.is_(True),
                     Product.price > 0,
-                    Product.price <= max_combo,
                 )
                 .order_by(Product.price.desc())
-                .limit(200)
+                .limit(300)
                 .all()
             )
     except Exception as e:

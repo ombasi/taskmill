@@ -14,7 +14,7 @@
       <div>
         <p class="text-[11px] uppercase tracking-[0.2em] text-rose-300 font-semibold">Wallet</p>
         <h1 class="text-2xl md:text-4xl font-black mt-1">Withdraw</h1>
-        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Cash out to mobile money or bank. You must leave UGX 15,000 for the next day’s tasks.</p>
+        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Cash out to mobile money or bank. You must leave {{ money(current_user, reserve|default(15000)) }} for the next day’s tasks.</p>
       </div>
       <div class="grid grid-cols-2 gap-2 min-w-[220px]">
         <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
@@ -41,7 +41,7 @@
   <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
     <h2 class="font-bold text-sm mb-3">Withdrawal checklist</h2>
     <ul class="space-y-2">
-      {% for item in checklist.items %}
+      {% for item in checklist.get("items", []) %}
       <li class="flex items-start gap-3 text-sm">
         <span class="mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0
           {% if item.ok %}bg-emerald-500/20 text-emerald-400{% else %}bg-rose-500/20 text-rose-400{% endif %}">
@@ -54,7 +54,7 @@
       </li>
       {% endfor %}
     </ul>
-    {% if not checklist.all_ok %}
+    {% if not checklist.get("all_ok") %}
     <p class="text-xs text-amber-300/90 mt-4">Fix the red items before submitting a withdrawal.</p>
     {% endif %}
   </div>
@@ -124,7 +124,7 @@
       <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-3 text-sm text-zinc-400">
         <p class="text-rose-300 font-semibold text-xs uppercase tracking-wider">Rules</p>
         <ul class="space-y-2">
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Leave at least UGX 15,000 in the wallet</li>
+          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Leave at least {{ money(current_user, reserve|default(15000)) }} in the wallet</li>
           <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Complete required tasks before withdrawing (when enforced)</li>
           <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Clear any combo negative balance first</li>
           <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Funds held until admin marks paid</li>
