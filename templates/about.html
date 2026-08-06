@@ -46,8 +46,20 @@
   <section class="rounded-[2rem] border border-indigo-500/25 overflow-hidden"
            style="background: linear-gradient(135deg, rgba(79,70,229,.2), rgba(15,23,42,.95) 45%, rgba(168,85,247,.12));">
     <div class="p-8 md:p-10">
-      <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Word from the CEO</p>
-      <h2 class="mt-2 text-2xl md:text-3xl font-black">A message of encouragement</h2>
+      <div class="flex flex-col sm:flex-row sm:items-start gap-6 mb-2">
+        <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl overflow-hidden border-2 border-indigo-400/40 shadow-xl shadow-indigo-950/50 bg-indigo-500/20 shrink-0 mx-auto sm:mx-0">
+          <img src="{{ url_for('static', filename='images/ceo.jpg') }}"
+               alt="CEO of Taskmill"
+               class="w-full h-full object-cover"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="hidden absolute inset-0 items-center justify-center text-3xl font-black text-indigo-100 bg-indigo-500/30">T</div>
+        </div>
+        <div class="text-center sm:text-left flex-1">
+          <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Word from the CEO</p>
+          <h2 class="mt-2 text-2xl md:text-3xl font-black">A message of encouragement</h2>
+          <p class="mt-2 text-sm text-zinc-400">Leadership · Vision · Commitment to every member</p>
+        </div>
+      </div>
       <blockquote class="mt-6 text-zinc-200 text-base md:text-lg leading-relaxed border-l-4 border-indigo-500 pl-5 md:pl-6">
         <p class="mb-4">
           Every great journey begins with a single step — and on Taskmill, that step is completing your first task with care.
@@ -66,7 +78,13 @@
         </p>
       </blockquote>
       <div class="mt-8 flex items-center gap-4">
-        <div class="w-14 h-14 rounded-2xl bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-xl font-black text-indigo-100">T</div>
+        <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 border-indigo-400/50 shadow-lg shadow-indigo-900/40 bg-indigo-500/20 shrink-0">
+          <img src="{{ url_for('static', filename='images/ceo.jpg') }}"
+               alt="CEO, Taskmill"
+               class="w-full h-full object-cover"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="hidden absolute inset-0 items-center justify-center text-xl font-black text-indigo-100 bg-indigo-500/30">T</div>
+        </div>
         <div>
           <p class="font-bold text-lg">CEO, Taskmill</p>
           <p class="text-sm text-indigo-200/70">Founder &amp; Chief Executive Officer</p>
