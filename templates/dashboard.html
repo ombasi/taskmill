@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+<div class="max-w-7xl mx-auto px-3 md:px-5 mt-2">
+  <a href="{{ url_for('dashboard.daily_digest') }}" class="text-xs text-indigo-400 hover:underline">Today's digest →</a>
+</div>
+
 {% set _tps = current_user.membership.tasks_per_set if current_user.membership and current_user.membership.tasks_per_set else 16 %}
 {% set _ds = current_user.membership.daily_sets if current_user.membership and current_user.membership.daily_sets else 2 %}
 {% set _total = (_tps|int) * (_ds|int) %}

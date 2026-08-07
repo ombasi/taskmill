@@ -17,7 +17,14 @@
     <button class="bg-indigo-600 px-5 rounded-xl text-sm font-semibold">Search</button>
   </form>
 
-  <form method="POST" action="{{ url_for('admin.bulk_approve_deposits') }}">
+  <form method="POST" action="{{ url_for('admin.bulk_approve_deposits') }}" id="bulkDepForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <div class="flex flex-wrap gap-2 mb-3">
+      <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold">Bulk approve</button>
+      <button type="submit" formaction="{{ url_for('admin.bulk_reject_deposits') }}" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold"
+              onclick="return confirm('Reject selected deposits?')">Bulk reject</button>
+    </div>
+
     <button type="submit" class="mb-4 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-sm font-semibold">Bulk Approve Selected</button>
     <div class="glass rounded-3xl overflow-hidden">
       <table class="w-full text-sm">

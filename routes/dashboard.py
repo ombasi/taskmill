@@ -259,3 +259,52 @@ def agent_site(code):
         (User.referral_code == code) | (User.username == code)
     ).filter((User.is_agent == True) | (User.is_admin == True)).first()
     return render_template("agent_site.html", agent=agent, code=code)
+
+
+@dashboard_bp.route("/digest")
+@login_required
+def daily_digest():
+    """In-app daily summary of what needs attention."""
+    from models.deposit import Deposit
+    from models.withdraw import Withdrawal
+    from models.notification import Notification
+    from services.task_service import TaskService
+    TaskService.ensure_daily_reset(current_user)
+    tps, ds, total = TaskService._limits(current_user)
+    done = int(current_user.tasks_completed_today or 0)
+    pending_deps = Deposit.query.filter_by(user_id=current_user.id, status="Pending").count()
+    pending_wds = Withdrawal.query.filter(
+        Withdrawal.user_id == current_user.id,
+        Withdrawal.status.in_(["Pending", "Processing"]),
+    ).count()
+    unread = 0
+    try:
+        unread = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+    except Exception:
+        try:
+            unread = Notification.query.filter_by(user_id=current_user.id, read=False).count()
+        except Exception:
+            pass
+    items = []
+    if float(current_user.available_balance or 0) < 0 or getattr(current_user, "combo_active", False):
+        items.append({"level": "danger", "title": "Combo / negative balance", "body": "Deposit to clear the hold, then submit the frozen product.", "url": url_for("wallet.deposit")})
+    if done < total:
+        items.append({"level": "info", "title": "Tasks remaining", "body": f"{done}/{total} completed today.", "url": url_for("task.index")})
+    else:
+        items.append({"level": "ok", "title": "Daily tasks complete", "body": "Great work — check mystery box if available.", "url": url_for("task.mystery_box")})
+    if pending_deps:
+        items.append({"level": "warn", "title": "Deposit pending", "body": f"{pending_deps} deposit(s) waiting for admin.", "url": url_for("wallet.index")})
+    if pending_wds:
+        items.append({"level": "warn", "title": "Withdrawal in progress", "body": f"{pending_wds} withdrawal(s) Pending/Processing.", "url": url_for("wallet.my_withdrawals")})
+    if unread:
+        items.append({"level": "info", "title": "Unread notifications", "body": f"{unread} new message(s).", "url": url_for("profile.notifications")})
+    if not getattr(current_user, "payout_confirmed", False):
+        items.append({"level": "info", "title": "Payout method", "body": "Set or wait for admin confirmation before withdrawing.", "url": url_for("wallet.withdraw")})
+    return render_template(
+        "digest.html",
+        items=items,
+        done=done,
+        total=total,
+        pending_deps=pending_deps,
+        pending_wds=pending_wds,
+    )

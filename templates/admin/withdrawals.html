@@ -2,6 +2,12 @@
 {% block title %}Withdrawals{% endblock %}
 {% block page_title %}Withdrawals{% endblock %}
 {% block content %}
+<form method="POST" action="{{ url_for('admin.bulk_withdrawals_processing') }}" class="mb-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+  <button type="submit" class="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold">Mark selected as Processing</button>
+  <p class="text-[11px] text-zinc-500 mt-1">Select pending rows with checkboxes (if shown), or use per-row Processing.</p>
+</form>
+
 <div class="space-y-6">
   <div class="grid md:grid-cols-4 gap-4">
     <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Pending</p><h2 class="text-3xl font-black text-amber-300">{{ pending }}</h2></div>
@@ -46,7 +52,8 @@
           <td class="p-4 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
           <td class="p-4">
             {% if w.status=='Pending' %}
-            <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
+            <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
+              <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-amber-400 text-xs">Processing</a>
             <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
             {% endif %}
           </td>

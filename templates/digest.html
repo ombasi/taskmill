@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Today's digest{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6 pb-12">
+  <header>
+    <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Daily overview</p>
+    <h1 class="text-3xl font-black mt-1">Today at a glance</h1>
+    <p class="text-sm text-zinc-400 mt-2">Tasks {{ done }}/{{ total }} · Deposits pending {{ pending_deps }} · Withdrawals open {{ pending_wds }}</p>
+  </header>
+
+  <div class="space-y-3">
+    {% for it in items %}
+    <a href="{{ it.url }}" class="block rounded-3xl border border-white/10 p-5 hover:bg-white/5 transition
+      {% if it.level == 'danger' %}bg-rose-500/10 border-rose-500/30
+      {% elif it.level == 'warn' %}bg-amber-500/10 border-amber-500/25
+      {% elif it.level == 'ok' %}bg-emerald-500/10 border-emerald-500/25
+      {% else %}bg-zinc-900/50{% endif %}">
+      <p class="font-bold">{{ it.title }}</p>
+      <p class="text-sm text-zinc-400 mt-1">{{ it.body }}</p>
+    </a>
+    {% else %}
+    <p class="text-center text-zinc-500 py-10">You're all clear for now.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

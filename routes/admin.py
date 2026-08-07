@@ -3498,3 +3498,51 @@ def claim_challenge_prize(id):
     db.session.commit()
     flash(f"Prize awarded to {agent.username}: cash {cash:,.0f}, spins {spins}.", "success")
     return redirect(url_for("admin.team_challenges"))
+
+
+@admin_bp.route("/deposits/bulk-reject", methods=["POST"])
+@login_required
+@admin_required
+def bulk_reject_deposits():
+    ids = request.form.getlist("deposit_ids")
+    ok = 0
+    for did in ids:
+        try:
+            deposit = Deposit.query.get(int(did))
+        except Exception:
+            continue
+        if not deposit or deposit.status != "Pending":
+            continue
+        try:
+            WalletService.reject_deposit(deposit, current_user)
+            ok += 1
+        except Exception as e:
+            print("bulk reject", e)
+    db.session.commit()
+    flash(f"Rejected {ok} deposit(s).", "success" if ok else "warning")
+    return redirect(url_for("admin.deposits", status="Pending"))
+
+
+@admin_bp.route("/withdrawals/bulk-processing", methods=["POST"])
+@login_required
+@admin_required
+def bulk_withdrawals_processing():
+    ids = request.form.getlist("withdrawal_ids")
+    ok = 0
+    from datetime import datetime
+    for wid in ids:
+        try:
+            w = Withdrawal.query.get(int(wid))
+        except Exception:
+            continue
+        if not w or w.status != "Pending":
+            continue
+        w.status = "Processing"
+        if hasattr(w, "reviewed_by"):
+            w.reviewed_by = current_user.id
+        if hasattr(w, "reviewed_at"):
+            w.reviewed_at = datetime.utcnow()
+        ok += 1
+    db.session.commit()
+    flash(f"Marked {ok} withdrawal(s) as processing.", "success" if ok else "warning")
+    return redirect(url_for("admin.withdrawals", status="Pending"))
