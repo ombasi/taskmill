@@ -97,6 +97,9 @@ def admin_required(f):
                 "admin.freeze_wallet",
                 "admin.export_team_users_csv",
                 "admin.referral_leaderboard",
+                "admin.stuck_users",
+                "admin.team_challenges",
+                "admin.claim_challenge_prize",
             }
             if ep not in allowed:
                 flash("Team leaders can only manage users in their referral tree.", "warning")

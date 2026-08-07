@@ -187,29 +187,39 @@
       {% set links = [
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
+        ('admin.stuck_users', 'fa-triangle-exclamation', 'Stuck users'),
         ('admin.agents_hub', 'fa-sitemap', 'Agents'),
+        ('admin.team_challenges', 'fa-flag-checkered', 'Challenges'),
         ('admin.products', 'fa-box', 'Products'),
         ('admin.combos', 'fa-bolt', 'Combos'),
         ('admin.deposits', 'fa-arrow-down', 'Deposits'),
         ('admin.payment_settings', 'fa-credit-card', 'Payment methods'),
         ('admin.withdrawals', 'fa-arrow-up', 'Withdrawals'),
         ('admin.memberships', 'fa-crown', 'Memberships'),
+        ('admin.campaign_settings', 'fa-bullseye', 'Campaigns'),
         ('admin.daily_ops_report', 'fa-chart-pie', 'Daily report'),
+        ('admin.success_stories_admin', 'fa-quote-left', 'Stories'),
         ('admin.announcements', 'fa-bullhorn', 'Announcements'),
         ('admin.notifications', 'fa-bell', 'Notifications'),
         ('admin.support', 'fa-headset', 'Support'),
         ('chat.admin_inbox', 'fa-comments', 'Chat'),
         ('admin.spin_prizes', 'fa-gift', 'Lucky Spin'),
+        ('admin.referral_leaderboard', 'fa-trophy', 'Leaderboard'),
         ('admin.settings', 'fa-gear', 'Settings'),
+        ('auth.setup_2fa', 'fa-shield-halved', '2FA'),
       ] %}
       {% else %}
       {% set links = [
         ('admin.users', 'fa-users', 'My team'),
+        ('admin.stuck_users', 'fa-triangle-exclamation', 'Stuck users'),
+        ('admin.team_challenges', 'fa-flag-checkered', 'Challenges'),
         ('admin.combos', 'fa-bolt', 'Combos'),
         ('admin.deposits', 'fa-arrow-down', 'Team deposits'),
         ('admin.withdrawals', 'fa-arrow-up', 'Team withdrawals'),
         ('admin.team_report', 'fa-chart-pie', 'Team report'),
+        ('admin.export_team_users_csv', 'fa-file-csv', 'Export CSV'),
         ('chat.admin_inbox', 'fa-comments', 'Team chat'),
+        ('auth.setup_2fa', 'fa-shield-halved', '2FA'),
       ] %}
       {% endif %}
       {% for ep, icon, label in links %}
@@ -252,6 +262,12 @@
           <span class="pulse-dot" aria-hidden="true"></span>
           <span class="hidden sm:inline">Pending ops</span>
         </a>
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('admin.campaign_settings') }}"
+           class="hidden md:inline-flex text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">Campaigns</a>
+        <a href="{{ url_for('admin.stuck_users') }}"
+           class="hidden md:inline-flex text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">Stuck</a>
+        {% endif %}
         <a href="{{ url_for('dashboard.index') }}"
            class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
           View site
