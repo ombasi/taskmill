@@ -467,3 +467,16 @@ def receipt(kind, item_id):
         title=title,
         meta=meta,
     )
+
+
+@wallet_bp.route("/withdrawals")
+@login_required
+def my_withdrawals():
+    from models.withdraw import Withdrawal
+    rows = (
+        Withdrawal.query.filter_by(user_id=current_user.id)
+        .order_by(Withdrawal.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return render_template("wallet/my_withdrawals.html", withdrawals=rows)

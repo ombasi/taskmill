@@ -18,6 +18,11 @@
     <p class="p-6 text-zinc-500 text-sm">No login history yet.</p>
     {% endfor %}
   </div>
+  <form method="POST" action="{{ url_for('profile.logout_other_sessions') }}" class="pt-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <button class="rounded-xl bg-rose-600/90 hover:bg-rose-500 px-5 py-2.5 text-sm font-semibold"
+            onclick="return confirm('Sign out all other devices?')">Log out other sessions</button>
+  </form>
   <a href="{{ url_for('profile.index') }}" class="text-sm text-indigo-400">← Profile</a>
 </div>
 {% endblock %}

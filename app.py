@@ -460,6 +460,24 @@ def create_app():
         except Exception:
             return {"deposit_match_banner": None, "site_settings": None}
 
+
+    @app.before_request
+    def _check_session_version():
+        from flask_login import current_user
+        from flask import session, redirect, url_for
+        if current_user.is_authenticated:
+            try:
+                sv = int(getattr(current_user, "session_version", 0) or 0)
+                if "sv" not in session:
+                    session["sv"] = sv
+                elif int(session.get("sv") or 0) != sv:
+                    from flask_login import logout_user
+                    logout_user()
+                    session.clear()
+                    return redirect(url_for("auth.login"))
+            except Exception:
+                pass
+
     return app
 
 app = create_app()

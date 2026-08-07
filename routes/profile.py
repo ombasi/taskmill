@@ -240,3 +240,16 @@ def mentor():
             "active": bool(m.is_active and not m.is_blocked),
         })
     return render_template("profile/mentor.html", rows=rows)
+
+
+@profile_bp.route("/sessions/logout-others", methods=["POST"])
+@login_required
+def logout_other_sessions():
+    """Bump session version so other browsers must log in again."""
+    from extensions import db
+    from flask import session
+    current_user.session_version = int(getattr(current_user, "session_version", 0) or 0) + 1
+    session["sv"] = current_user.session_version
+    db.session.commit()
+    flash("Other sessions will be signed out. This device stays logged in.", "success")
+    return redirect(url_for("profile.sessions"))

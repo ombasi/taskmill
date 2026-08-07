@@ -1788,13 +1788,41 @@ def withdrawals():
     )
 
 
+@admin_bp.route("/withdrawals/<int:withdrawal_id>/processing")
+@login_required
+@admin_required
+def mark_withdrawal_processing(withdrawal_id):
+    withdrawal = Withdrawal.query.get_or_404(withdrawal_id)
+    if withdrawal.status != "Pending":
+        flash("Only pending withdrawals can move to processing.", "warning")
+        return redirect(url_for("admin.withdrawals"))
+    withdrawal.status = "Processing"
+    if hasattr(withdrawal, "reviewed_by"):
+        withdrawal.reviewed_by = current_user.id
+    if hasattr(withdrawal, "reviewed_at"):
+        from datetime import datetime
+        withdrawal.reviewed_at = datetime.utcnow()
+    db.session.commit()
+    try:
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            withdrawal.user_id if hasattr(withdrawal, "user_id") else withdrawal.user,
+            "Withdrawal processing",
+            f"Your withdrawal of {float(withdrawal.amount):,.0f} is being processed.",
+        )
+    except Exception:
+        pass
+    flash("Marked as processing.", "success")
+    return redirect(url_for("admin.withdrawals"))
+
+
 @admin_bp.route("/withdrawals/<int:withdrawal_id>/approve")
 @login_required
 @admin_required
 def approve_withdrawal(withdrawal_id):
     from services.wallet_service import WalletService
     withdrawal = Withdrawal.query.get_or_404(withdrawal_id)
-    if withdrawal.status != "Pending":
+    if withdrawal.status not in ("Pending", "Processing"):
         flash("Already reviewed.", "warning")
         return redirect(url_for("admin.withdrawals"))
     ok = WalletService.approve_withdrawal(withdrawal, current_user)

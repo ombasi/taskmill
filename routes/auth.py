@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import session, Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 
 from models.user import User
@@ -232,6 +232,7 @@ def register():
         _db.session.commit()
 
         login_user(user)
+        session["sv"] = int(getattr(user, "session_version", 0) or 0)
         AuthService.login_success(user, AuthService.get_client_ip())
         try:
             from utils.location import get_client_ip, apply_geo_currency

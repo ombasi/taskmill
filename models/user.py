@@ -235,6 +235,8 @@ class User(db.Model, UserMixin):
     mystery_opened_today = db.Column(db.Boolean, default=False)
     streak_days = db.Column(db.Integer, default=0)
     last_task_day = db.Column(db.Date, nullable=True)
+    session_version = db.Column(db.Integer, default=0)
+
 
 
 

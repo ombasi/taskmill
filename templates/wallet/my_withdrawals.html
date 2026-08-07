@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}My withdrawals{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6 pb-12">
+  <header>
+    <h1 class="text-3xl font-black">Withdrawals</h1>
+    <p class="text-sm text-zinc-400 mt-1">Track status from request to paid</p>
+  </header>
+
+  {% for w in withdrawals %}
+  {% set st = (w.status or 'Pending') %}
+  <article class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-4">
+    <div class="flex justify-between gap-3">
+      <div>
+        <p class="text-lg font-bold">{{ money(current_user, w.amount) }}</p>
+        <p class="text-xs text-zinc-500">{{ w.payment_method }} · {{ w.account_number }}</p>
+        <p class="text-[11px] text-zinc-600 mt-1">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</p>
+      </div>
+      <span class="h-fit text-[11px] font-bold px-2.5 py-1 rounded-full
+        {% if st == 'Paid' or st == 'Approved' %}bg-emerald-500/15 text-emerald-300
+        {% elif st == 'Processing' %}bg-amber-500/15 text-amber-200
+        {% elif st == 'Rejected' %}bg-rose-500/15 text-rose-300
+        {% else %}bg-zinc-500/20 text-zinc-300{% endif %}">{{ st }}</span>
+    </div>
+
+    {# Timeline #}
+    <div class="flex items-center gap-1 text-[10px] uppercase tracking-wider">
+      {% set steps = ['Pending', 'Processing', 'Approved', 'Paid'] %}
+      {% if st == 'Rejected' %}
+        <span class="text-rose-400 font-semibold">Rejected</span>
+      {% else %}
+        {% for step in steps %}
+          {% set done = (st == 'Paid') or (st == 'Approved' and step != 'Paid') or (st == 'Processing' and step in ['Pending','Processing']) or (st == 'Pending' and step == 'Pending') %}
+          {% if st == 'Approved' and step == 'Paid' %}{% set done = false %}{% endif %}
+          <span class="px-2 py-1 rounded-lg {% if done %}bg-indigo-500/20 text-indigo-200{% else %}bg-white/5 text-zinc-600{% endif %}">{{ step }}</span>
+          {% if not loop.last %}<span class="text-zinc-700">→</span>{% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </article>
+  {% else %}
+  <p class="text-center text-zinc-500 text-sm py-12">No withdrawals yet.</p>
+  {% endfor %}
+
+  <a href="{{ url_for('wallet.withdraw') }}" class="inline-block text-sm text-indigo-400">← Withdraw</a>
+</div>
+{% endblock %}
