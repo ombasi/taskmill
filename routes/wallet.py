@@ -82,6 +82,13 @@ def deposit():
 
     if request.method == "POST":
         try:
+            from utils.rate_limit import too_soon
+            if too_soon(f"dep_{current_user.id}", 10):
+                flash("Please wait a few seconds before submitting another deposit.", "warning")
+                return redirect(url_for("wallet.deposit"))
+        except Exception:
+            pass
+        try:
             amount = float(request.form.get("amount") or 0)
         except (TypeError, ValueError):
             flash("Enter a valid deposit amount.", "danger")
@@ -285,6 +292,14 @@ def withdraw():
                     left = int((last + timedelta(minutes=mins) - datetime.utcnow()).total_seconds() // 60) + 1
                     flash(f"Large withdrawals have a {mins}-minute cooling period. Try again in ~{left} min.", "warning")
                     return redirect(url_for("wallet.withdraw"))
+        except Exception:
+            pass
+
+        try:
+            from utils.rate_limit import too_soon
+            if too_soon(f"wd_{current_user.id}", 15):
+                flash("Please wait a few seconds before another withdrawal request.", "warning")
+                return redirect(url_for("wallet.withdraw"))
         except Exception:
             pass
 

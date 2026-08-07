@@ -142,20 +142,7 @@ def submit(id):
     rating = int(request.form.get("rating", 5))
     review = request.form.get("review", "")
 
-    ok, result = proof_path = None
-    proof = request.files.get("proof") or request.files.get("proof_image")
-    if proof and proof.filename:
-        import os, uuid
-        from werkzeug.utils import secure_filename
-        ext = secure_filename(proof.filename).rsplit(".", 1)[-1].lower() if "." in proof.filename else "jpg"
-        if ext in ("jpg", "jpeg", "png", "webp", "gif"):
-            folder = os.path.join("static", "uploads", "proofs")
-            os.makedirs(folder, exist_ok=True)
-            fname = f"{uuid.uuid4().hex}.{ext}"
-            proof.save(os.path.join(folder, fname))
-            proof_path = f"uploads/proofs/{fname}"
-    TaskService.complete_task(
-        task, proof_image=proof_path, rating=rating, review=review)
+    ok, result = TaskService.complete_task(task, rating=rating, review=review)
 
     if not ok:
         flash(result, "danger")

@@ -63,7 +63,7 @@
           </div>
         </div>
 
-        <form enctype="multipart/form-data" method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="mt-6 space-y-4 flex-1 flex flex-col">
+        <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="mt-6 space-y-4 flex-1 flex flex-col">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div>
             <label class="text-sm text-zinc-400">Your rating</label>
@@ -82,9 +82,7 @@
                       class="mt-1 w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm"></textarea>
           </div>
           <div class="flex flex-col sm:flex-row gap-2 pt-2">
-            <button type="file" name="proof" accept="image/*" class="text-xs text-zinc-400 mb-3 block">
-      <label class="text-xs text-zinc-500">Optional photo proof</label>
-      <button type="submit" class="flex-1 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 font-bold shadow-lg shadow-indigo-600/20">
+            <button type="submit" class="flex-1 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 font-bold shadow-lg shadow-indigo-600/20">
               Submit review
             </button>
             <a href="{{ url_for('task.park', id=task.id) }}"

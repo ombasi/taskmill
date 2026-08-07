@@ -1,6 +1,13 @@
 {% extends "admin/base.html" %}
 {% block title %}Payment Settings{% endblock %}
 {% block content %}
+<form method="POST" action="{{ url_for('admin.seed_crypto_methods') }}" class="mb-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+  <button type="submit" class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-semibold">
+    Add crypto methods (USDT / BTC / ETH) — start inactive
+  </button>
+</form>
+
 <div class="max-w-7xl mx-auto space-y-8">
 
   <div class="glass rounded-3xl p-8">

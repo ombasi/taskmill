@@ -433,16 +433,27 @@ def users():
 @login_required
 @admin_required
 def payment_settings():
-
-
     settings = PaymentSetting.query.order_by(
         PaymentSetting.method.asc()
     ).all()
-
     return render_template(
         "admin/payment_settings.html",
         settings=settings
     )
+
+
+@admin_bp.route("/payment-settings/seed-crypto", methods=["POST"])
+@login_required
+@admin_required
+def seed_crypto_methods():
+    """Create TRC20/ERC20/BTC/ETH rows inactive if missing."""
+    try:
+        from utils.payment_methods import ensure_crypto_rows
+        ensure_crypto_rows()
+        flash("Crypto methods ready (inactive). Toggle Active to show on deposit.", "success")
+    except Exception as e:
+        flash(f"Could not seed crypto: {e}", "danger")
+    return redirect(url_for("admin.payment_settings"))
 
 @admin_bp.route("/payment-settings/add", methods=["POST"])
 @login_required
