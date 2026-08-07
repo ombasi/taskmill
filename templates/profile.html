@@ -24,7 +24,7 @@
   </div>
 
   <p class="mt-6 text-sm"><a href="{{ url_for('profile.sessions') }}" class="text-indigo-400 hover:underline">View login sessions</a></p>
-  <p class="mt-2 text-sm"><a href="{{ url_for('profile.badges') }}" class="text-indigo-400 hover:underline">Badges</a> · <a href="{{ url_for('profile.mentor') }}" class="text-indigo-400 hover:underline">Mentor view →</a></p>
+  <p class="mt-2 text-sm"><a href="{{ url_for('profile.badges') }}" class="text-indigo-400 hover:underline">Badges</a>{% if current_user.streak_days %}<span class="text-zinc-500"> · 🔥 {{ current_user.streak_days }} day streak</span>{% endif %} · <a href="{{ url_for('profile.mentor') }}" class="text-indigo-400 hover:underline">Mentor view →</a></p>
 {% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-5">

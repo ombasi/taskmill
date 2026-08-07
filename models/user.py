@@ -233,6 +233,9 @@ class User(db.Model, UserMixin):
     last_big_withdraw_at = db.Column(db.DateTime, nullable=True)
     skips_used_today = db.Column(db.Integer, default=0)
     mystery_opened_today = db.Column(db.Boolean, default=False)
+    streak_days = db.Column(db.Integer, default=0)
+    last_task_day = db.Column(db.Date, nullable=True)
+
 
 
     currency_symbol = db.Column(

@@ -495,6 +495,29 @@ class TaskService:
         except Exception:
             pass
 
+        # Badges + streak (normal tasks)
+        if not is_combo:
+            try:
+                from services.badge_service import award
+                award(user.id, "first_task")
+                tasks_per_set, daily_sets, total = TaskService._limits(user)
+                if int(user.tasks_completed_today or 0) >= total:
+                    award(user.id, "full_day")
+                from datetime import date, timedelta
+                today = date.today()
+                last = getattr(user, "last_task_day", None)
+                if last != today:
+                    if last == today - timedelta(days=1):
+                        user.streak_days = int(user.streak_days or 0) + 1
+                    else:
+                        user.streak_days = 1
+                    user.last_task_day = today
+                    if int(user.streak_days or 0) >= 3:
+                        award(user.id, "streak_3")
+                    db.session.commit()
+            except Exception as _b:
+                print("badge/streak:", _b)
+
         return True, "negative" if is_negative else "success"
 
     @staticmethod
@@ -545,13 +568,12 @@ class TaskService:
             )
         except Exception:
             pass
-        return True
-
         try:
             from services.badge_service import award
             award(user.id, "combo_cleared")
         except Exception:
             pass
+        return True
 
     @staticmethod
     def withdraw_checklist(user):

@@ -31,6 +31,13 @@
         <div class="h-full bg-indigo-500" style="width: {{ p.pct }}%"></div>
       </div>
       <p class="text-[11px] text-zinc-400 mt-1">{{ p.sets }} / {{ c.target_sets }} sets · {{ p.members }} members</p>
+      {% if c.active and p.sets >= c.target_sets %}
+      <form method="POST" action="{{ url_for('admin.claim_challenge_prize', id=c.id) }}" class="mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button class="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-bold"
+                onclick="return confirm('Award prize to agent and close challenge?')">Claim prize</button>
+      </form>
+      {% endif %}
       {% endif %}
     </div>
     {% else %}

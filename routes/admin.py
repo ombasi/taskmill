@@ -3427,3 +3427,46 @@ def combo_suggest(user_id):
             "projected_balance": round(bal - price, 2),
         })
     return jsonify({"target": target, "balance": bal, "suggestions": out})
+
+
+@admin_bp.route("/team-challenges/<int:id>/claim", methods=["POST"])
+@login_required
+@admin_required
+def claim_challenge_prize(id):
+    """Award prize to agent when team hit target sets (direct referrals)."""
+    from models.team_challenge import TeamChallenge
+    from models.wallet_transaction import WalletTransaction
+    from datetime import datetime
+    ch = TeamChallenge.query.get_or_404(id)
+    if not ch.active:
+        flash("Challenge is not active.", "warning")
+        return redirect(url_for("admin.team_challenges"))
+    members = User.query.filter_by(referred_by_id=ch.agent_id).all()
+    sets_sum = sum(int(m.daily_sets_completed or 0) for m in members)
+    if sets_sum < int(ch.target_sets or 0):
+        flash(f"Target not met ({sets_sum}/{ch.target_sets}).", "warning")
+        return redirect(url_for("admin.team_challenges"))
+    agent = User.query.get(ch.agent_id)
+    if not agent:
+        flash("Agent not found.", "danger")
+        return redirect(url_for("admin.team_challenges"))
+    cash = float(ch.prize_cash or 0)
+    spins = int(ch.prize_spins or 0)
+    if cash > 0:
+        before = float(agent.available_balance or 0)
+        agent.available_balance = before + cash
+        agent.total_earned = (agent.total_earned or 0) + cash
+        db.session.add(WalletTransaction(
+            user_id=agent.id,
+            amount=cash,
+            transaction_type="challenge_prize",
+            description=f"Team challenge prize: {ch.title}",
+            balance_before=before,
+            balance_after=float(agent.available_balance),
+        ))
+    if spins > 0 and hasattr(agent, "daily_spins_used"):
+        agent.daily_spins_used = max(0, int(agent.daily_spins_used or 0) - spins)
+    ch.active = False
+    db.session.commit()
+    flash(f"Prize awarded to {agent.username}: cash {cash:,.0f}, spins {spins}.", "success")
+    return redirect(url_for("admin.team_challenges"))
