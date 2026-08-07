@@ -1,54 +1,8 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ user.username }}
-<div id="payoutModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-  <div class="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 space-y-4 shadow-2xl">
-    <div class="flex justify-between items-center">
-      <h3 class="font-bold text-lg">Payout method</h3>
-      <button type="button" onclick="document.getElementById('payoutModal').classList.add('hidden')" class="text-zinc-400 hover:text-white">✕</button>
-    </div>
-    <form method="POST" action="{{ url_for('admin.update_user_payout', user_id=user.id) }}" class="grid sm:grid-cols-2 gap-3">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div class="sm:col-span-2">
-        <label class="text-[11px] text-zinc-500">Method</label>
-        <input name="payout_method" value="{{ user.payout_method or '' }}" list="payout-presets"
-               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm" placeholder="MTN / Bank / USDT…">
-      </div>
-      <div>
-        <label class="text-[11px] text-zinc-500">Provider</label>
-        <input name="payout_provider" value="{{ user.payout_provider or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
-      </div>
-      <div>
-        <label class="text-[11px] text-zinc-500">Account name</label>
-        <input name="payout_account_name" value="{{ user.payout_account_name or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
-      </div>
-      <div class="sm:col-span-2">
-        <label class="text-[11px] text-zinc-500">Phone / account / wallet</label>
-        <input name="payout_account_number" value="{{ user.payout_account_number or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
-      </div>
-      <label class="flex items-center gap-2 text-sm sm:col-span-2">
-        <input type="checkbox" name="payout_confirmed" value="1" {% if user.payout_confirmed %}checked{% endif %}>
-        Confirmed for withdrawals
-      </label>
-      <div class="sm:col-span-2 flex flex-wrap gap-2">
-        <button type="submit" name="action" value="save" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold">Save / change</button>
-        <button type="submit" name="action" value="confirm" class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold">Confirm</button>
-        <button type="button" onclick="document.getElementById('payoutModal').classList.add('hidden')" class="rounded-xl bg-zinc-700 px-5 py-2.5 text-sm">Cancel</button>
-      </div>
-      <datalist id="payout-presets">
-        <option value="MTN Mobile Money"><option value="Airtel Money"><option value="M-Pesa">
-        <option value="Bank Transfer"><option value="USDT (TRC20)"><option value="USDT (ERC20)">
-        <option value="Bitcoin (BTC)"><option value="Ethereum (ETH)">
-      </datalist>
-    </form>
-  </div>
-</div>
-<script>
-function openPayoutModal(){ document.getElementById('payoutModal').classList.remove('hidden'); }
-</script>
-
-{% endblock %}
+{% block title %}User · {{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
+
 
     {% if current_user.is_admin %}
     <div class="flex flex-wrap gap-2 mb-4">
@@ -415,4 +369,62 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
     </div>
   </div>
 
+{# Payout modal #}
+<div id="payoutModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70">
+  <div class="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 space-y-4 shadow-2xl">
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-lg">Payout method</h3>
+      <button type="button" onclick="closePayoutModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.update_user_payout', user_id=user.id) }}" class="grid sm:grid-cols-2 gap-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div class="sm:col-span-2">
+        <label class="text-[11px] text-zinc-500">Method</label>
+        <input name="payout_method" value="{{ user.payout_method or '' }}" list="payout-presets"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm" placeholder="MTN / Bank / USDT…">
+      </div>
+      <div>
+        <label class="text-[11px] text-zinc-500">Provider</label>
+        <input name="payout_provider" value="{{ user.payout_provider or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+      </div>
+      <div>
+        <label class="text-[11px] text-zinc-500">Account name</label>
+        <input name="payout_account_name" value="{{ user.payout_account_name or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-[11px] text-zinc-500">Phone / account / wallet</label>
+        <input name="payout_account_number" value="{{ user.payout_account_number or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+      </div>
+      <label class="flex items-center gap-2 text-sm sm:col-span-2">
+        <input type="checkbox" name="payout_confirmed" value="1" {% if user.payout_confirmed %}checked{% endif %}>
+        Confirmed for withdrawals
+      </label>
+      <div class="sm:col-span-2 flex flex-wrap gap-2">
+        <button type="submit" name="action" value="save" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold">Save / change</button>
+        <button type="submit" name="action" value="confirm" class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold">Confirm</button>
+        <button type="button" onclick="closePayoutModal()" class="rounded-xl bg-zinc-700 px-5 py-2.5 text-sm">Cancel</button>
+      </div>
+      <datalist id="payout-presets">
+        <option value="MTN Mobile Money"></option>
+        <option value="Airtel Money"></option>
+        <option value="M-Pesa"></option>
+        <option value="Bank Transfer"></option>
+        <option value="USDT (TRC20)"></option>
+        <option value="USDT (ERC20)"></option>
+        <option value="Bitcoin (BTC)"></option>
+        <option value="Ethereum (ETH)"></option>
+      </datalist>
+    </form>
+  </div>
+</div>
+<script>
+function openPayoutModal(){
+  var m = document.getElementById('payoutModal');
+  if(m){ m.classList.remove('hidden'); }
+}
+function closePayoutModal(){
+  var m = document.getElementById('payoutModal');
+  if(m){ m.classList.add('hidden'); }
+}
+</script>
 {% endblock %}

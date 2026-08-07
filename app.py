@@ -242,8 +242,12 @@ def create_app():
             print("create_all:", e)
 
         try:
-            from utils.payment_methods import ensure_crypto_payment_methods
-            ensure_crypto_payment_methods()
+            try:
+                from utils.payment_methods import ensure_crypto_rows
+                ensure_crypto_rows()
+            except ImportError:
+                from utils.payment_methods import ensure_crypto_payment_methods
+                ensure_crypto_payment_methods()
         except Exception as e:
             print("ensure crypto payments:", e)
 

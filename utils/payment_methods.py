@@ -140,3 +140,8 @@ def ensure_crypto_rows():
             db.session.rollback()
         except Exception:
             pass
+
+
+def ensure_crypto_payment_methods():
+    """Backward-compatible alias."""
+    return ensure_crypto_rows()
