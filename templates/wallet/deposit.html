@@ -46,11 +46,12 @@
                   class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 focus:border-indigo-500 outline-none">
             <option value="">Select method</option>
             {% for m in payment_methods|default([]) %}
-            <option value="{{ m if m is string else m.name }}">{{ m if m is string else m.name }}</option>
+            {% set label = m if m is string else (m.method or m.name or m.provider or '') %}
+            {% if label %}
+            <option value="{{ label }}">{{ label }}</option>
+            {% endif %}
             {% else %}
-            <option value="MTN Mobile Money">MTN Mobile Money</option>
-            <option value="Airtel Money">Airtel Money</option>
-            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="" disabled>No active payment methods — ask admin to enable them</option>
             {% endfor %}
           </select>
         </div>
@@ -86,7 +87,7 @@
         <div class="space-y-3">
           {% for s in payment_settings %}
           <div class="rounded-2xl bg-black/25 border border-white/5 p-4">
-            <p class="text-sm font-semibold">{{ s.name or s.provider or s.method or 'Method' }}</p>
+            <p class="text-sm font-semibold">{{ s.method or s.provider or s.name or 'Method' }}</p>
             {% if s.account_name %}<p class="text-xs text-zinc-400 mt-1">Name: <span class="text-white">{{ s.account_name }}</span></p>{% endif %}
             {% if s.account_number %}<p class="text-xs text-zinc-400">Account: <span class="text-white font-mono">{{ s.account_number }}</span></p>{% endif %}
             {% if s.instructions %}<p class="text-xs text-zinc-500 mt-2">{{ s.instructions }}</p>{% endif %}

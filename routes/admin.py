@@ -503,16 +503,14 @@ def edit_payment_setting(id):
 @login_required
 @admin_required
 def toggle_payment_setting(id):
-
     setting = PaymentSetting.query.get_or_404(id)
-
-    setting.active = not setting.active
-
+    setting.active = not bool(setting.active)
     db.session.commit()
-
-    return redirect(
-        url_for("admin.payment_settings")
+    flash(
+        f"{setting.method} is now {'active' if setting.active else 'disabled'}.",
+        "success",
     )
+    return redirect(url_for("admin.payment_settings"))
 
 @admin_bp.route("/payment-settings/<int:id>/delete", methods=["POST"])
 @login_required

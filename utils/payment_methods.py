@@ -92,6 +92,7 @@ def active_deposit_methods(country: str = None):
             item = {
                 "id": getattr(r, "id", None),
                 "method": label,
+                "name": label,
                 "provider": getattr(r, "provider", None) or label,
                 "account_name": getattr(r, "account_name", None) or "",
                 "account_number": getattr(r, "account_number", None) or "",
