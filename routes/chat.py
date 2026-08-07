@@ -1,3 +1,10 @@
+CANNED_REPLIES = [
+    ("Clear combo", "Deposit enough to bring your balance to 0 or above, then open Tasks and submit the frozen product to earn combo commission."),
+    ("Set payout", "Go to Wallet → Withdraw, add your payout method once. Admin will confirm it before you can withdraw."),
+    ("Withdraw PIN", "Set your withdraw PIN under Profile. If you forgot it, ask admin to reset it."),
+    ("Pending deposit", "Deposits are reviewed by admin. Please share your transaction ID and wait for approval."),
+]
+
 import os
 import uuid
 from flask import (
@@ -220,5 +227,6 @@ def admin_thread(user_id):
     return render_template(
         "chat/admin_thread.html",
         messages=messages,
+        canned=CANNED_REPLIES,
         chat_user=user,
     )

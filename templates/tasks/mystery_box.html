@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Mystery box{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center py-12 space-y-6">
+  <div class="text-6xl">🎁</div>
+  <h1 class="text-3xl font-black">Daily mystery box</h1>
+  <p class="text-zinc-400 text-sm">You finished {{ done }}/{{ total }} tasks. Open for a surprise.</p>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <button class="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-4 font-black text-lg shadow-lg">Open box</button>
+  </form>
+</div>
+{% endblock %}

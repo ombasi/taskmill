@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Join with {{ code }}{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto py-12 px-4 text-center space-y-6">
+  <h1 class="text-3xl font-black">Taskmill</h1>
+  {% if agent %}
+  <p class="text-zinc-300">You're joining through <strong>{{ agent.username }}</strong></p>
+  {% endif %}
+  <p class="text-sm text-zinc-400">Complete product tasks · Earn commissions · Withdraw in your currency</p>
+  <p class="font-mono text-indigo-300">Code: {{ code }}</p>
+  <a href="{{ url_for('auth.register', ref=code) }}" class="inline-block rounded-2xl bg-indigo-600 px-8 py-3.5 font-bold">Create account</a>
+</div>
+{% endblock %}

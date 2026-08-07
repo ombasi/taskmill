@@ -29,6 +29,8 @@ def detect_location(ip):
 
 
 def apply_geo_currency(user, ip=None, force=False):
+    if getattr(user, "currency_locked", False):
+        return
     """
     Sync country + currency from IP.
     When IP country is known and differs from stored (or force), update.

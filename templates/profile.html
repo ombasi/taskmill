@@ -1,5 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Profile{% endblock %}
+{% block title %}Profile
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 mt-6 space-y-4">
+    <h3 class="font-bold">Currency preference</h3>
+    <p class="text-xs text-zinc-500">Lock your currency so VPN / travel does not change it.</p>
+    <form method="POST" action="{{ url_for('profile.set_currency') }}" class="grid sm:grid-cols-2 gap-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div>
+        <label class="text-xs text-zinc-500">Currency</label>
+        <select name="currency" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+          {% for c in ['UGX','KES','TZS','NGN','GHS','ZAR','USD','EUR','GBP','CAD'] %}
+          <option value="{{ c }}" {% if current_user.currency == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <label class="flex items-center gap-2 text-sm mt-6">
+        <input type="checkbox" name="currency_locked" value="1" {% if current_user.currency_locked %}checked{% endif %}>
+        Lock currency (ignore IP)
+      </label>
+      <div class="sm:col-span-2">
+        <button class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold">Save currency</button>
+      </div>
+    </form>
+  </div>
+
+  <p class="mt-6 text-sm"><a href="{{ url_for('profile.sessions') }}" class="text-indigo-400 hover:underline">View login sessions</a></p>
+  <p class="mt-2 text-sm"><a href="{{ url_for('profile.badges') }}" class="text-indigo-400 hover:underline">Badges</a> · <a href="{{ url_for('profile.mentor') }}" class="text-indigo-400 hover:underline">Mentor view →</a></p>
+{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-5">
 

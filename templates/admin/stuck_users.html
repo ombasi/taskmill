@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% block title %}Stuck users{% endblock %}
+{% block page_title %}Stuck users{% endblock %}
+{% block content %}
+<div class="space-y-4">
+  <p class="text-sm text-zinc-400">Negative balance, combo hold, idle 24h, pending deposit &gt;12h, or set 2 locked.</p>
+  <div class="glass rounded-3xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="text-left text-xs text-zinc-500 border-b border-white/10">
+        <tr><th class="p-3">User</th><th class="p-3">Balance</th><th class="p-3">Reasons</th><th class="p-3"></th></tr>
+      </thead>
+      <tbody>
+        {% for row in stuck %}
+        <tr class="border-b border-white/5 hover:bg-white/5">
+          <td class="p-3 font-medium">{{ row.user.username }}</td>
+          <td class="p-3">{{ money(current_user, row.user.available_balance) }}</td>
+          <td class="p-3">
+            {% for r in row.reasons %}
+            <span class="inline-block text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 mr-1 mb-1">{{ r }}</span>
+            {% endfor %}
+          </td>
+          <td class="p-3"><a class="text-indigo-400 text-xs font-semibold" href="{{ url_for('admin.view_user', user_id=row.user.id) }}">Open →</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="p-6 text-center text-zinc-500">No stuck users 🎉</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

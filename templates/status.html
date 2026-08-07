@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}System status{% endblock %}
+{% block content %}
+{% macro badge(s) %}
+  {% set s = (s or 'normal')|lower %}
+  {% if s == 'normal' %}<span class="text-emerald-400">● Normal</span>
+  {% elif s == 'delayed' %}<span class="text-amber-400">● Delayed</span>
+  {% else %}<span class="text-rose-400">● Issue</span>{% endif %}
+{% endmacro %}
+<div class="max-w-xl mx-auto space-y-6 pb-12">
+  <header class="text-center">
+    <h1 class="text-3xl font-black">System status</h1>
+    <p class="text-zinc-400 text-sm mt-2">{{ settings.status_message if settings and settings.status_message else "All systems normal" }}</p>
+  </header>
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 divide-y divide-white/5">
+    <div class="flex justify-between p-5 text-sm"><span>Tasks</span>{{ badge(settings.status_tasks if settings else 'normal') }}</div>
+    <div class="flex justify-between p-5 text-sm"><span>Deposits</span>{{ badge(settings.status_deposits if settings else 'normal') }}</div>
+    <div class="flex justify-between p-5 text-sm"><span>Withdrawals</span>{{ badge(settings.status_withdrawals if settings else 'normal') }}</div>
+  </div>
+  <p class="text-center text-xs text-zinc-500">Updated for members · Not a live uptime monitor</p>
+</div>
+{% endblock %}

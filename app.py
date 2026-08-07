@@ -89,6 +89,7 @@ def _ensure_notification_broadcast_column():
 
 
 def _ensure_payout_columns(db):
+    """Also ensures currency_locked + campaign settings columns."""
     """Add payout_* columns if missing (SQLite + Postgres). Safe to call every boot."""
     try:
         from sqlalchemy import text, inspect
@@ -104,7 +105,37 @@ def _ensure_payout_columns(db):
             ("payout_provider", "VARCHAR(100)"),
             ("payout_confirmed", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
             ("payout_set_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+            ("currency_locked", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
         ]
+        # settings table extras
+        try:
+            if "settings" in insp.get_table_names():
+                scols = {c["name"] for c in insp.get_columns("settings")}
+                sspecs = [
+                    ("deposit_match_active", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
+                    ("deposit_match_percent", "FLOAT DEFAULT 0"),
+                    ("deposit_match_ends_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+                    ("deposit_match_message", "VARCHAR(255)"),
+                    ("whatsapp_number", "VARCHAR(40)"),
+                    ("status_message", "VARCHAR(255)"),
+                    ("status_deposits", "VARCHAR(40)"),
+                    ("status_withdrawals", "VARCHAR(40)"),
+                    ("status_tasks", "VARCHAR(40)"),
+                ]
+                for name, typ in sspecs:
+                    if name not in scols:
+                        try:
+                            if dialect == "postgresql":
+                                db.session.execute(text(f"ALTER TABLE settings ADD COLUMN IF NOT EXISTS {name} {typ}"))
+                            else:
+                                db.session.execute(text(f"ALTER TABLE settings ADD COLUMN {name} {typ}"))
+                            db.session.commit()
+                            print("Added settings." + name)
+                        except Exception as e:
+                            db.session.rollback()
+                            print("settings col", name, e)
+        except Exception as e:
+            print("settings ensure", e)
         for name, typ in specs:
             if name in cols:
                 continue
@@ -407,6 +438,23 @@ def create_app():
         )
 
     app.context_processor(inject_csrf)
+
+
+    @app.context_processor
+    def inject_campaign():
+        try:
+            from models.settings import Settings
+            from datetime import datetime
+            s = Settings.query.first()
+            msg = None
+            if s and getattr(s, "deposit_match_active", False):
+                ends = getattr(s, "deposit_match_ends_at", None)
+                if not ends or ends > datetime.utcnow():
+                    pct = getattr(s, "deposit_match_percent", 0) or 0
+                    msg = getattr(s, "deposit_match_message", None) or f"Deposit match: +{pct:.0f}% bonus — limited time"
+            return {"deposit_match_banner": msg, "site_settings": s}
+        except Exception:
+            return {"deposit_match_banner": None, "site_settings": None}
 
     return app
 

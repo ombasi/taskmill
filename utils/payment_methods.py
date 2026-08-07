@@ -1,12 +1,5 @@
 
-"""Country-aware deposit methods. Crypto is always offered."""
-
-CRYPTO_METHODS = [
-    "USDT (TRC20)",
-    "USDT (ERC20)",
-    "Bitcoin (BTC)",
-    "Ethereum (ETH)",
-]
+"""Deposit methods from Payment Settings only (toggle active in admin)."""
 
 COUNTRY_METHODS = {
     "Uganda": ["MTN Mobile Money", "Airtel Money", "Bank Transfer"],
@@ -31,20 +24,52 @@ COUNTRY_METHODS = {
 
 DEFAULT_METHODS = ["Bank Transfer", "Mobile Money"]
 
+# Seed helpers only — NOT auto-shown unless created + active in Payment Settings
+CRYPTO_SEED = [
+    {
+        "method": "USDT (TRC20)",
+        "provider": "Tether TRC20",
+        "account_name": "USDT TRC20 Wallet",
+        "account_number": "REPLACE_WITH_YOUR_TRC20_ADDRESS",
+        "instructions": "Send only USDT on TRON (TRC20). Wrong network = lost funds.",
+        "country": "all",
+    },
+    {
+        "method": "USDT (ERC20)",
+        "provider": "Tether ERC20",
+        "account_name": "USDT ERC20 Wallet",
+        "account_number": "REPLACE_WITH_YOUR_ERC20_ADDRESS",
+        "instructions": "Send only USDT on Ethereum (ERC20).",
+        "country": "all",
+    },
+    {
+        "method": "Bitcoin (BTC)",
+        "provider": "Bitcoin",
+        "account_name": "BTC Wallet",
+        "account_number": "REPLACE_WITH_YOUR_BTC_ADDRESS",
+        "instructions": "Send BTC to this address only.",
+        "country": "all",
+    },
+    {
+        "method": "Ethereum (ETH)",
+        "provider": "Ethereum",
+        "account_name": "ETH Wallet",
+        "account_number": "REPLACE_WITH_YOUR_ETH_ADDRESS",
+        "instructions": "Send ETH on Ethereum mainnet only.",
+        "country": "all",
+    },
+]
+
 
 def methods_for_country(country: str):
-    local = list(COUNTRY_METHODS.get(country or "", DEFAULT_METHODS))
-    # Crypto always available
-    for c in CRYPTO_METHODS:
-        if c not in local:
-            local.append(c)
-    return local
+    """Fallback labels only — prefer active_deposit_methods()."""
+    return list(COUNTRY_METHODS.get(country or "", DEFAULT_METHODS))
 
 
 def active_deposit_methods(country: str = None):
     """
-    Prefer active PaymentSetting rows filtered by country when possible.
-    Always append crypto methods.
+    Only methods that exist in Payment Settings AND are active.
+    Crypto appears only if those rows are active (admin toggle).
     """
     out = []
     seen = set()
@@ -55,87 +80,63 @@ def active_deposit_methods(country: str = None):
             .order_by(PaymentSetting.method.asc())
             .all()
         )
-        country_l = (country or "").lower()
+        country_l = (country or "").strip().lower()
         for r in rows:
             label = (getattr(r, "method", None) or getattr(r, "provider", None) or "").strip()
-            if not label:
+            if not label or label.lower() in seen:
                 continue
-            # optional country field on setting
-            row_country = (getattr(r, "country", None) or "").strip()
-            if row_country and country and row_country.lower() not in (country_l, "all", "global", "crypto"):
-                # still allow if method is crypto
-                if "usdt" not in label.lower() and "bitcoin" not in label.lower() and "ethereum" not in label.lower() and "crypto" not in label.lower():
+            row_country = (getattr(r, "country", None) or "").strip().lower()
+            if row_country and row_country not in ("", "all", "global", "any", "crypto"):
+                if country_l and row_country != country_l:
                     continue
-            if label not in seen:
-                seen.add(label)
-                out.append(label)
+            item = {
+                "id": getattr(r, "id", None),
+                "method": label,
+                "provider": getattr(r, "provider", None) or label,
+                "account_name": getattr(r, "account_name", None) or "",
+                "account_number": getattr(r, "account_number", None) or "",
+                "instructions": getattr(r, "instructions", None) or "",
+                "qr_image": getattr(r, "qr_image", None) or getattr(r, "logo", None),
+            }
+            out.append(item)
+            seen.add(label.lower())
     except Exception as e:
         print("active_deposit_methods:", e)
 
+    # If admin has no payment settings yet, soft fallback (no crypto)
     if not out:
-        out = methods_for_country(country)
-    else:
-        for c in CRYPTO_METHODS:
-            if c not in seen:
-                out.append(c)
-                seen.add(c)
+        for label in methods_for_country(country):
+            if label.lower() not in seen:
+                out.append({"method": label, "provider": label, "account_name": "", "account_number": "", "instructions": ""})
+                seen.add(label.lower())
     return out
 
 
-PAYMENT_METHODS = DEFAULT_METHODS + CRYPTO_METHODS
-
-
-CRYPTO_PAYMENT_DEFAULTS = [
-    {
-        "method": "USDT (TRC20)",
-        "provider": "Tether TRC20",
-        "account_name": "USDT TRC20 Wallet",
-        "account_number": "REPLACE_WITH_YOUR_TRC20_ADDRESS",
-        "instructions": "Send only USDT on TRON (TRC20). Wrong network = lost funds. Paste TxID after payment.",
-    },
-    {
-        "method": "USDT (ERC20)",
-        "provider": "Tether ERC20",
-        "account_name": "USDT ERC20 Wallet",
-        "account_number": "REPLACE_WITH_YOUR_ERC20_ADDRESS",
-        "instructions": "Send only USDT on Ethereum (ERC20). Wrong network = lost funds. Paste TxID after payment.",
-    },
-    {
-        "method": "Bitcoin (BTC)",
-        "provider": "Bitcoin",
-        "account_name": "BTC Wallet",
-        "account_number": "REPLACE_WITH_YOUR_BTC_ADDRESS",
-        "instructions": "Send BTC only to this address. Confirm network fees. Paste TxID after payment.",
-    },
-    {
-        "method": "Ethereum (ETH)",
-        "provider": "Ethereum",
-        "account_name": "ETH Wallet",
-        "account_number": "REPLACE_WITH_YOUR_ETH_ADDRESS",
-        "instructions": "Send ETH only on Ethereum mainnet. Paste TxID after payment.",
-    },
-]
-
-
-def ensure_crypto_payment_methods():
-    """Create crypto rows if missing so admin can edit addresses anytime."""
-    from models.payment_setting import PaymentSetting
-    from extensions import db
-    created = 0
-    for row in CRYPTO_PAYMENT_DEFAULTS:
-        exists = PaymentSetting.query.filter_by(method=row["method"]).first()
-        if exists:
-            continue
-        db.session.add(PaymentSetting(
-            method=row["method"],
-            provider=row["provider"],
-            account_name=row["account_name"],
-            account_number=row["account_number"],
-            instructions=row["instructions"],
-            active=True,
-        ))
-        created += 1
-    if created:
+def ensure_crypto_rows():
+    """Create crypto PaymentSetting rows if missing (inactive by default)."""
+    try:
+        from models.payment_setting import PaymentSetting
+        from extensions import db
+        for spec in CRYPTO_SEED:
+            exists = PaymentSetting.query.filter_by(method=spec["method"]).first()
+            if exists:
+                continue
+            row = PaymentSetting(
+                method=spec["method"],
+                provider=spec.get("provider"),
+                account_name=spec.get("account_name"),
+                account_number=spec.get("account_number"),
+                instructions=spec.get("instructions"),
+                active=False,  # admin must toggle on
+            )
+            if hasattr(PaymentSetting, "country"):
+                row.country = spec.get("country", "all")
+            db.session.add(row)
         db.session.commit()
-        print(f"Payment settings: added {created} crypto method(s)")
-    return created
+    except Exception as e:
+        print("ensure_crypto_rows:", e)
+        try:
+            from extensions import db
+            db.session.rollback()
+        except Exception:
+            pass

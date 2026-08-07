@@ -945,7 +945,7 @@ def credit_wallet(user_id):
     db.session.commit()
 
     log_staff_action("wallet", "credit", target=str(user_id), description=f"Credit by {current_user.username}")
-    flash("Wallet credited successfully.", "success")
+    flash(f"New balance ~ {float(user.available_balance or 0):,.0f} UGX. " + "Wallet credited successfully.", "success")
 
     return redirect(
         url_for("admin.view_user", user_id=user.id)
@@ -2075,76 +2075,75 @@ from models.settings import Settings
 @login_required
 @admin_required
 def settings():
+    from models.settings import Settings
     settings = Settings.query.first()
     if not settings:
-        settings = Settings()
+        settings = Settings(site_name="Taskmill")
         db.session.add(settings)
         db.session.commit()
+
     if request.method == "POST":
-        settings.site_name = request.form.get("site_name")
-        settings.site_url = request.form.get("site_url")
-        settings.registration_enabled = (
-            request.form.get("registration_enabled") == "on"
-        )
-        settings.deposits_enabled = (
-            request.form.get("deposits_enabled") == "on"
-        )
-        settings.withdrawals_enabled = (
-            request.form.get("withdrawals_enabled") == "on"
-        )
-        settings.maintenance = (
-            request.form.get("maintenance") == "on"
-        )
-        settings.referral_bonus = float(
-            request.form.get("referral_bonus") or 0
-        )
-        settings.referral_activation = float(
-            request.form.get("referral_activation") or 0
-        )
-        settings.daily_task_reset_hour = int(
-            request.form.get("daily_task_reset_hour") or 0
-        )
-        settings.task_delay = int(
-            request.form.get("task_delay") or 3
-        )
-        settings.combo_probability = float(
-            request.form.get("combo_probability") or 0
-        )
-        settings.combo_penalty = float(
-            request.form.get("combo_penalty") or 0
-        )
-        settings.max_daily_combo = int(
-            request.form.get("max_daily_combo") or 1
-        )
-        settings.combo_minimum_amount = float(
-            request.form.get("combo_minimum_amount") or 0
-        )
-        settings.daily_spins = int(
-            request.form.get("daily_spins") or 1
-        )
-        settings.max_spin_reward = float(
-            request.form.get("max_spin_reward") or 100
-        )
-        settings.smtp_host = request.form.get("smtp_host")
-        settings.smtp_port = int(
-            request.form.get("smtp_port") or 587
-        )
-        settings.smtp_username = request.form.get("smtp_username")
-        settings.smtp_password = request.form.get("smtp_password")
-        settings.sender_email = request.form.get("sender_email")
-        settings.minimum_withdrawal = float(
-            request.form.get("minimum_withdrawal") or 10
-        )
-        settings.maximum_withdrawal = float(
-            request.form.get("maximum_withdrawal") or 100000
-        )
-        db.session.commit()
-        flash("Settings updated successfully.", "success")
+        def _f(name, default=0.0):
+            try:
+                return float(request.form.get(name) or default)
+            except (TypeError, ValueError):
+                return float(default)
+        def _i(name, default=0):
+            try:
+                return int(float(request.form.get(name) or default))
+            except (TypeError, ValueError):
+                return int(default)
+
+        settings.site_name = (request.form.get("site_name") or settings.site_name or "Taskmill").strip()
+        settings.site_url = (request.form.get("site_url") or "").strip() or None
+        settings.registration_enabled = request.form.get("registration_enabled") in ("on", "1", "true", "yes")
+        settings.deposits_enabled = request.form.get("deposits_enabled") in ("on", "1", "true", "yes")
+        settings.withdrawals_enabled = request.form.get("withdrawals_enabled") in ("on", "1", "true", "yes")
+        settings.maintenance = request.form.get("maintenance") in ("on", "1", "true", "yes")
+        settings.referral_bonus = _f("referral_bonus", getattr(settings, "referral_bonus", 0) or 0)
+        settings.referral_activation = _f("referral_activation", getattr(settings, "referral_activation", 0) or 0)
+        if hasattr(settings, "daily_task_reset_hour"):
+            settings.daily_task_reset_hour = _i("daily_task_reset_hour", 0)
+        if hasattr(settings, "task_delay"):
+            settings.task_delay = _i("task_delay", 3)
+        if hasattr(settings, "combo_probability"):
+            settings.combo_probability = _f("combo_probability", 0)
+        if hasattr(settings, "combo_penalty"):
+            settings.combo_penalty = _f("combo_penalty", 0)
+        if hasattr(settings, "max_daily_combo"):
+            settings.max_daily_combo = _i("max_daily_combo", 1)
+        if hasattr(settings, "combo_minimum_amount"):
+            settings.combo_minimum_amount = _f("combo_minimum_amount", 0)
+        if hasattr(settings, "daily_spins"):
+            settings.daily_spins = _i("daily_spins", 1)
+        if hasattr(settings, "max_spin_reward"):
+            settings.max_spin_reward = _f("max_spin_reward", 100)
+        if hasattr(settings, "smtp_host"):
+            settings.smtp_host = request.form.get("smtp_host") or None
+        if hasattr(settings, "smtp_port"):
+            settings.smtp_port = _i("smtp_port", 587)
+        if hasattr(settings, "smtp_username"):
+            settings.smtp_username = request.form.get("smtp_username") or None
+        if hasattr(settings, "smtp_password"):
+            pwd = request.form.get("smtp_password")
+            if pwd:
+                settings.smtp_password = pwd
+        if hasattr(settings, "sender_email"):
+            settings.sender_email = request.form.get("sender_email") or None
+        if hasattr(settings, "minimum_withdrawal"):
+            settings.minimum_withdrawal = _f("minimum_withdrawal", 10)
+        if hasattr(settings, "maximum_withdrawal"):
+            settings.maximum_withdrawal = _f("maximum_withdrawal", 100000)
+        try:
+            db.session.commit()
+            flash("Settings saved.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Could not save settings: {e}", "danger")
         return redirect(url_for("admin.settings"))
-    return render_template(
-        "admin/settings.html",
-        settings=settings
-    )
+
+    return render_template("admin/settings.html", settings=settings)
+
 
 
 # ==========================================================
@@ -3213,3 +3212,220 @@ def referral_leaderboard():
         .all()
     )
     return render_template("admin/leaderboard.html", leaders=leaders)
+
+
+@admin_bp.route("/stuck-users")
+@login_required
+@admin_required
+def stuck_users():
+    """Users who need attention: negative, idle, pending deposit, set2 locked."""
+    from datetime import datetime, timedelta
+    from models.deposit import Deposit
+    from sqlalchemy import or_
+    now = datetime.utcnow()
+    day_ago = now - timedelta(hours=24)
+    h12 = now - timedelta(hours=12)
+
+    q = User.query.filter(User.is_admin.is_(False))
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        # agents: only downline — best effort flat referral
+        q = q.filter(User.referred_by_id == current_user.id)
+
+    users = q.order_by(User.id.desc()).limit(500).all()
+    stuck = []
+    for u in users:
+        reasons = []
+        if float(u.available_balance or 0) < 0:
+            reasons.append("negative_balance")
+        if getattr(u, "negative_today", False):
+            reasons.append("combo_hold")
+        if not getattr(u, "set2_unlocked", True) and int(u.daily_sets_completed or 0) >= 1:
+            reasons.append("set2_locked")
+        last = getattr(u, "last_login", None) or getattr(u, "updated_at", None)
+        if last and last < day_ago and int(u.tasks_completed_today or 0) == 0:
+            reasons.append("idle_24h")
+        pending = Deposit.query.filter_by(user_id=u.id, status="Pending").filter(Deposit.created_at <= h12).count()
+        if pending:
+            reasons.append("deposit_pending_12h")
+        if reasons:
+            stuck.append({"user": u, "reasons": reasons})
+
+    return render_template("admin/stuck_users.html", stuck=stuck)
+
+
+@admin_bp.route("/campaigns", methods=["GET", "POST"])
+@login_required
+@admin_required
+def campaign_settings():
+    from models.settings import Settings
+    from datetime import datetime
+    s = Settings.query.first()
+    if not s:
+        s = Settings(site_name="Taskmill")
+        db.session.add(s)
+        db.session.commit()
+    if request.method == "POST":
+        s.deposit_match_active = request.form.get("deposit_match_active") == "1"
+        try:
+            s.deposit_match_percent = float(request.form.get("deposit_match_percent") or 0)
+        except ValueError:
+            s.deposit_match_percent = 0
+        ends = (request.form.get("deposit_match_ends_at") or "").strip()
+        if ends:
+            try:
+                s.deposit_match_ends_at = datetime.fromisoformat(ends)
+            except ValueError:
+                try:
+                    s.deposit_match_ends_at = datetime.strptime(ends, "%Y-%m-%dT%H:%M")
+                except ValueError:
+                    pass
+        else:
+            s.deposit_match_ends_at = None
+        s.deposit_match_message = (request.form.get("deposit_match_message") or "").strip() or None
+        s.whatsapp_number = (request.form.get("whatsapp_number") or "").strip() or None
+        s.status_message = (request.form.get("status_message") or "All systems normal").strip()
+        s.status_deposits = (request.form.get("status_deposits") or "normal").strip()
+        s.status_withdrawals = (request.form.get("status_withdrawals") or "normal").strip()
+        s.status_tasks = (request.form.get("status_tasks") or "normal").strip()
+        try:
+            s.weekend_bonus_percent = float(request.form.get("weekend_bonus_percent") or 0)
+        except ValueError:
+            pass
+        try:
+            s.potd_product_id = int(request.form.get("potd_product_id") or 0) or None
+        except ValueError:
+            s.potd_product_id = None
+        try:
+            s.potd_boost_percent = float(request.form.get("potd_boost_percent") or 25)
+        except ValueError:
+            pass
+        try:
+            s.potd_slots_left = int(request.form.get("potd_slots_left") or 0)
+        except ValueError:
+            pass
+        try:
+            s.withdraw_cooling_minutes = int(request.form.get("withdraw_cooling_minutes") or 30)
+        except ValueError:
+            pass
+        try:
+            s.withdraw_cooling_threshold = float(request.form.get("withdraw_cooling_threshold") or 500000)
+        except ValueError:
+            pass
+        db.session.commit()
+        flash("Campaign & status settings saved.", "success")
+        return redirect(url_for("admin.campaign_settings"))
+    return render_template("admin/campaigns.html", settings=s)
+
+
+@admin_bp.route("/success-stories", methods=["GET", "POST"])
+@login_required
+@admin_required
+def success_stories_admin():
+    from models.success_story import SuccessStory
+    if request.method == "POST":
+        story = SuccessStory(
+            display_name=(request.form.get("display_name") or "Member").strip()[:80],
+            country=(request.form.get("country") or "").strip()[:80] or None,
+            membership_name=(request.form.get("membership_name") or "").strip()[:40] or None,
+            body=(request.form.get("body") or "").strip(),
+            approved=request.form.get("approved") == "1",
+        )
+        if story.body:
+            db.session.add(story)
+            db.session.commit()
+            flash("Story saved.", "success")
+        return redirect(url_for("admin.success_stories_admin"))
+    stories = SuccessStory.query.order_by(SuccessStory.created_at.desc()).limit(100).all()
+    return render_template("admin/success_stories.html", stories=stories)
+
+
+@admin_bp.route("/success-stories/<int:id>/toggle")
+@login_required
+@admin_required
+def success_story_toggle(id):
+    from models.success_story import SuccessStory
+    s = SuccessStory.query.get_or_404(id)
+    s.approved = not s.approved
+    db.session.commit()
+    return redirect(url_for("admin.success_stories_admin"))
+
+
+@admin_bp.route("/success-stories/<int:id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def success_story_delete(id):
+    from models.success_story import SuccessStory
+    s = SuccessStory.query.get_or_404(id)
+    db.session.delete(s)
+    db.session.commit()
+    flash("Deleted.", "success")
+    return redirect(url_for("admin.success_stories_admin"))
+
+
+@admin_bp.route("/team-challenges", methods=["GET", "POST"])
+@login_required
+@admin_required
+def team_challenges():
+    from models.team_challenge import TeamChallenge
+    from datetime import datetime, timedelta
+    if request.method == "POST":
+        agent_id = request.form.get("agent_id", type=int) or current_user.id
+        ch = TeamChallenge(
+            agent_id=agent_id,
+            title=(request.form.get("title") or "Team race").strip()[:120],
+            target_sets=int(request.form.get("target_sets") or 10),
+            prize_spins=int(request.form.get("prize_spins") or 1),
+            prize_cash=float(request.form.get("prize_cash") or 0),
+            ends_at=datetime.utcnow() + timedelta(days=int(request.form.get("days") or 7)),
+            active=True,
+        )
+        db.session.add(ch)
+        db.session.commit()
+        flash("Challenge created.", "success")
+        return redirect(url_for("admin.team_challenges"))
+    q = TeamChallenge.query.order_by(TeamChallenge.created_at.desc())
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        q = q.filter_by(agent_id=current_user.id)
+    items = q.limit(50).all()
+    agents = User.query.filter((User.is_agent == True) | (User.is_admin == True)).limit(100).all()
+    # Progress: sum of daily_sets_completed among direct referrals of agent
+    progress = {}
+    for c in items:
+        members = User.query.filter_by(referred_by_id=c.agent_id).all()
+        sets_sum = sum(int(m.daily_sets_completed or 0) for m in members)
+        progress[c.id] = {"sets": sets_sum, "members": len(members), "pct": min(100, int(100 * sets_sum / max(1, c.target_sets or 1)))}
+    return render_template("admin/team_challenges.html", items=items, agents=agents, progress=progress)
+
+
+@admin_bp.route("/users/<int:user_id>/combo-suggest")
+@login_required
+@admin_required
+def combo_suggest(user_id):
+    """JSON: 3 products near target amount for smart combo."""
+    from models.product import Product
+    from flask import jsonify
+    if assert_can_manage(user_id) is None:
+        return jsonify({"error": "forbidden"}), 403
+    user = User.query.get_or_404(user_id)
+    try:
+        target = float(request.args.get("target") or 0)
+    except ValueError:
+        target = 0
+    bal = float(user.available_balance or 0)
+    if target <= 0:
+        target = bal + 50000
+    products = (
+        Product.query.filter(Product.active.is_(True), Product.price > 0)
+        .order_by(Product.price.asc()).limit(500).all()
+    )
+    products.sort(key=lambda p: abs(float(p.price or 0) - target))
+    out = []
+    for p in products[:3]:
+        price = float(p.price or 0)
+        out.append({
+            "id": p.id,
+            "name": p.name,
+            "price": price,
+            "projected_balance": round(bal - price, 2),
+        })
+    return jsonify({"target": target, "balance": bal, "suggestions": out})

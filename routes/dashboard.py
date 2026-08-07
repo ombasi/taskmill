@@ -225,3 +225,37 @@ def upgrade_membership(plan_id):
     ok, msg = MembershipService.upgrade(current_user, plan)
     flash(msg, "success" if ok else "danger")
     return redirect(url_for("dashboard.membership"))
+
+
+@dashboard_bp.route("/join/<code>")
+def join_invite(code):
+    """Branded invite landing; stores referral code in session."""
+    from flask import session
+    from models.user import User
+    code = (code or "").strip()
+    referrer = User.query.filter_by(referral_code=code).first()
+    session["referral_code"] = code
+    return render_template("join.html", code=code, referrer=referrer)
+
+
+@dashboard_bp.route("/status")
+def public_status():
+    from models.settings import Settings
+    settings = Settings.query.first()
+    return render_template("status.html", settings=settings)
+
+
+@dashboard_bp.route("/stories")
+def stories():
+    from models.success_story import SuccessStory
+    items = SuccessStory.query.filter_by(approved=True).order_by(SuccessStory.created_at.desc()).limit(50).all()
+    return render_template("stories.html", stories=items)
+
+
+@dashboard_bp.route("/a/<code>")
+def agent_site(code):
+    from models.user import User
+    agent = User.query.filter(
+        (User.referral_code == code) | (User.username == code)
+    ).filter((User.is_agent == True) | (User.is_admin == True)).first()
+    return render_template("agent_site.html", agent=agent, code=code)

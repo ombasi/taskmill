@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
+{% set _tps = current_user.membership.tasks_per_set if current_user.membership and current_user.membership.tasks_per_set else 16 %}
+{% set _ds = current_user.membership.daily_sets if current_user.membership and current_user.membership.daily_sets else 2 %}
+{% set _total = (_tps|int) * (_ds|int) %}
+{% if (current_user.tasks_completed_today or 0) >= _total and not current_user.mystery_opened_today %}
+<div class="max-w-7xl mx-auto px-3 md:px-5 mt-3">
+  <a href="{{ url_for('task.mystery_box') }}" class="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm hover:bg-amber-500/15 transition">
+    <span class="text-amber-100 font-semibold">🎁 Daily mystery box unlocked — open your reward</span>
+    <span class="text-xs font-bold text-amber-300">Open →</span>
+  </a>
+</div>
+{% endif %}
+
 {% set bal = current_user.available_balance or 0 %}
 {% set mname = current_user.membership.name if current_user.membership else "Starter" %}
 {% set done = today_completed|default(progress.completed_today if progress is defined and progress else 0) %}

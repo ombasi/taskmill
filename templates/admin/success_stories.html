@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% block title %}Success stories{% endblock %}
+{% block page_title %}Success stories{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-2 gap-6">
+  <form method="POST" class="glass rounded-3xl p-6 space-y-3">
+    <h3 class="font-bold">Add story</h3>
+    <input name="display_name" placeholder="Display name" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" required>
+    <input name="country" placeholder="Country" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    <input name="membership_name" placeholder="Membership" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    <textarea name="body" rows="4" placeholder="Quote (no balances)" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" required></textarea>
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="approved" value="1" checked> Approved (public)</label>
+    <button class="rounded-xl bg-indigo-600 px-6 py-2.5 font-bold text-sm">Save</button>
+  </form>
+  <div class="space-y-3">
+    {% for s in stories %}
+    <div class="glass rounded-2xl p-4 text-sm">
+      <p class="text-zinc-300">{{ s.body[:180] }}{% if s.body|length > 180 %}…{% endif %}</p>
+      <p class="text-xs text-zinc-500 mt-2">{{ s.display_name }} · {% if s.approved %}<span class="text-emerald-400">Public</span>{% else %}Hidden{% endif %}</p>
+      <div class="flex gap-2 mt-2">
+        <a href="{{ url_for('admin.success_story_toggle', id=s.id) }}" class="text-xs text-indigo-400">Toggle</a>
+        <form method="POST" action="{{ url_for('admin.success_story_delete', id=s.id) }}" onsubmit="return confirm('Delete?')">
+          <button class="text-xs text-rose-400">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-zinc-500 text-sm">No stories yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -252,6 +252,22 @@ def withdraw():
             flash("Your payout method is waiting for admin confirmation.", "warning")
             return redirect(url_for("wallet.withdraw"))
 
+        # Cooling-off for large withdrawals
+        try:
+            from models.settings import Settings
+            from datetime import datetime, timedelta
+            settings = Settings.query.first()
+            thr = float(getattr(settings, "withdraw_cooling_threshold", 500000) or 500000)
+            mins = int(getattr(settings, "withdraw_cooling_minutes", 30) or 30)
+            if amount >= thr and mins > 0:
+                last = getattr(current_user, "last_big_withdraw_at", None)
+                if last and datetime.utcnow() < last + timedelta(minutes=mins):
+                    left = int((last + timedelta(minutes=mins) - datetime.utcnow()).total_seconds() // 60) + 1
+                    flash(f"Large withdrawals have a {mins}-minute cooling period. Try again in ~{left} min.", "warning")
+                    return redirect(url_for("wallet.withdraw"))
+        except Exception:
+            pass
+
         withdrawal = WalletService.create_withdrawal(
             current_user,
             amount,
@@ -262,6 +278,17 @@ def withdraw():
         )
 
         if withdrawal:
+            try:
+                from models.settings import Settings
+                from datetime import datetime
+                settings = Settings.query.first()
+                thr = float(getattr(settings, "withdraw_cooling_threshold", 500000) or 500000)
+                if amount >= thr:
+                    current_user.last_big_withdraw_at = datetime.utcnow()
+                    from extensions import db
+                    db.session.commit()
+            except Exception:
+                pass
             flash("Withdrawal request submitted. Funds held pending admin approval.", "success")
         else:
             flash("Cannot withdraw: insufficient balance after the required reserve, or invalid amount.", "danger")

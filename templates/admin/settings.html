@@ -1,173 +1,105 @@
 {% extends "admin/base.html" %}
-
 {% block title %}System Settings{% endblock %}
 {% block page_title %}System Settings{% endblock %}
-
 {% block content %}
+<form method="POST" class="space-y-6 max-w-4xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
-<form method="POST" enctype="multipart/form-data">
-
-<div class="space-y-8">
-
-    <!-- Website -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-3xl font-bold mb-8">
-            Website
-        </h2>
-
-        <div class="grid md:grid-cols-2 gap-6">
-
-            <div>
-                <label>Website Name</label>
-                <input
-                    name="site_name"
-                    class="w-full bg-slate-800 rounded-xl p-3 mt-2"
-                    value="{{ settings.site_name }}">
-            </div>
-
-            <div>
-                <label>Website URL</label>
-                <input
-                    name="site_url"
-                    class="w-full bg-slate-800 rounded-xl p-3 mt-2"
-                    value="{{ settings.site_url }}">
-            </div>
-
-        </div>
-
+  <div class="glass rounded-3xl p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-bold">Website</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-zinc-500">Site name</label>
+        <input name="site_name" value="{{ settings.site_name or '' }}" required
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Site URL</label>
+        <input name="site_url" value="{{ settings.site_url or '' }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
     </div>
+  </div>
 
-    <!-- System -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-3xl font-bold mb-8">
-            System Controls
-        </h2>
-
-        <div class="grid md:grid-cols-2 gap-5">
-
-            <label>
-                <input type="checkbox"
-                       name="registration_enabled"
-                       {% if settings.registration_enabled %}checked{% endif %}>
-                Registration Enabled
-            </label>
-
-            <label>
-                <input type="checkbox"
-                       name="deposits_enabled"
-                       {% if settings.deposits_enabled %}checked{% endif %}>
-                Deposits Enabled
-            </label>
-
-            <label>
-                <input type="checkbox"
-                       name="withdrawals_enabled"
-                       {% if settings.withdrawals_enabled %}checked{% endif %}>
-                Withdrawals Enabled
-            </label>
-
-            <label>
-                <input type="checkbox"
-                       name="maintenance"
-                       {% if settings.maintenance %}checked{% endif %}>
-                Maintenance Mode
-            </label>
-
-        </div>
-
+  <div class="glass rounded-3xl p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-bold">System controls</h2>
+    <div class="grid sm:grid-cols-2 gap-3 text-sm">
+      <label class="flex items-center gap-2"><input type="checkbox" name="registration_enabled" {% if settings.registration_enabled %}checked{% endif %}> Registration enabled</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="deposits_enabled" {% if settings.deposits_enabled %}checked{% endif %}> Deposits enabled</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="withdrawals_enabled" {% if settings.withdrawals_enabled %}checked{% endif %}> Withdrawals enabled</label>
+      <label class="flex items-center gap-2"><input type="checkbox" name="maintenance" {% if settings.maintenance %}checked{% endif %}> Maintenance mode</label>
     </div>
+  </div>
 
-    <!-- Referral -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-3xl font-bold mb-8">
-            Referral
-        </h2>
-
-        <div class="grid md:grid-cols-2 gap-6">
-
-            <input
-                name="referral_bonus"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.referral_bonus }}">
-
-            <input
-                name="referral_activation"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.referral_activation }}">
-
-        </div>
-
+  <div class="glass rounded-3xl p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-bold">Referral (UGX base)</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-zinc-500">Referral bonus</label>
+        <input type="number" step="any" name="referral_bonus" value="{{ settings.referral_bonus or 0 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Referral activation</label>
+        <input type="number" step="any" name="referral_activation" value="{{ settings.referral_activation or 0 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
     </div>
+  </div>
 
-    <!-- Combo -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-3xl font-bold mb-8">
-            Combo Engine
-        </h2>
-
-        <div class="grid md:grid-cols-3 gap-6">
-
-            <input
-                name="combo_probability"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.combo_probability }}">
-
-            <input
-                name="combo_penalty"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.combo_penalty }}">
-
-            <input
-                name="max_daily_combo"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.max_daily_combo }}">
-
-        </div>
-
+  <div class="glass rounded-3xl p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-bold">Combo / tasks</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div>
+        <label class="text-xs text-zinc-500">Combo probability</label>
+        <input type="number" step="any" name="combo_probability" value="{{ settings.combo_probability or 0 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Combo penalty</label>
+        <input type="number" step="any" name="combo_penalty" value="{{ settings.combo_penalty or 0 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Max daily combo</label>
+        <input type="number" name="max_daily_combo" value="{{ settings.max_daily_combo or 1 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Task delay (sec)</label>
+        <input type="number" name="task_delay" value="{{ settings.task_delay or 3 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Min withdrawal</label>
+        <input type="number" step="any" name="minimum_withdrawal" value="{{ settings.minimum_withdrawal or 10 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Max withdrawal</label>
+        <input type="number" step="any" name="maximum_withdrawal" value="{{ settings.maximum_withdrawal or 100000 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
     </div>
+  </div>
 
-    <!-- Lucky Spin -->
-
-    <div class="glass rounded-3xl p-8">
-
-        <h2 class="text-3xl font-bold mb-8">
-            Lucky Spin
-        </h2>
-
-        <div class="grid md:grid-cols-2 gap-6">
-
-            <input
-                name="daily_spins"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.daily_spins }}">
-
-            <input
-                name="max_spin_reward"
-                class="bg-slate-800 rounded-xl p-3"
-                value="{{ settings.max_spin_reward }}">
-
-        </div>
-
+  <div class="glass rounded-3xl p-6 md:p-8 space-y-4">
+    <h2 class="text-xl font-bold">Lucky spin</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-zinc-500">Daily spins</label>
+        <input type="number" name="daily_spins" value="{{ settings.daily_spins or 1 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">Max spin reward</label>
+        <input type="number" step="any" name="max_spin_reward" value="{{ settings.max_spin_reward or 100 }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+      </div>
     </div>
+  </div>
 
-    <button
-        type="submit"
-        class="bg-indigo-600 px-10 py-4 rounded-xl">
-
-        Save Settings
-
-    </button>
-
-</div>
-
+  <button type="submit" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-10 py-3.5 font-bold">Save settings</button>
+  <p class="text-xs text-zinc-500">Campaigns, deposit match, WhatsApp & status → <a class="text-indigo-400" href="{{ url_for('admin.campaign_settings') }}">Campaigns</a>. Payment methods → <a class="text-indigo-400" href="{{ url_for('admin.payment_settings') }}">Payment settings</a>.</p>
 </form>
-
 {% endblock %}

@@ -44,6 +44,41 @@ class Settings(db.Model):
         default=False
     )
 
+    # Deposit matching campaign (UGX base amounts; display via money())
+    deposit_match_active = db.Column(db.Boolean, default=False)
+    deposit_match_percent = db.Column(db.Float, default=0.0)  # e.g. 10 = +10%
+    deposit_match_ends_at = db.Column(db.DateTime, nullable=True)
+    deposit_match_message = db.Column(db.String(255), nullable=True)
+
+    # Support
+    whatsapp_number = db.Column(db.String(40), nullable=True)  # e.g. 2567...
+
+    # Public status page
+    status_message = db.Column(db.String(255), default="All systems normal")
+    status_deposits = db.Column(db.String(40), default="normal")  # normal|delayed|offline
+    status_withdrawals = db.Column(db.String(40), default="normal")
+    status_tasks = db.Column(db.String(40), default="normal")
+
+    # Weekend mode
+    weekend_bonus_percent = db.Column(db.Float, default=0.0)  # extra % on normal commission Sat-Sun
+
+    # Product of the day
+    potd_product_id = db.Column(db.Integer, nullable=True)
+    potd_boost_percent = db.Column(db.Float, default=25.0)
+    potd_slots_left = db.Column(db.Integer, default=0)
+
+    # Big withdraw cooling-off (minutes, threshold in UGX)
+    withdraw_cooling_minutes = db.Column(db.Integer, default=30)
+    withdraw_cooling_threshold = db.Column(db.Float, default=500000.0)
+
+    vip_skips_per_day = db.Column(db.Integer, default=2)
+    mystery_box_enabled = db.Column(db.Boolean, default=True)
+    mystery_cash_min = db.Column(db.Float, default=500.0)
+    mystery_cash_max = db.Column(db.Float, default=3000.0)
+
+
+
+
     # ==================================================
     # SYSTEM
     # ==================================================

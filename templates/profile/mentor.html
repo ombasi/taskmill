@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Mentor view{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4 pb-12">
+  <h1 class="text-2xl font-black">People you referred</h1>
+  <p class="text-sm text-zinc-400">Anonymized progress — help them stay on track.</p>
+  <div class="rounded-3xl border border-white/10 divide-y divide-white/5 bg-zinc-900/50">
+    {% for r in rows %}
+    <div class="p-4 flex flex-wrap justify-between gap-2 text-sm">
+      <div>
+        <p class="font-semibold">{{ r.label }}</p>
+        <p class="text-xs text-zinc-500">{{ r.membership }} · tasks today {{ r.tasks_today }} · sets {{ r.sets }}</p>
+      </div>
+      <div class="text-xs">
+        {% if r.negative %}<span class="text-rose-400">Needs deposit</span>
+        {% elif r.active %}<span class="text-emerald-400">Active</span>
+        {% else %}<span class="text-zinc-500">Inactive</span>{% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="p-6 text-zinc-500 text-sm">No referrals yet. Share your code to become a mentor.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

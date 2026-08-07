@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Join Taskmill{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto py-10 px-4">
+  <div class="rounded-3xl border border-white/10 p-8 text-center"
+       style="background: radial-gradient(80% 60% at 50% 0%, rgba(99,102,241,.35), #0b1020);">
+    <p class="text-[11px] uppercase tracking-[0.25em] text-indigo-300 font-semibold">You're invited</p>
+    <h1 class="mt-3 text-3xl font-black">Join Taskmill</h1>
+    {% if referrer %}
+    <p class="mt-3 text-zinc-300 text-sm">Invited by <strong>{{ referrer.username }}</strong></p>
+    {% endif %}
+    <p class="mt-2 text-zinc-400 text-sm">Code: <span class="font-mono text-indigo-300">{{ code }}</span></p>
+    <p class="mt-4 text-sm text-zinc-400">Complete product tasks, earn commissions, withdraw in your currency.</p>
+    <div class="mt-8 flex flex-col gap-3">
+      <a href="{{ url_for('auth.register', ref=code) }}" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-3.5 font-bold">Create account</a>
+      <a href="{{ url_for('auth.login') }}" class="rounded-2xl border border-white/15 py-3 text-sm">Already have an account? Log in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

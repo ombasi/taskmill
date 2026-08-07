@@ -1,14 +1,12 @@
 {
   "name": "Taskmill",
   "short_name": "Taskmill",
-  "description": "Review products, earn commissions, grow your wallet",
-  "start_url": "/dashboard/",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#6366f1",
-  "orientation": "portrait-primary",
+  "background_color": "#070b14",
+  "theme_color": "#4f46e5",
   "icons": [
-    { "src": "/static/img/taskmill-logo.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/static/img/taskmill-logo.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

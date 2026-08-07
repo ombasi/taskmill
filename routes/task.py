@@ -142,7 +142,20 @@ def submit(id):
     rating = int(request.form.get("rating", 5))
     review = request.form.get("review", "")
 
-    ok, result = TaskService.complete_task(task, rating=rating, review=review)
+    ok, result = proof_path = None
+    proof = request.files.get("proof") or request.files.get("proof_image")
+    if proof and proof.filename:
+        import os, uuid
+        from werkzeug.utils import secure_filename
+        ext = secure_filename(proof.filename).rsplit(".", 1)[-1].lower() if "." in proof.filename else "jpg"
+        if ext in ("jpg", "jpeg", "png", "webp", "gif"):
+            folder = os.path.join("static", "uploads", "proofs")
+            os.makedirs(folder, exist_ok=True)
+            fname = f"{uuid.uuid4().hex}.{ext}"
+            proof.save(os.path.join(folder, fname))
+            proof_path = f"uploads/proofs/{fname}"
+    TaskService.complete_task(
+        task, proof_image=proof_path, rating=rating, review=review)
 
     if not ok:
         flash(result, "danger")
@@ -245,3 +258,68 @@ def cancel(id):
         db.session.commit()
         flash("Task cancelled. Product hold returned to wallet.", "info")
     return redirect(url_for("dashboard.index"))
+
+
+@task_bp.route("/skip", methods=["POST"])
+@login_required
+def skip_task():
+    from services.task_service import TaskService
+    ok, msg = TaskService.skip_current_task(current_user)
+    flash(msg, "success" if ok else "warning")
+    return redirect(url_for("task.index"))
+
+
+@task_bp.route("/mystery-box", methods=["GET", "POST"])
+@login_required
+def mystery_box():
+    from services.task_service import TaskService
+    from models.settings import Settings
+    from extensions import db
+    import random
+    TaskService.ensure_daily_reset(current_user)
+    settings = Settings.query.first()
+    if not settings or not getattr(settings, "mystery_box_enabled", True):
+        flash("Mystery box is not available.", "warning")
+        return redirect(url_for("dashboard.index"))
+    tasks_per_set, daily_sets, total = TaskService._limits(current_user)
+    done = int(current_user.tasks_completed_today or 0)
+    if done < total:
+        flash(f"Complete all {total} daily tasks first ({done}/{total}).", "warning")
+        return redirect(url_for("task.index"))
+    if getattr(current_user, "mystery_opened_today", False):
+        flash("You already opened today's mystery box.", "info")
+        return redirect(url_for("dashboard.index"))
+    if request.method == "POST":
+        lo = float(getattr(settings, "mystery_cash_min", 500) or 500)
+        hi = float(getattr(settings, "mystery_cash_max", 3000) or 3000)
+        if hi < lo:
+            hi = lo
+        roll = random.random()
+        if roll < 0.15:
+            prize = "try_again"
+            msg = "Mystery box: try again tomorrow — better luck next time!"
+        elif roll < 0.35:
+            prize = "spin"
+            current_user.daily_spins_used = max(0, int(current_user.daily_spins_used or 0) - 1)  # grant feel: reduce used
+            msg = "Mystery box: +1 lucky spin!"
+        else:
+            cash = round(random.uniform(lo, hi), 0)
+            before = float(current_user.available_balance or 0)
+            current_user.available_balance = before + cash
+            current_user.total_earned = (current_user.total_earned or 0) + cash
+            from models.wallet_transaction import WalletTransaction
+            db.session.add(WalletTransaction(
+                user_id=current_user.id,
+                amount=cash,
+                transaction_type="mystery_box",
+                description="Mystery box cash prize",
+                balance_before=before,
+                balance_after=float(current_user.available_balance),
+            ))
+            msg = f"Mystery box: you won cash!"
+            prize = cash
+        current_user.mystery_opened_today = True
+        db.session.commit()
+        flash(msg, "success")
+        return redirect(url_for("dashboard.index"))
+    return render_template("tasks/mystery_box.html", total=total, done=done)

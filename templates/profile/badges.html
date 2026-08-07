@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Badges{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 pb-12">
+  <h1 class="text-3xl font-black">Your badges</h1>
+  <div class="grid sm:grid-cols-2 gap-4">
+    {% for b in badges %}
+    <div class="rounded-3xl border border-white/10 p-5 {% if b.id in earned_ids %}bg-indigo-500/10 border-indigo-400/30{% else %}bg-zinc-900/40 opacity-60{% endif %}">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-black/30 flex items-center justify-center text-xl">
+          <i class="fa-solid {{ b.icon or 'fa-medal' }} {% if b.id in earned_ids %}text-amber-400{% else %}text-zinc-600{% endif %}"></i>
+        </div>
+        <div>
+          <p class="font-bold">{{ b.name }}</p>
+          <p class="text-xs text-zinc-500">{{ b.description }}</p>
+          <p class="text-[11px] mt-1 {% if b.id in earned_ids %}text-emerald-400{% else %}text-zinc-600{% endif %}">
+            {% if b.id in earned_ids %}Earned{% else %}Locked{% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('profile.index') }}" class="text-sm text-indigo-400">← Profile</a>
+</div>
+{% endblock %}

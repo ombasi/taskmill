@@ -196,6 +196,41 @@ class WalletService:
 
         before = float(user.available_balance)
         user.available_balance += amount
+
+        # Deposit matching campaign
+        try:
+            from models.settings import Settings
+            from datetime import datetime
+            settings = Settings.query.first()
+            if settings and getattr(settings, "deposit_match_active", False):
+                ends = getattr(settings, "deposit_match_ends_at", None)
+                if not ends or ends > datetime.utcnow():
+                    pct = float(getattr(settings, "deposit_match_percent", 0) or 0)
+                    if pct > 0:
+                        match_amt = round(amount * (pct / 100.0), 2)
+                        if match_amt > 0:
+                            user.available_balance = float(user.available_balance or 0) + match_amt
+                            try:
+                                from models.wallet_transaction import WalletTransaction
+                                db.session.add(WalletTransaction(
+                                    user_id=user.id,
+                                    amount=match_amt,
+                                    type="credit",
+                                    description=f"Deposit match +{pct:.0f}%",
+                                ))
+                            except Exception:
+                                pass
+                            try:
+                                from services.notification_service import NotificationService
+                                NotificationService.send(
+                                    user.id if hasattr(user, 'id') else user,
+                                    "Deposit match bonus",
+                                    f"You received +{pct:.0f}% match on your deposit.",
+                                )
+                            except Exception:
+                                pass
+        except Exception as _dm_e:
+            print("deposit_match:", _dm_e)
         try:
             from services.task_service import TaskService
             TaskService.sync_negative_and_combo_tasks(user)
@@ -255,6 +290,11 @@ class WalletService:
                                 "Referral Deposit Bonus",
                                 f"You earned UGX {bonus:,.0f} (25%) because {user.username} deposited.",
                             )
+                            try:
+                                from services.badge_service import award
+                                award(referrer.id, "first_referral")
+                            except Exception:
+                                pass
                         except Exception:
                             pass
         except Exception as e:
@@ -269,6 +309,12 @@ class WalletService:
                 "Deposit Approved",
                 f"Your deposit of UGX {amount:,.0f} has been approved and credited."
             )
+        except Exception:
+            pass
+
+        try:
+            from services.badge_service import award
+            award(user.id, "first_deposit")
         except Exception:
             pass
 
@@ -330,6 +376,8 @@ class WalletService:
 
         if amount <= 0:
             return None
+        if amount < 1000:
+            return None  # minimum UGX 1000 (user enters local currency; route converts)
 
         # Must leave UGX 15,000 for next day's tasks
         reserve = 15000.0

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Success stories{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 pb-12">
+  <header class="text-center">
+    <p class="text-[11px] uppercase tracking-[0.25em] text-zinc-500">Community</p>
+    <h1 class="text-3xl font-black mt-2">Success stories</h1>
+    <p class="text-sm text-zinc-400 mt-2">Real members · No balance figures shared</p>
+  </header>
+  <div class="space-y-4">
+    {% for s in stories %}
+    <article class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
+      <p class="text-zinc-200 leading-relaxed">“{{ s.body }}”</p>
+      <p class="mt-4 text-sm text-zinc-500">
+        — <strong class="text-zinc-300">{{ s.display_name }}</strong>
+        {% if s.country %} · {{ s.country }}{% endif %}
+        {% if s.membership_name %} · {{ s.membership_name }}{% endif %}
+      </p>
+    </article>
+    {% else %}
+    <p class="text-center text-zinc-500 text-sm">Stories coming soon.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

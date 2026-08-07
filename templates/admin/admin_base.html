@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}Admin{% endblock %} · Taskmill</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { --sidebar-w: 17rem; --sidebar-collapsed: 4.75rem; }
+    body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
+    body.nav-open { overflow: hidden; }
+    .glass {
+      background: rgba(15,23,42,.88);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .sidebar {
+      width: var(--sidebar-w);
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: width, transform;
+    }
+    /* Desktop collapsed = icons only */
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .brand-text {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .sidebar.collapsed .sidebar-link {
+      justify-content: center;
+      gap: 0;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    .sidebar.collapsed .sidebar-link [data-badge] {
+      position: absolute;
+      top: 0.35rem;
+      right: 0.35rem;
+      margin: 0;
+    }
+    .sidebar.collapsed .sidebar-link { position: relative; }
+
+    .nav-label, .brand-text {
+      transition: opacity 0.25s ease, width 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .sidebar-link {
+      display: flex; align-items: center; gap: .8rem;
+      padding: .72rem .9rem; border-radius: .85rem;
+      color: #94a3b8;
+      transition: background .2s ease, color .2s ease, border-color .2s ease;
+      border: 1px solid transparent;
+    }
+    .sidebar-link i { width: 1.25rem; text-align: center; flex-shrink: 0; }
+    .sidebar-link:hover {
+      background: rgba(99,102,241,.14);
+      color: #e2e8f0;
+      border-color: rgba(99,102,241,.2);
+    }
+    .sidebar-link.active {
+      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(139,92,246,.8));
+      color: white;
+      box-shadow: 0 8px 22px rgba(99,102,241,.28);
+    }
+
+    /* Hide scrollbar on nav (still scrollable) */
+    .nav-scroll {
+      overflow-y: auto;
+      scrollbar-width: none;           /* Firefox */
+      -ms-overflow-style: none;        /* IE/Edge */
+    }
+    .nav-scroll::-webkit-scrollbar {   /* Chrome/Safari */
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    .sidebar-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .pulse-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: #4ade80;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+      animation: pulse-green 1.4s ease-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+    }
+
+    .menu-btn {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: background .2s ease, transform .15s ease;
+      flex-shrink: 0;
+    }
+    .menu-btn:hover { background: rgba(255,255,255,.1); }
+    .menu-btn:active { transform: scale(0.96); }
+
+    /* Mobile: slide-in drawer */
+    @media (max-width: 1023px) {
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        z-index: 50;
+        width: min(88vw, 20rem) !important;
+        transform: translateX(-105%);
+        box-shadow: 16px 0 48px rgba(0,0,0,.5);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      /* Don't use icon-collapse on mobile drawer */
+      .sidebar.collapsed {
+        width: min(88vw, 20rem) !important;
+      }
+      .sidebar.collapsed .nav-label,
+      .sidebar.collapsed .brand-text {
+        opacity: 1;
+        width: auto;
+        overflow: visible;
+        pointer-events: auto;
+      }
+      .sidebar.collapsed .sidebar-link {
+        justify-content: flex-start;
+        gap: .8rem;
+      }
+    }
+    @media (min-width: 1024px) {
+      .sidebar-backdrop { display: none !important; }
+      #closeMobileSidebar { display: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+<!-- Mobile-only: open drawer via logo chip (not header hamburger) -->
+<button type="button" id="openMobileSidebar" class="fixed top-3 left-3 z-[45] menu-btn lg:hidden shadow-lg" aria-label="Open menu" title="Menu">
+  <span class="font-black text-indigo-300">T</span>
+</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+<div class="flex min-h-screen">
+
+  <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0" id="adminSidebar">
+    <div class="p-4 flex items-center gap-3 border-b border-white/5 min-h-[4.5rem]">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-black shrink-0">T</div>
+      <div class="brand-text flex-1 min-w-0 overflow-hidden">
+        <p class="font-black text-lg leading-none">Taskmill</p>
+        <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>
+      </div>
+      <button type="button" id="closeMobileSidebar" class="menu-btn" aria-label="Close menu">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <nav class="nav-scroll flex-1 px-3 py-4 space-y-1" id="adminNav">
+      {% if current_user.is_admin %}
+      {% set links = [
+        ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
+        ('admin.users', 'fa-users', 'Users'),
+        ('admin.agents_hub', 'fa-sitemap', 'Agents'),
+        ('admin.products', 'fa-box', 'Products'),
+        ('admin.combos', 'fa-bolt', 'Combos'),
+        ('admin.deposits', 'fa-arrow-down', 'Deposits'),
+        ('admin.payment_settings', 'fa-credit-card', 'Payment methods'),
+        ('admin.withdrawals', 'fa-arrow-up', 'Withdrawals'),
+        ('admin.memberships', 'fa-crown', 'Memberships'),
+        ('admin.daily_ops_report', 'fa-chart-pie', 'Daily report'),
+        ('admin.announcements', 'fa-bullhorn', 'Announcements'),
+        ('admin.notifications', 'fa-bell', 'Notifications'),
+        ('admin.support', 'fa-headset', 'Support'),
+        ('chat.admin_inbox', 'fa-comments', 'Chat'),
+        ('admin.spin_prizes', 'fa-gift', 'Lucky Spin'),
+        ('admin.settings', 'fa-gear', 'Settings'),
+        ('auth.setup_2fa', 'fa-shield-halved', '2FA'),
+        ('admin.referral_leaderboard', 'fa-trophy', 'Leaderboard'),
+      ] %}
+      {% else %}
+      {% set links = [
+        ('admin.users', 'fa-users', 'My team'),
+        ('admin.combos', 'fa-bolt', 'Combos'),
+        ('admin.deposits', 'fa-arrow-down', 'Team deposits'),
+        ('admin.withdrawals', 'fa-arrow-up', 'Team withdrawals'),
+        ('admin.team_report', 'fa-chart-pie', 'Team report'),
+        ('admin.export_team_users_csv', 'fa-file-csv', 'Export CSV'),
+        ('auth.setup_2fa', 'fa-shield-halved', '2FA'),
+        ('chat.admin_inbox', 'fa-comments', 'Team chat'),
+      ] %}
+      {% endif %}
+      {% for ep, icon, label in links %}
+      <a href="{{ url_for(ep) }}" title="{{ label }}"
+         class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">
+        <i class="fa-solid {{ icon }}"></i>
+        <span class="nav-label text-sm font-medium">{{ label }}</span>
+        {% if label == 'Deposits' %}
+        <span data-badge="pending_deposits" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-amber-400 text-black text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% elif label == 'Withdrawals' %}
+        <span data-badge="pending_withdrawals" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% elif label == 'Chat' %}
+        <span data-badge="chat" class="ml-auto min-w-[1.15rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold hidden"></span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </nav>
+
+    <div class="p-3 border-t border-white/5 space-y-1">
+      <button type="button" id="toggleSidebar" class="sidebar-link w-full" title="Collapse menu">
+        <i class="fa-solid fa-left-right" id="toggleIcon"></i>
+        <span class="nav-label text-sm">Collapse</span>
+      </button>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link text-rose-300" title="Logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="nav-label text-sm">Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="glass border-b border-white/10 px-3 sm:px-5 md:px-6 py-3 flex items-center justify-between gap-3 sticky top-0 z-30">
+      <div class="min-w-0">
+        <p class="text-[11px] uppercase tracking-wider text-zinc-500">Admin</p>
+        <h1 class="text-lg md:text-xl font-bold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="{{ url_for('admin.deposits', status='Pending') }}"
+           class="inline-flex items-center gap-2 text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span class="hidden sm:inline">Pending ops</span>
+        </a>
+        <a href="{{ url_for('dashboard.index') }}"
+           class="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+          View site
+        </a>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 md:p-8">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for cat, msg in messages %}
+          <div class="rounded-xl border border-white/10 px-4 py-3 text-sm
+            {% if cat == 'success' %}bg-emerald-500/10 text-emerald-200
+            {% elif cat == 'danger' %}bg-rose-500/10 text-rose-200
+            {% else %}bg-indigo-500/10 text-indigo-100{% endif %}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var side = document.getElementById('adminSidebar');
+  var backdrop = document.getElementById('sidebarBackdrop');
+  var openBtn = document.getElementById('openMobileSidebar');
+  var closeBtn = document.getElementById('closeMobileSidebar');
+  var toggleBtn = document.getElementById('toggleSidebar');
+  var KEY = 'taskmill_admin_sidebar_collapsed';
+
+  function isMobile() {
+    return window.matchMedia('(max-width: 1023px)').matches;
+  }
+
+  function openDrawer() {
+    side.classList.add('open');
+    if (openBtn) openBtn.style.display = 'none';
+    if (backdrop) {
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden', 'false');
+    }
+    document.body.classList.add('nav-open');
+  }
+  function closeDrawer() {
+    side.classList.remove('open');
+    if (openBtn && isMobile()) openBtn.style.display = '';
+    if (backdrop) {
+      backdrop.classList.remove('show');
+      backdrop.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('nav-open');
+  }
+
+  function setCollapsed(on) {
+    if (on) {
+      side.classList.add('collapsed');
+      try { localStorage.setItem(KEY, '1'); } catch(e) {}
+    } else {
+      side.classList.remove('collapsed');
+      try { localStorage.setItem(KEY, '0'); } catch(e) {}
+    }
+  }
+
+  // Restore desktop collapse preference
+  try {
+    if (!isMobile() && localStorage.getItem(KEY) === '1') {
+      side.classList.add('collapsed');
+    }
+  } catch(e) {}
+
+  // Top hamburger: mobile = drawer, desktop = collapse icons
+  if (openBtn) openBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (isMobile()) {
+      if (side.classList.contains('open')) closeDrawer();
+      else openDrawer();
+    } else {
+      setCollapsed(!side.classList.contains('collapsed'));
+    }
+  });
+
+  if (toggleBtn) toggleBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (isMobile()) {
+      closeDrawer();
+    } else {
+      setCollapsed(!side.classList.contains('collapsed'));
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    closeDrawer();
+  });
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  document.querySelectorAll('#adminNav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (isMobile()) closeDrawer();
+    });
+  });
+
+  window.addEventListener('resize', function() {
+    if (!isMobile()) closeDrawer();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDrawer();
+  });
+})();
+</script>
+{% block scripts %}{% endblock %}
+<script>
+(function(){
+  function setBadge(key, n){
+    document.querySelectorAll('[data-badge="'+key+'"]').forEach(function(el){
+      var n2 = parseInt(n, 10) || 0;
+      if (n2 > 0) {
+        el.textContent = n2 > 99 ? '99+' : String(n2);
+        el.classList.remove('hidden');
+      } else {
+        el.textContent = '';
+        el.classList.add('hidden');
+      }
+    });
+  }
+  function tick(){
+    fetch('/api/v1/badges', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d) return;
+        setBadge('notifications', d.notifications);
+        setBadge('chat', d.chat);
+        setBadge('pending_deposits', d.pending_deposits);
+        setBadge('pending_withdrawals', d.pending_withdrawals);
+        setBadge('total', d.total);
+      }).catch(function(){});
+  }
+  tick();
+  setInterval(tick, 8000);
+})();
+</script>
+</body>
+</html>

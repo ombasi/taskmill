@@ -252,6 +252,20 @@ Logout
 </div>
 </nav>
 
+{% if current_user.is_authenticated %}
+{% set _s = none %}
+{# Campaign banner filled by context if available #}
+{% if deposit_match_banner is defined and deposit_match_banner %}
+<div id="deposit-match-banner" class="mx-auto max-w-7xl px-3 md:px-5 mt-2">
+  <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+    <span class="text-amber-100">{{ deposit_match_banner }}</span>
+    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-amber-400 text-zinc-900 text-xs font-bold px-3 py-1.5">Deposit now</a>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+
 <!-- Mobile Drawer -->
 
 <div
@@ -433,10 +447,15 @@ Support
 
 <div class="space-y-3 text-zinc-400">
 <a href="{{ url_for('dashboard.contact') }}" class="block hover:text-indigo-400">Contact support</a>
+{% if site_settings and site_settings.whatsapp_number %}
+<a href="https://wa.me/{{ site_settings.whatsapp_number }}?text=Hello%20Taskmill%20support" target="_blank" rel="noopener" class="block hover:text-indigo-400">WhatsApp</a>
+{% endif %}
 <a href="{{ url_for('chat.inbox') if current_user.is_authenticated else url_for('auth.login') }}" class="block hover:text-indigo-400">Live chat</a>
 <a href="{{ url_for('dashboard.about') }}" class="block hover:text-indigo-400">About</a>
 <a href="{{ url_for('dashboard.faq') }}" class="block hover:text-indigo-400">FAQs</a>
 <a href="{{ url_for('dashboard.terms') }}" class="block hover:text-indigo-400">Terms &amp; Conditions</a>
+<a href="{{ url_for('dashboard.public_status') }}" class="block hover:text-indigo-400">System status</a>
+<a href="{{ url_for('dashboard.stories') }}" class="block hover:text-indigo-400">Success stories</a>
 </div>
 
 </div>

@@ -1,0 +1,88 @@
+{% extends "admin/base.html" %}
+{% block title %}Campaigns{% endblock %}
+{% block page_title %}Campaigns & status{% endblock %}
+{% block content %}
+<form method="POST" class="max-w-2xl space-y-6">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">Deposit match</h3>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="deposit_match_active" value="1" {% if settings.deposit_match_active %}checked{% endif %}>
+      Campaign active
+    </label>
+    <div>
+      <label class="text-xs text-zinc-500">Match percent (e.g. 10 = +10%)</label>
+      <input type="number" step="0.1" name="deposit_match_percent" value="{{ settings.deposit_match_percent or 0 }}"
+             class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    </div>
+    <div>
+      <label class="text-xs text-zinc-500">Ends at (local server time)</label>
+      <input type="datetime-local" name="deposit_match_ends_at"
+             value="{{ settings.deposit_match_ends_at.strftime('%Y-%m-%dT%H:%M') if settings.deposit_match_ends_at else '' }}"
+             class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    </div>
+    <div>
+      <label class="text-xs text-zinc-500">Banner message (optional)</label>
+      <input type="text" name="deposit_match_message" value="{{ settings.deposit_match_message or '' }}"
+             placeholder="Deposit today — get +10% match!"
+             class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    </div>
+  </div>
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">WhatsApp support</h3>
+    <input type="text" name="whatsapp_number" value="{{ settings.whatsapp_number or '' }}"
+           placeholder="2567XXXXXXXX (no +)"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+  </div>
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">Public status page</h3>
+    <input type="text" name="status_message" value="{{ settings.status_message or 'All systems normal' }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+    <div class="grid grid-cols-3 gap-3">
+      {% for key, label in [('status_tasks','Tasks'),('status_deposits','Deposits'),('status_withdrawals','Withdrawals')] %}
+      <div>
+        <label class="text-xs text-zinc-500">{{ label }}</label>
+        <select name="{{ key }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+          {% set val = settings[key] if settings[key] is defined else 'normal' %}
+          {% for o in ['normal','delayed','offline'] %}
+          <option value="{{ o }}" {% if settings|attr(key) == o %}selected{% endif %}>{{ o }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">Weekend mode</h3>
+    <p class="text-xs text-zinc-500">Extra commission % on normal tasks Saturday–Sunday (UTC).</p>
+    <input type="number" step="0.1" name="weekend_bonus_percent" value="{{ settings.weekend_bonus_percent or 0 }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="e.g. 5">
+  </div>
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">Product of the day</h3>
+    <input type="number" name="potd_product_id" value="{{ settings.potd_product_id or '' }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="Product ID">
+    <input type="number" step="0.1" name="potd_boost_percent" value="{{ settings.potd_boost_percent or 25 }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="Boost %">
+    <input type="number" name="potd_slots_left" value="{{ settings.potd_slots_left or 0 }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="Slots left today">
+  </div>
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h3 class="font-bold text-lg">Large withdraw cooling-off</h3>
+    <input type="number" name="withdraw_cooling_minutes" value="{{ settings.withdraw_cooling_minutes or 30 }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="Minutes">
+    <input type="number" name="withdraw_cooling_threshold" value="{{ settings.withdraw_cooling_threshold or 500000 }}"
+           class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3" placeholder="Threshold UGX">
+    <p class="text-xs text-zinc-500">First withdraw at or above threshold waits N minutes before another large one.</p>
+  </div>
+
+  <button class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-3 font-bold">Save</button>
+</form>
+{% endblock %}

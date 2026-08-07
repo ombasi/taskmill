@@ -174,3 +174,69 @@ def set_withdraw_pin():
 
 
 
+
+
+@profile_bp.route("/currency", methods=["POST"])
+@login_required
+def set_currency():
+    """Pin preferred currency (stops IP auto-switch)."""
+    from extensions import db
+    from utils.world_currencies import CURRENCY_BY_COUNTRY  # may not exist
+    code = (request.form.get("currency") or "").strip().upper()
+    lock = request.form.get("currency_locked") == "1"
+    if code:
+        current_user.currency = code
+        # crude symbol map
+        symbols = {"UGX": "USh", "KES": "KSh", "TZS": "TSh", "NGN": "₦", "USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "GHS": "GH₵", "ZAR": "R"}
+        current_user.currency_symbol = symbols.get(code, code)
+    current_user.currency_locked = lock
+    db.session.commit()
+    flash("Currency preference saved." + (" Locked — IP will not change it." if lock else ""), "success")
+    return redirect(url_for("profile.index"))
+
+
+@profile_bp.route("/sessions")
+@login_required
+def sessions():
+    rows = []
+    try:
+        from models.login_history import LoginHistory
+        rows = (
+            LoginHistory.query.filter_by(user_id=current_user.id)
+            .order_by(LoginHistory.login_time.desc())
+            .limit(30)
+            .all()
+        )
+    except Exception:
+        pass
+    return render_template("profile/sessions.html", sessions=rows)
+
+
+@profile_bp.route("/badges")
+@login_required
+def badges():
+    from services.badge_service import ensure_badges
+    from models.badge import Badge, UserBadge
+    ensure_badges()
+    all_b = Badge.query.order_by(Badge.id.asc()).all()
+    earned_ids = {ub.badge_id for ub in UserBadge.query.filter_by(user_id=current_user.id).all()}
+    return render_template("profile/badges.html", badges=all_b, earned_ids=earned_ids)
+
+
+@profile_bp.route("/mentor")
+@login_required
+def mentor():
+    """Anonymized progress for people you referred."""
+    from models.user import User
+    mentees = User.query.filter_by(referred_by_id=current_user.id).order_by(User.created_at.desc()).limit(50).all()
+    rows = []
+    for m in mentees:
+        rows.append({
+            "label": (m.username[:2] + "***") if m.username else "User",
+            "membership": m.membership.name if m.membership else "—",
+            "tasks_today": int(m.tasks_completed_today or 0),
+            "sets": int(m.daily_sets_completed or 0),
+            "negative": bool(getattr(m, "negative_today", False) or float(m.available_balance or 0) < 0),
+            "active": bool(m.is_active and not m.is_blocked),
+        })
+    return render_template("profile/mentor.html", rows=rows)

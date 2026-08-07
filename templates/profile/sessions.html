@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Login sessions{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-4 pb-12">
+  <h1 class="text-2xl font-black">Recent logins</h1>
+  <p class="text-sm text-zinc-400">Devices and locations from your login history.</p>
+  <div class="rounded-3xl border border-white/10 divide-y divide-white/5 bg-zinc-900/50">
+    {% for s in sessions %}
+    <div class="p-4 text-sm">
+      <p class="font-medium">{{ s.device or s.user_agent or "Device" }}</p>
+      <p class="text-xs text-zinc-500 mt-1">
+        {{ s.ip_address or "—" }}
+        {% if s.location or s.city or s.country %} · {{ s.location or ((s.city or '') ~ ' ' ~ (s.country or '')) }}{% endif %}
+        · {% if s.login_time %}{{ s.login_time.strftime('%d %b %Y %H:%M') }}{% endif %}
+      </p>
+    </div>
+    {% else %}
+    <p class="p-6 text-zinc-500 text-sm">No login history yet.</p>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('profile.index') }}" class="text-sm text-indigo-400">← Profile</a>
+</div>
+{% endblock %}

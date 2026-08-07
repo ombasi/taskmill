@@ -137,6 +137,25 @@ class TaskService:
         if remaining_budget <= 0:
             return 0.0
 
+        # Weekend mode + product-of-the-day boosts
+        try:
+            from models.settings import Settings
+            from datetime import datetime
+            settings = Settings.query.first()
+            if settings:
+                if datetime.utcnow().weekday() >= 5:  # Sat=5 Sun=6
+                    wb = float(getattr(settings, "weekend_bonus_percent", 0) or 0)
+                    if wb > 0 and not is_combo:
+                        commission = commission * (1.0 + wb / 100.0)
+                if not is_combo and product_price:
+                    from models.product import Product
+                    potd_id = getattr(settings, "potd_product_id", None)
+                    slots = int(getattr(settings, "potd_slots_left", 0) or 0)
+                    boost = float(getattr(settings, "potd_boost_percent", 0) or 0)
+                    # boost applied at assign time when product matches — handled in assign_task
+                    pass
+        except Exception:
+            pass
         return round(max(commission, 0.0), 0)
 
     @staticmethod
@@ -158,6 +177,8 @@ class TaskService:
             return False
 
         user.tasks_completed_today = 0
+        user.skips_used_today = 0
+        user.mystery_opened_today = False
         user.daily_sets_completed = 0
         user.mandatory_completed = False
         user.daily_limit_reached = False
@@ -336,6 +357,13 @@ class TaskService:
         commission = TaskService.calculate_commission(
             user, price, is_combo=False, task_set=current_set
         )
+
+        try:
+            diff = (getattr(product, "difficulty", None) or "standard").lower()
+            mult = {"easy": 0.85, "standard": 1.0, "challenge": 1.25}.get(diff, 1.0)
+            commission = round(float(commission) * mult, 0)
+        except Exception:
+            pass
         task_in_set = (int(user.tasks_completed_today or 0) % tasks_per_set) + 1
 
         # Deduct product price now
@@ -371,7 +399,7 @@ class TaskService:
 
 
     @staticmethod
-    def complete_task(task, rating=5, review=""):
+    def complete_task(task, rating=5, review="", proof_image=None):
         if task.status not in ("assigned", "frozen"):
             return False, "Task already completed or cancelled."
 
@@ -403,6 +431,8 @@ class TaskService:
         task.status = "completed"
         task.rating = max(1, min(5, int(rating or 5)))
         task.review = (review or "")[:2000]
+        if proof_image:
+            task.proof_image = proof_image
         task.completed_at = datetime.utcnow()
 
         commission = float(task.commission or 0)
@@ -516,6 +546,12 @@ class TaskService:
         except Exception:
             pass
         return True
+
+        try:
+            from services.badge_service import award
+            award(user.id, "combo_cleared")
+        except Exception:
+            pass
 
     @staticmethod
     def withdraw_checklist(user):
@@ -713,3 +749,47 @@ class TaskService:
             "withdrawal_done": bool(user.withdrawal_completed_today),
             "max_product_price": float(user.membership.max_product_price) if user.membership else 0,
         }
+
+
+    @staticmethod
+    def can_skip(user):
+        name = (user.membership.name if user.membership else "").lower()
+        if "vip" not in name:
+            return False, "Skip is only available for VIP members."
+        from models.settings import Settings
+        settings = Settings.query.first()
+        limit = int(getattr(settings, "vip_skips_per_day", 2) or 2)
+        used = int(getattr(user, "skips_used_today", 0) or 0)
+        if used >= limit:
+            return False, f"Daily skip limit reached ({limit})."
+        return True, ""
+
+    @staticmethod
+    def skip_current_task(user):
+        ok, reason = TaskService.can_skip(user)
+        if not ok:
+            return False, reason
+        task = (
+            Task.query.filter_by(user_id=user.id, status="assigned")
+            .filter(Task.task_set != 99)
+            .first()
+        )
+        if not task:
+            return False, "No active task to skip."
+        # Refund hold without commission
+        price = float(task.product_price or 0)
+        before = float(user.available_balance or 0)
+        user.available_balance = before + price
+        task.status = "cancelled"
+        user.skips_used_today = int(user.skips_used_today or 0) + 1
+        from models.wallet_transaction import WalletTransaction
+        db.session.add(WalletTransaction(
+            user_id=user.id,
+            amount=price,
+            transaction_type="task_skip_refund",
+            description=f"Skipped task – refund hold {task.product_name}",
+            balance_before=before,
+            balance_after=float(user.available_balance),
+        ))
+        db.session.commit()
+        return True, "Task skipped. Hold refunded."

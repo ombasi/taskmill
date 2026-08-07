@@ -229,6 +229,12 @@ class User(db.Model, UserMixin):
         default="UGX"
     )
 
+    currency_locked = db.Column(db.Boolean, default=False)
+    last_big_withdraw_at = db.Column(db.DateTime, nullable=True)
+    skips_used_today = db.Column(db.Integer, default=0)
+    mystery_opened_today = db.Column(db.Boolean, default=False)
+
+
     currency_symbol = db.Column(
         db.String(10),
         default="USh"

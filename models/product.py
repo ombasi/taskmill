@@ -39,6 +39,10 @@ class Product(db.Model):
         nullable=True
     )
 
+    # easy | standard | challenge
+    difficulty = db.Column(db.String(20), default="standard")
+
+
     partner_id = db.Column(
         db.Integer,
         db.ForeignKey("partners.id"),
