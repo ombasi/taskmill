@@ -1860,7 +1860,7 @@ def approve_withdrawal(withdrawal_id):
 def reject_withdrawal(withdrawal_id):
     from services.wallet_service import WalletService
     withdrawal = Withdrawal.query.get_or_404(withdrawal_id)
-    if withdrawal.status != "Pending":
+    if withdrawal.status not in ("Pending", "Processing"):
         flash("Already reviewed.", "warning")
         return redirect(url_for("admin.withdrawals"))
     ok = WalletService.reject_withdrawal(withdrawal, current_user)

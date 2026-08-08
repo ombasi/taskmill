@@ -434,7 +434,7 @@ class WalletService:
         admin
     ):
         """Funds were already held on request – just mark approved."""
-        if withdrawal.status != "Pending":
+        if withdrawal.status not in ("Pending", "Processing"):
             return False
 
         user = withdrawal.user
@@ -464,7 +464,7 @@ class WalletService:
         admin
     ):
         """Refund held amount back to available balance."""
-        if withdrawal.status != "Pending":
+        if withdrawal.status not in ("Pending", "Processing"):
             return False
 
         user = withdrawal.user

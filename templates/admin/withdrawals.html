@@ -19,7 +19,7 @@
   <form method="GET" class="glass rounded-2xl p-4 flex gap-3">
     <select name="status" class="bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
       <option value="">All Status</option>
-      {% for s in ['Pending','Approved','Rejected','Paid'] %}
+      {% for s in ['Pending','Processing','Approved','Rejected','Paid'] %}
       <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s }}</option>
       {% endfor %}
     </select>
@@ -50,11 +50,18 @@
           <td class="p-4 text-xs">{{ w.account_number or w.wallet_address or '—' }}</td>
           <td class="p-4">{{ w.status }}</td>
           <td class="p-4 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
-          <td class="p-4">
-            {% if w.status=='Pending' %}
-            <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
-              <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-amber-400 text-xs">Processing</a>
-            <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
+          <td class="p-4 space-x-2 whitespace-nowrap">
+            {% if w.status == 'Pending' %}
+              <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-amber-400 text-xs font-semibold">Processing</a>
+              <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold">Approve</a>
+              <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
+            {% elif w.status == 'Processing' %}
+              <a href="{{ url_for('admin.approve_withdrawal', withdrawal_id=w.id) }}" class="text-emerald-400 text-xs font-semibold">Approve</a>
+              <a href="{{ url_for('admin.reject_withdrawal', withdrawal_id=w.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
+            {% elif w.status == 'Approved' %}
+              <a href="{{ url_for('admin.mark_withdrawal_paid', withdrawal_id=w.id) }}" class="text-sky-400 text-xs font-semibold">Mark paid</a>
+            {% else %}
+              <span class="text-xs text-zinc-500">—</span>
             {% endif %}
           </td>
         </tr>
