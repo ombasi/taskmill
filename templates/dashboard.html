@@ -178,7 +178,7 @@
         ('wallet.withdraw', 'fa-arrow-up', 'Withdraw', 'Cash out', 'from-sky-500/20 to-blue-500/10', 'text-sky-300'),
         ('engagement.check_in', 'fa-calendar-check', 'Check-in', 'Claim XP', 'from-amber-500/20 to-orange-500/10', 'text-amber-300'),
         ('spin.index', 'fa-gift', 'Lucky Spin', 'Rewards', 'from-fuchsia-500/20 to-pink-500/10', 'text-fuchsia-300'),
-        ('chat.user_inbox', 'fa-comments', 'Support', 'Message admin', 'from-cyan-500/20 to-sky-500/10', 'text-cyan-300'),
+        ('chat.inbox', 'fa-comments', 'Support', 'Message admin', 'from-cyan-500/20 to-sky-500/10', 'text-cyan-300'),
         ('profile.index', 'fa-user', 'Profile', 'Account', 'from-zinc-500/20 to-slate-500/10', 'text-zinc-300'),
         ('engagement.kyc', 'fa-id-card', 'KYC', 'Verify ID', 'from-rose-500/15 to-red-500/10', 'text-rose-300'),
       ] %}
@@ -204,7 +204,7 @@
       </div>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
-    <a href="{{ url_for('dashboard.history') if 'dashboard.history' else url_for('task.index') }}" class="dash-card rounded-2xl px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
+    <a href="{{ url_for('task.history') }}" class="dash-card rounded-2xl px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
       <div>
         <p class="font-semibold text-sm">Task history</p>
         <p class="text-[11px] text-zinc-500">Pending & completed</p>
