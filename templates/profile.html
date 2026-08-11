@@ -1,93 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Profile{% endblock %}
 {% block content %}
+{% set name = current_user.full_name or current_user.username %}
+{% set mname = current_user.membership.name if current_user.membership else "None" %}
+<style>
+  .pf-hero {
+    background:
+      radial-gradient(600px 280px at 0% 0%, rgba(99,102,241,.3), transparent 60%),
+      radial-gradient(500px 240px at 100% 0%, rgba(236,72,153,.15), transparent 55%),
+      linear-gradient(180deg, rgba(15,23,42,.95), rgba(7,11,20,.5));
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .pf-card {
+    background: linear-gradient(145deg, rgba(24,24,37,.92), rgba(15,23,42,.8));
+    border: 1px solid rgba(255,255,255,.08);
+  }
+</style>
 
-<div class="max-w-4xl mx-auto space-y-5">
-<div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 mt-6">
-    <h3 class="font-bold mb-4">Activity stats</h3>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-      <div class="rounded-2xl bg-black/30 p-3">
-        <p class="text-lg font-black text-emerald-400">{{ money(current_user, current_user.total_earned or 0) }}</p>
-        <p class="text-[10px] text-zinc-500 uppercase mt-1">Total earned</p>
-      </div>
-      <div class="rounded-2xl bg-black/30 p-3">
-        <p class="text-lg font-black">{{ current_user.completed_tasks or 0 }}</p>
-        <p class="text-[10px] text-zinc-500 uppercase mt-1">Tasks done</p>
-      </div>
-      <div class="rounded-2xl bg-black/30 p-3">
-        <p class="text-lg font-black">{{ current_user.streak_days or 0 }}</p>
-        <p class="text-[10px] text-zinc-500 uppercase mt-1">Day streak</p>
-      </div>
-      <div class="rounded-2xl bg-black/30 p-3">
-        <p class="text-lg font-black">{{ current_user.referral_count or 0 }}</p>
-        <p class="text-[10px] text-zinc-500 uppercase mt-1">Referrals</p>
-      </div>
-    </div>
-  </div>
+<div class="max-w-4xl mx-auto px-3 sm:px-5 pb-24 space-y-5">
 
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 mt-6 space-y-4">
-    <h3 class="font-bold">Currency preference</h3>
-    <p class="text-xs text-zinc-500">Lock your currency so VPN / travel does not change it.</p>
-    <form method="POST" action="{{ url_for('profile.set_currency') }}" class="grid sm:grid-cols-2 gap-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div>
-        <label class="text-xs text-zinc-500">Currency</label>
-        <select name="currency" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
-          {% for c in ['UGX','KES','TZS','NGN','GHS','ZAR','USD','EUR','GBP','CAD'] %}
-          <option value="{{ c }}" {% if current_user.currency == c %}selected{% endif %}>{{ c }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <label class="flex items-center gap-2 text-sm mt-6">
-        <input type="checkbox" name="currency_locked" value="1" {% if current_user.currency_locked %}checked{% endif %}>
-        Lock currency (ignore IP)
-      </label>
-      <div class="sm:col-span-2">
-        <button class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold">Save currency</button>
-      </div>
-    </form>
-  </div>
-
-  <p class="mt-6 text-sm"><a href="{{ url_for('profile.sessions') }}" class="text-indigo-400 hover:underline">View login sessions</a></p>
-  <p class="mt-2 text-sm"><a href="{{ url_for('profile.badges') }}" class="text-indigo-400 hover:underline">Badges</a>{% if current_user.streak_days %}<span class="text-zinc-500"> · 🔥 {{ current_user.streak_days }} day streak</span>{% endif %} · <a href="{{ url_for('profile.mentor') }}" class="text-indigo-400 hover:underline">Mentor view →</a></p>
-
-
-  {# Header card #}
-  <section class="relative overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8"
-           style="background: radial-gradient(100% 80% at 0% 0%, rgba(99,102,241,.35), transparent 50%), #0c0f1a;">
-    <div class="flex flex-col sm:flex-row items-center gap-5">
+  {# Header #}
+  <section class="pf-hero rounded-[1.75rem] p-5 sm:p-7">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
       <div class="relative">
-        <img src="{{ avatar_url }}" alt="Avatar"
-             class="w-24 h-24 md:w-28 md:h-28 rounded-3xl object-cover border-2 border-white/20 shadow-xl bg-zinc-800">
-        <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-indigo-600 border border-white/20 flex items-center justify-center text-xs">
-          <i class="fa-solid fa-camera"></i>
-        </span>
+        <img src="{{ avatar_url }}" alt="" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover ring-2 ring-indigo-400/40 shadow-xl">
+        <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-zinc-950"></span>
       </div>
-      <div class="text-center sm:text-left flex-1">
-        <h1 class="text-2xl md:text-3xl font-black">{{ current_user.full_name or current_user.username }}</h1>
-        <p class="text-zinc-400 text-sm mt-1">@{{ current_user.username }} · {{ current_user.email }}</p>
-        <div class="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
-          <span class="text-xs rounded-full bg-indigo-500/20 text-indigo-200 px-3 py-1">
-            {{ current_user.membership.name if current_user.membership else "Starter" }}
-          </span>
-          <span class="text-xs rounded-full bg-white/5 text-zinc-300 px-3 py-1">{{ current_user.country or "—" }}</span>
-          {% if current_user.sex %}
-          <span class="text-xs rounded-full bg-white/5 text-zinc-300 px-3 py-1">{{ current_user.sex }}</span>
-          {% endif %}
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl sm:text-3xl font-black truncate">{{ name }}</h1>
+        <p class="text-sm text-zinc-400 mt-0.5">@{{ current_user.username }}</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="rounded-full bg-indigo-500/15 border border-indigo-400/20 text-indigo-200 text-xs font-semibold px-3 py-1">{{ mname }}</span>
+          <span class="rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs px-3 py-1">Level {{ current_user.user_level or 1 }}</span>
+          <span class="rounded-full bg-white/5 border border-white/10 text-zinc-300 text-xs px-3 py-1">{{ current_user.currency or 'UGX' }}</span>
         </div>
+      </div>
+      <div class="sm:text-right">
+        <p class="text-[11px] uppercase tracking-wider text-zinc-500">Balance</p>
+        <p class="text-xl font-black text-emerald-300">{{ money(current_user, current_user.available_balance or 0) }}</p>
       </div>
     </div>
   </section>
 
+  {# Stats #}
+  <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {% for label, val, color in [
+      ('Total earned', money(current_user, current_user.total_earned or 0), 'text-emerald-300'),
+      ('Tasks done', current_user.completed_tasks or 0, 'text-white'),
+      ('Day streak', current_user.streak_days or 0, 'text-amber-300'),
+      ('Referrals', current_user.referral_count or 0, 'text-indigo-300'),
+    ] %}
+    <div class="pf-card rounded-2xl p-4 text-center">
+      <p class="text-lg font-black {{ color }}">{{ val }}</p>
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 mt-1">{{ label }}</p>
+    </div>
+    {% endfor %}
+  </section>
+
   <div class="grid lg:grid-cols-5 gap-4">
     {# Locked identity #}
-    <div class="lg:col-span-3 rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="font-bold text-lg">Account details</h2>
-        <span class="text-[11px] text-zinc-500 flex items-center gap-1"><i class="fa-solid fa-lock"></i> Locked</span>
-      </div>
-
-      <div class="grid sm:grid-cols-2 gap-3">
+    <div class="lg:col-span-3 pf-card rounded-[1.5rem] p-5 space-y-4">
+      <h2 class="font-bold">Account details</h2>
+      <p class="text-xs text-zinc-500">Locked fields — contact support for corrections.</p>
+      <div class="grid sm:grid-cols-2 gap-2.5">
         {% for label, value in [
           ('Full name', current_user.full_name or '—'),
           ('Username', current_user.username),
@@ -104,100 +79,118 @@
         </div>
         {% endfor %}
       </div>
-      <p class="text-xs text-zinc-500">Name, username, email, sex, date of birth, and country cannot be changed. Contact admin if a correction is required.</p>
     </div>
 
-    {# Editable side #}
+    {# Editable #}
     <div class="lg:col-span-2 space-y-4">
-      {# Avatar #}
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+      <div class="pf-card rounded-[1.5rem] p-5">
         <h2 class="font-bold mb-3">Profile photo</h2>
         <form method="POST" enctype="multipart/form-data" class="space-y-3">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="avatar">
           <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required
-                 class="block w-full text-xs text-zinc-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-2 file:text-white file:text-xs">
-          <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 py-2.5 text-sm font-semibold">Upload photo</button>
+                 class="w-full text-sm text-zinc-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-2 file:text-xs file:font-bold file:text-white">
+          <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 py-2.5 text-sm font-bold">Update photo</button>
         </form>
       </div>
 
-      {# Phone #}
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+      <div class="pf-card rounded-[1.5rem] p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-bold">Phone number</h2>
-          <span class="text-[11px] rounded-full px-2 py-0.5 {% if phone_changes_left > 0 %}bg-emerald-500/15 text-emerald-300{% else %}bg-rose-500/15 text-rose-300{% endif %}">
+          <h2 class="font-bold">Phone</h2>
+          <span class="text-[10px] rounded-full px-2 py-0.5 {% if phone_changes_left > 0 %}bg-emerald-500/15 text-emerald-300{% else %}bg-rose-500/15 text-rose-300{% endif %}">
             {{ phone_changes_left }}/{{ phone_changes_max }} left
           </span>
         </div>
         <form method="POST" class="space-y-3">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="phone">
-          <input type="text" name="phone" value="{{ current_user.phone or '' }}"
-                 placeholder="e.g. 07XXXXXXXX"
+          <input type="text" name="phone" value="{{ current_user.phone or '' }}" placeholder="07XXXXXXXX"
                  {% if phone_changes_left <= 0 %}disabled{% endif %}
                  class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm disabled:opacity-50">
-          <button type="submit"
-                  {% if phone_changes_left <= 0 %}disabled{% endif %}
-                  class="w-full rounded-xl bg-white/10 hover:bg-white/15 py-2.5 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+          <button type="submit" {% if phone_changes_left <= 0 %}disabled{% endif %}
+                  class="w-full rounded-xl bg-white/10 hover:bg-white/15 py-2.5 text-sm font-semibold disabled:opacity-40">
             Update phone
           </button>
         </form>
-        <p class="text-[11px] text-zinc-500 mt-2">Maximum {{ phone_changes_max }} changes per calendar month.</p>
-      </div>
-
-      {# Security links #}
-      
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-2">
-        <h2 class="font-bold mb-2">Security</h2>
-        <a href="{{ url_for('profile.change_password') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
-          <span class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center"><i class="fa-solid fa-key"></i></span>
-          <span class="text-sm font-medium">Change password</span>
-        </a>
-        <a href="{{ url_for('spin.index') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
-          <span class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-300 flex items-center justify-center"><i class="fa-solid fa-gift"></i></span>
-          <span class="text-sm font-medium">Lucky Spin</span>
-        </a>
-        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition">
-          <span class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center"><i class="fa-solid fa-lock"></i></span>
-          <span class="text-sm font-medium">Withdraw PIN</span>
-        </a>
       </div>
     </div>
   </div>
-</div>
 
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 space-y-3">
-    <h3 class="font-bold flex items-center gap-2">
-      <span class="text-sky-400">✈</span> Push alerts (Telegram)
-    </h3>
+  {# Currency #}
+  <section class="pf-card rounded-[1.5rem] p-5 space-y-3">
+    <h2 class="font-bold">Currency preference</h2>
+    <p class="text-xs text-zinc-500">Lock currency so VPN / travel does not change display rates.</p>
+    <form method="POST" action="{{ url_for('profile.set_currency') }}" class="grid sm:grid-cols-3 gap-3 items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div class="sm:col-span-1">
+        <label class="text-xs text-zinc-500">Currency</label>
+        <select name="currency" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+          {% for c in ['UGX','KES','TZS','NGN','GHS','ZAR','USD','EUR','GBP','CAD'] %}
+          <option value="{{ c }}" {% if (current_user.currency or 'UGX') == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex items-center gap-2 sm:col-span-1">
+        <label class="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+          <input type="checkbox" name="currency_locked" value="1" {% if current_user.currency_locked %}checked{% endif %} class="rounded border-white/20">
+          Lock currency
+        </label>
+      </div>
+      <button type="submit" class="rounded-xl bg-indigo-600 hover:bg-indigo-500 py-3 text-sm font-bold">Save currency</button>
+    </form>
+  </section>
+
+  {# Telegram #}
+  <section class="pf-card rounded-[1.5rem] p-5 space-y-3">
+    <h2 class="font-bold flex items-center gap-2">
+      <span class="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-300 flex items-center justify-center text-sm"><i class="fa-brands fa-telegram"></i></span>
+      Push alerts (Telegram)
+    </h2>
     <p class="text-xs text-zinc-500">
-      1) Open your platform bot on Telegram and send <strong>/start</strong>.
-      2) Get your chat ID (ask admin or use getUpdates).
-      3) Paste it below and save. You will get alerts for deposits, withdrawals, and combos.
+      Message the platform bot with <strong>/start</strong>, get your chat ID from @userinfobot, paste it here.
     </p>
     <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-3">
       <input type="hidden" name="action" value="telegram_prefs">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div>
-        <label class="text-xs text-zinc-500">Telegram chat ID</label>
-        <input name="telegram_chat_id" value="{{ current_user.telegram_chat_id or '' }}"
-               placeholder="e.g. 123456789"
-               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm font-mono">
-      </div>
-      <div>
-        <label class="text-xs text-zinc-500">WhatsApp number (optional)</label>
-        <input name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}"
-               placeholder="+256..."
-               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-zinc-500">Telegram chat ID</label>
+          <input name="telegram_chat_id" value="{{ current_user.telegram_chat_id or '' }}"
+                 placeholder="123456789"
+                 class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm font-mono">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-500">WhatsApp (optional)</label>
+          <input name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}"
+                 placeholder="+256..."
+                 class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+        </div>
       </div>
       <button type="submit" class="rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-sm font-bold">Save alert settings</button>
     </form>
-    <p class="text-xs text-zinc-500">
-      <a class="text-emerald-400 hover:underline" href="{{ url_for('engagement.check_in') }}">Daily check-in</a>
-      ·
-      <a class="text-indigo-400 hover:underline" href="{{ url_for('engagement.kyc') }}">KYC verification</a>
-    </p>
-  </div>
+  </section>
 
+  {# Security & links #}
+  <section class="pf-card rounded-[1.5rem] p-5">
+    <h2 class="font-bold mb-3">Security & tools</h2>
+    <div class="grid sm:grid-cols-2 gap-2">
+      {% set links = [
+        ('profile.change_password', 'fa-key', 'Change password', 'text-indigo-300', 'bg-indigo-500/15'),
+        ('profile.set_withdraw_pin', 'fa-lock', 'Withdraw PIN', 'text-emerald-300', 'bg-emerald-500/15'),
+        ('spin.index', 'fa-gift', 'Lucky Spin', 'text-amber-300', 'bg-amber-500/15'),
+        ('engagement.check_in', 'fa-calendar-check', 'Daily check-in', 'text-teal-300', 'bg-teal-500/15'),
+        ('engagement.kyc', 'fa-id-card', 'KYC verification', 'text-rose-300', 'bg-rose-500/15'),
+        ('profile.sessions', 'fa-mobile-screen', 'Sessions', 'text-sky-300', 'bg-sky-500/15'),
+      ] %}
+      {% for ep, icon, label, color, bg in links %}
+      <a href="{{ safe_url_for(ep) if safe_url_for is defined else url_for(ep) }}"
+         class="flex items-center gap-3 rounded-2xl px-3 py-3 hover:bg-white/5 transition border border-transparent hover:border-white/10">
+        <span class="w-9 h-9 rounded-xl {{ bg }} {{ color }} flex items-center justify-center"><i class="fa-solid {{ icon }}"></i></span>
+        <span class="text-sm font-medium">{{ label }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
 
+</div>
 {% endblock %}
