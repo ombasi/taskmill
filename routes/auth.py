@@ -201,6 +201,15 @@ def register():
             flash("You must be at least 20 years old to register.", "danger")
             return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
 
+        if not referral:
+            flash("A valid referral code is required to create an account.", "danger")
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
+
+        referrer = User.query.filter_by(referral_code=referral).first()
+        if not referrer:
+            flash("Invalid referral code. Ask your inviter for the correct code.", "danger")
+            return render_template("register.html", world_countries=_world_countries(), max_dob=_max_dob())
+
         if User.query.filter_by(username=username).first():
 
             flash("Username already exists.", "danger")

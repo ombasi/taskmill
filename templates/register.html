@@ -2,110 +2,102 @@
 {% block title %}Register · Taskmill{% endblock %}
 {% block content %}
 <style>
-  .reg-wrap {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 1rem 0.75rem 6rem;
-  }
+  .reg-wrap { max-width: 560px; margin: 0 auto; padding: 1rem 0.75rem 6rem; }
   .reg-card {
-    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(15,23,42,.94));
-    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(165deg, rgba(15,23,42,.98), rgba(8,12,22,.99));
+    border: 1px solid rgba(255,255,255,.14);
     border-radius: 1.75rem;
-    box-shadow: 0 28px 70px -32px rgba(0,0,0,.85), 0 0 60px -20px rgba(226,232,240,.16);
+    box-shadow: 0 28px 80px -32px rgba(0,0,0,.9), 0 0 80px -24px rgba(186,230,253,.2);
     position: relative;
   }
   .reg-card::before {
     content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,.45), rgba(203,213,225,.15) 40%, rgba(100,116,139,.2));
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.65) 0%, rgba(186,230,253,.35) 30%, rgba(148,163,184,.2) 65%, rgba(255,255,255,.4) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    -webkit-mask-composite: xor; mask-composite: exclude;
     pointer-events: none;
   }
   .pt-text {
-    background: linear-gradient(120deg, #fff 0%, #e2e8f0 35%, #94a3b8 60%, #f8fafc 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .pt-btn {
-    background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 28%, #94a3b8 52%, #cbd5e1 78%, #f1f5f9 100%);
-    color: #0f172a;
-    font-weight: 800;
-    box-shadow: 0 14px 32px -14px rgba(226,232,240,.5);
+    background: linear-gradient(145deg, #fff 0%, #f1f5f9 20%, #e2e8f0 40%, #bae6fd 60%, #cbd5e1 80%, #fff 100%);
+    color: #0f172a; font-weight: 800;
+    box-shadow: 0 14px 36px -12px rgba(186,230,253,.5);
   }
-  .pt-btn:hover { filter: brightness(1.05); }
+  .pt-btn:hover { filter: brightness(1.06); }
   .pt-input {
-    background: linear-gradient(180deg, rgba(0,0,0,.5), rgba(15,23,42,.65));
-    border: 1px solid rgba(203,213,225,.14);
-    border-radius: 1rem;
-    width: 100%;
-    padding: 0.85rem 1rem;
-    font-size: 0.875rem;
-    color: #fff;
+    background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(15,23,42,.7));
+    border: 1px solid rgba(186,230,253,.18);
+    border-radius: 1rem; width: 100%; padding: 0.85rem 1rem;
+    font-size: 0.875rem; color: #fff;
   }
   .pt-input:focus {
-    outline: none;
-    border-color: rgba(226,232,240,.4);
-    box-shadow: 0 0 0 3px rgba(148,163,184,.18);
+    outline: none; border-color: rgba(186,230,253,.5);
+    box-shadow: 0 0 0 3px rgba(125,211,252,.18);
   }
   .pt-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #71717a;
-    margin-bottom: 0.4rem;
+    display: block; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: #71717a; margin-bottom: 0.4rem;
   }
+  .req { color: #fca5a5; }
 </style>
 
 <div class="reg-wrap">
   <div class="text-center mb-6">
     <div class="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center
-                bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 shadow-lg shadow-slate-400/25">
-      <i class="fa-solid fa-user-plus text-zinc-900 text-xl"></i>
+                bg-gradient-to-br from-white via-sky-100 to-slate-300 shadow-lg shadow-sky-200/30 ring-1 ring-white/40">
+      <i class="fa-solid fa-gem text-zinc-900 text-xl"></i>
     </div>
     <h1 class="mt-4 text-3xl font-black pt-text">Create account</h1>
-    <p class="text-zinc-400 text-sm mt-2">Join Taskmill and start reviewing products</p>
+    <p class="text-zinc-400 text-sm mt-2">Invitation only — a referral code is required</p>
   </div>
 
   <div class="reg-card p-6 sm:p-8">
     <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4 relative">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+      {# REQUIRED REFERRAL — top of form #}
+      <div class="rounded-2xl border border-sky-400/25 bg-sky-500/10 p-4">
+        <label class="pt-label text-sky-200/90">Referral code <span class="req">*</span></label>
+        <input type="text" name="referral_code" required
+               value="{{ request.args.get('ref','') or request.form.get('referral_code','') }}"
+               class="pt-input font-mono tracking-wide" placeholder="Enter inviter code"
+               autocomplete="off">
+        <p class="text-[11px] text-zinc-500 mt-2">You cannot register without a valid code from a Taskmill member.</p>
+      </div>
+
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="pt-label">Full name</label>
-          <input type="text" name="full_name" required class="pt-input" placeholder="Your full name">
+          <label class="pt-label">Full name <span class="req">*</span></label>
+          <input type="text" name="full_name" required class="pt-input" placeholder="Your full name" value="{{ request.form.full_name or '' }}">
         </div>
         <div>
-          <label class="pt-label">Username</label>
-          <input type="text" name="username" required class="pt-input" placeholder="Choose a username">
+          <label class="pt-label">Username <span class="req">*</span></label>
+          <input type="text" name="username" required class="pt-input" placeholder="Choose a username" value="{{ request.form.username or '' }}">
         </div>
       </div>
 
       <div>
-        <label class="pt-label">Email</label>
-        <input type="email" name="email" required class="pt-input" placeholder="you@email.com">
+        <label class="pt-label">Email <span class="req">*</span></label>
+        <input type="email" name="email" required class="pt-input" placeholder="you@email.com" value="{{ request.form.email or '' }}">
       </div>
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="pt-label">Phone</label>
-          <input type="text" name="phone" class="pt-input" placeholder="07XXXXXXXX">
+          <input type="text" name="phone" class="pt-input" placeholder="07XXXXXXXX" value="{{ request.form.phone or '' }}">
         </div>
         <div>
-          <label class="pt-label">Country</label>
+          <label class="pt-label">Country <span class="req">*</span></label>
           <select name="country" required class="pt-input">
-            <option value="" disabled selected>Select country</option>
+            <option value="" disabled {% if not request.form.country %}selected{% endif %}>Select country</option>
             {% for c in world_countries|default([]) %}
-            <option value="{{ c }}">{{ c }}</option>
+            <option value="{{ c }}" {% if request.form.country == c %}selected{% endif %}>{{ c }}</option>
             {% else %}
             <option value="Uganda">Uganda</option>
             <option value="Kenya">Kenya</option>
@@ -122,38 +114,34 @@
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="pt-label">Password</label>
+          <label class="pt-label">Password <span class="req">*</span></label>
           <input type="password" name="password" required minlength="6" class="pt-input" placeholder="Min 6 characters">
         </div>
         <div>
-          <label class="pt-label">Confirm password</label>
+          <label class="pt-label">Confirm password <span class="req">*</span></label>
           <input type="password" name="confirm_password" required minlength="6" class="pt-input" placeholder="Repeat password">
         </div>
       </div>
 
-      <div>
-        <label class="pt-label">Referral code (optional)</label>
-        <input type="text" name="referral_code" value="{{ request.args.get('ref','') }}" class="pt-input" placeholder="Friend's code">
-      </div>
-
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="pt-label">Sex</label>
-          <select name="sex" class="pt-input">
-            <option value="">Prefer not to say</option>
+          <label class="pt-label">Sex <span class="req">*</span></label>
+          <select name="sex" required class="pt-input">
+            <option value="" disabled selected>Select</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
+            <option value="Other">Other</option>
           </select>
         </div>
         <div>
-          <label class="pt-label">Date of birth</label>
-          <input type="date" name="date_of_birth" class="pt-input" {% if max_dob %}max="{{ max_dob }}"{% endif %}>
+          <label class="pt-label">Date of birth <span class="req">*</span></label>
+          <input type="date" name="date_of_birth" required class="pt-input" {% if max_dob %}max="{{ max_dob }}"{% endif %}>
         </div>
       </div>
 
       <label class="flex items-start gap-2 text-xs text-zinc-400 cursor-pointer pt-1">
         <input type="checkbox" name="accept_terms" value="1" required class="mt-0.5 rounded border-white/20 bg-zinc-900">
-        <span>I agree to the <a href="{{ url_for('dashboard.terms') }}" class="text-slate-200 underline">Terms & Conditions</a></span>
+        <span>I agree to the <a href="{{ url_for('dashboard.terms') }}" class="text-sky-200 underline">Terms & Conditions</a> <span class="req">*</span></span>
       </label>
 
       <button type="submit" class="pt-btn w-full rounded-2xl py-3.5 text-sm mt-2">
