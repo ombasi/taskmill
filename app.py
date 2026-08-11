@@ -493,9 +493,13 @@ def create_app():
 
     @app.context_processor
     def inject_helpers():
-        return dict(
-            money=money
-        )
+        def safe_url_for(endpoint, **values):
+            try:
+                from flask import url_for as _uf
+                return _uf(endpoint, **values)
+            except Exception:
+                return "#"
+        return dict(money=money, safe_url_for=safe_url_for)
 
     app.context_processor(inject_csrf)
 

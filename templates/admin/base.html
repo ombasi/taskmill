@@ -225,7 +225,7 @@
       ] %}
       {% endif %}
       {% for ep, icon, label in links %}
-      <a href="{{ url_for(ep) }}" title="{{ label }}"
+      <a href="{{ safe_url_for(ep) if safe_url_for is defined else url_for(ep) }}" title="{{ label }}"
          class="sidebar-link {% if request.endpoint == ep or (request.endpoint and ep.split('.')[1] in (request.endpoint or '')) %}active{% endif %}">
         <i class="fa-solid {{ icon }}"></i>
         <span class="nav-label text-sm font-medium">{{ label }}</span>
