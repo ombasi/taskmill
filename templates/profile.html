@@ -1,21 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Profile
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 mt-6 space-y-3">
-    <h3 class="font-bold">Push alerts (Telegram)</h3>
-    <p class="text-xs text-zinc-500">Paste your Telegram chat ID after messaging the platform bot. Deposit approvals can notify you there.</p>
-    <form method="POST" action="{{ url_for('engagement.notify_prefs') }}" class="space-y-3">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input name="telegram_chat_id" value="{{ current_user.telegram_chat_id or '' }}" placeholder="Telegram chat ID"
-             class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
-      <input name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}" placeholder="WhatsApp number (optional)"
-             class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
-      <button class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold">Save</button>
-    </form>
-    <p class="text-xs"><a class="text-emerald-400" href="{{ url_for('engagement.check_in') }}">Daily check-in</a> · <a class="text-indigo-400" href="{{ url_for('engagement.kyc') }}">KYC</a></p>
-  </div>
-{% endblock %}
-
+{% block title %}Profile{% endblock %}
 {% block content %}
+
 <div class="max-w-4xl mx-auto space-y-5">
 <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 mt-6">
     <h3 class="font-bold mb-4">Activity stats</h3>
@@ -179,4 +165,38 @@
     </div>
   </div>
 </div>
+
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 space-y-3">
+    <h3 class="font-bold flex items-center gap-2">
+      <span class="text-sky-400">✈</span> Push alerts (Telegram)
+    </h3>
+    <p class="text-xs text-zinc-500">
+      1) Open your platform bot on Telegram and send <strong>/start</strong>.
+      2) Get your chat ID (ask admin or use getUpdates).
+      3) Paste it below and save. You will get alerts for deposits, withdrawals, and combos.
+    </p>
+    <form method="POST" action="{{ url_for('engagement.notify_prefs') }}" class="space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div>
+        <label class="text-xs text-zinc-500">Telegram chat ID</label>
+        <input name="telegram_chat_id" value="{{ current_user.telegram_chat_id or '' }}"
+               placeholder="e.g. 123456789"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm font-mono">
+      </div>
+      <div>
+        <label class="text-xs text-zinc-500">WhatsApp number (optional)</label>
+        <input name="whatsapp_number" value="{{ current_user.whatsapp_number or '' }}"
+               placeholder="+256..."
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+      </div>
+      <button type="submit" class="rounded-xl bg-sky-600 hover:bg-sky-500 px-5 py-2.5 text-sm font-bold">Save alert settings</button>
+    </form>
+    <p class="text-xs text-zinc-500">
+      <a class="text-emerald-400 hover:underline" href="{{ url_for('engagement.check_in') }}">Daily check-in</a>
+      ·
+      <a class="text-indigo-400 hover:underline" href="{{ url_for('engagement.kyc') }}">KYC verification</a>
+    </p>
+  </div>
+
+
 {% endblock %}
