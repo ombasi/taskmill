@@ -33,51 +33,80 @@ from models.payment_setting import PaymentSetting
 def _ensure_schema_columns():
     """Add missing columns used by newer features (safe on Postgres + SQLite)."""
     from sqlalchemy import text, inspect
+
+    def _add(table, name, typ):
+        try:
+            dialect = db.engine.dialect.name
+            if dialect == "postgresql":
+                db.session.execute(text(
+                    f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {name} {typ}"
+                ))
+            else:
+                insp = inspect(db.engine)
+                cols = {c["name"] for c in insp.get_columns(table)}
+                if name in cols:
+                    return
+                db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {typ}"))
+            db.session.commit()
+            print(f"Added {table}.{name}")
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            print(f"ensure {table}.{name}:", e)
+
     try:
         insp = inspect(db.engine)
-        tables = insp.get_table_names()
+        tables = set(insp.get_table_names())
+        dialect = db.engine.dialect.name
+        bool_t = "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"
+        int_t = "INTEGER DEFAULT 0"
+        float_t = "DOUBLE PRECISION DEFAULT 0" if dialect == "postgresql" else "FLOAT DEFAULT 0"
 
-        # notifications.is_broadcast
         if "notifications" in tables:
-            cols = [c["name"] for c in insp.get_columns("notifications")]
-            if "is_broadcast" not in cols:
-                dialect = db.engine.dialect.name
-                if dialect == "postgresql":
-                    db.session.execute(text(
-                        "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_broadcast BOOLEAN DEFAULT FALSE"
-                    ))
-                else:
-                    db.session.execute(text(
-                        "ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"
-                    ))
-                db.session.commit()
-                print("Added notifications.is_broadcast")
-
-        # login_history.location
+            _add("notifications", "is_broadcast", bool_t)
         if "login_history" in tables:
-            lcols = [c["name"] for c in insp.get_columns("login_history")]
-            if "location" not in lcols:
-                db.session.execute(text(
-                    "ALTER TABLE login_history ADD COLUMN location VARCHAR(255)"
-                ))
-                db.session.commit()
-                print("Added login_history.location")
+            _add("login_history", "location", "VARCHAR(255)")
 
-        # users.is_agent
         if "users" in tables:
-            ucols = [c["name"] for c in insp.get_columns("users")]
-            if "is_agent" not in ucols:
-                dialect = db.engine.dialect.name
-                if dialect == "postgresql":
-                    db.session.execute(text(
-                        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_agent BOOLEAN DEFAULT FALSE"
-                    ))
-                else:
-                    db.session.execute(text(
-                        "ALTER TABLE users ADD COLUMN is_agent BOOLEAN DEFAULT 0"
-                    ))
-                db.session.commit()
-                print("Added users.is_agent")
+            user_cols = [
+                ("is_agent", bool_t),
+                ("session_version", int_t),
+                ("xp_points", int_t),
+                ("user_level", "INTEGER DEFAULT 1"),
+                ("quality_score", "DOUBLE PRECISION DEFAULT 50" if dialect == "postgresql" else "FLOAT DEFAULT 50"),
+                ("checkin_streak", int_t),
+                ("last_checkin", "DATE"),
+                ("telegram_chat_id", "VARCHAR(64)"),
+                ("whatsapp_number", "VARCHAR(40)"),
+                ("kyc_status", "VARCHAR(20)"),
+                ("streak_days", int_t),
+                ("last_task_day", "DATE"),
+                ("currency_locked", bool_t),
+                ("skips_used_today", int_t),
+                ("mystery_opened_today", bool_t),
+                ("last_big_withdraw_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+            ]
+            for n, typ in user_cols:
+                _add("users", n, typ)
+
+        if "settings" in tables:
+            for n, typ in [
+                ("telegram_bot_token", "VARCHAR(120)"),
+                ("kyc_withdraw_threshold", float_t),
+            ]:
+                _add("settings", n, typ)
+
+        # engagement tables
+        try:
+            db.create_all()
+        except Exception as e:
+            print("create_all in ensure:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
     except Exception as e:
         print("ensure schema columns:", e)
@@ -189,7 +218,23 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            print("load_user:", e)
+            try:
+                return db.session.get(User, int(user_id))
+            except Exception as e2:
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+                print("load_user retry:", e2)
+                return None
 
     # Register Blueprints
     app.register_blueprint(auth_bp)
@@ -476,18 +521,24 @@ def create_app():
     def _check_session_version():
         from flask_login import current_user
         from flask import session, redirect, url_for
-        if current_user.is_authenticated:
+        try:
+            if not current_user.is_authenticated:
+                return None
+            sv = int(getattr(current_user, "session_version", 0) or 0)
+            if "sv" not in session:
+                session["sv"] = sv
+            elif int(session.get("sv") or 0) != sv:
+                from flask_login import logout_user
+                logout_user()
+                session.clear()
+                return redirect(url_for("auth.login"))
+        except Exception as e:
             try:
-                sv = int(getattr(current_user, "session_version", 0) or 0)
-                if "sv" not in session:
-                    session["sv"] = sv
-                elif int(session.get("sv") or 0) != sv:
-                    from flask_login import logout_user
-                    logout_user()
-                    session.clear()
-                    return redirect(url_for("auth.login"))
+                db.session.rollback()
             except Exception:
                 pass
+            print("session_version check:", e)
+            return None
 
     return app
 
