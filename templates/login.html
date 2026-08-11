@@ -1,46 +1,124 @@
 {% extends "base.html" %}
 {% block title %}Login · Taskmill{% endblock %}
 {% block content %}
-<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-6">
-  <div class="w-full max-w-[400px]">
-    <div class="text-center mb-6">
-      <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-        <i class="fa-solid fa-cube text-xl"></i>
+<style>
+  .login-wrap {
+    min-height: calc(100dvh - 6rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    position: relative;
+  }
+  .login-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(600px 320px at 20% 0%, rgba(226,232,240,.14), transparent 55%),
+      radial-gradient(500px 280px at 85% 20%, rgba(148,163,184,.1), transparent 50%),
+      radial-gradient(400px 240px at 50% 100%, rgba(99,102,241,.12), transparent 55%);
+    pointer-events: none;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    background: linear-gradient(165deg, rgba(39,39,42,.94), rgba(15,23,42,.92));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.75rem;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.04) inset,
+      0 30px 80px -40px rgba(0,0,0,.9),
+      0 0 60px -20px rgba(148,163,184,.15);
+  }
+  .login-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,.05) 40%, rgba(148,163,184,.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .pt-text {
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 40%, #94a3b8 60%, #f1f5f9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .pt-btn {
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 35%, #94a3b8 55%, #e2e8f0 100%);
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 12px 30px -12px rgba(226,232,240,.5);
+  }
+  .pt-btn:hover { filter: brightness(1.05); }
+  .pt-input {
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .pt-input:focus {
+    outline: none;
+    border-color: rgba(203,213,225,.45);
+    box-shadow: 0 0 0 3px rgba(148,163,184,.15);
+  }
+</style>
+
+<div class="login-wrap">
+  <div class="login-card p-6 sm:p-8">
+    <div class="text-center mb-7">
+      <div class="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center
+                  bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500
+                  shadow-lg shadow-slate-400/20 ring-1 ring-white/30">
+        <i class="fa-solid fa-cube text-zinc-900 text-xl"></i>
       </div>
-      <h1 class="mt-4 text-2xl font-black">Welcome back</h1>
-      <p class="text-zinc-400 mt-1 text-sm">Sign in to Taskmill</p>
+      <h1 class="mt-5 text-3xl font-black pt-text tracking-tight">Welcome back</h1>
+      <p class="text-zinc-400 mt-2 text-sm">Sign in to your Taskmill account</p>
     </div>
 
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/80 p-6 shadow-2xl">
-      <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Username or email</label>
-          <input type="text" name="username" required autocomplete="username"
-                 class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm focus:border-indigo-500 outline-none">
+    <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Username or email</label>
+        <input type="text" name="username" required autocomplete="username" placeholder="your username"
+               class="pt-input w-full rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-zinc-600">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Password</label>
+        <div class="relative">
+          <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+                 class="pt-input w-full rounded-2xl px-4 py-3.5 pr-12 text-sm text-white placeholder:text-zinc-600">
+          <button type="button" onclick="var p=document.getElementById('password');p.type=p.type==='password'?'text':'password'"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">
+            <i class="fa-solid fa-eye"></i>
+          </button>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1.5">Password</label>
-          <div class="relative">
-            <input id="password" type="password" name="password" required autocomplete="current-password"
-                   class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 pr-11 text-sm focus:border-indigo-500 outline-none">
-            <button type="button" onclick="var p=document.getElementById('password');p.type=p.type==='password'?'text':'password'"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"><i class="fa-solid fa-eye"></i></button>
-          </div>
-        </div>
-        <div class="flex items-center justify-between text-xs">
-          <label class="flex items-center gap-2 text-zinc-400">
-            <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900">
-            Remember me
-          </label>
-          <a href="{{ url_for('auth.forgot_password') }}" class="text-indigo-400 hover:underline">Forgot password?</a>
-        </div>
-        <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 py-3 font-bold text-sm">
-          Sign in
-        </button>
-      </form>
-      <p class="text-center text-xs text-zinc-500 mt-5">
-        No account? <a href="{{ url_for('auth.register') }}" class="text-indigo-400 font-semibold">Create one</a>
+      </div>
+
+      <div class="flex items-center justify-between text-xs pt-0.5">
+        <label class="flex items-center gap-2 text-zinc-400 cursor-pointer">
+          <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900 text-slate-300 focus:ring-slate-400/40">
+          Remember me
+        </label>
+        <a href="{{ url_for('auth.forgot_password') }}" class="text-slate-300 hover:text-white font-medium transition">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="pt-btn w-full rounded-2xl py-3.5 text-sm mt-1 transition">
+        Sign in
+      </button>
+    </form>
+
+    <div class="mt-6 pt-5 border-t border-white/10 text-center">
+      <p class="text-xs text-zinc-500">
+        No account?
+        <a href="{{ url_for('auth.register') }}" class="text-slate-200 font-semibold hover:text-white">Create one</a>
       </p>
     </div>
   </div>
