@@ -1,16 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Support{% endblock %}
 {% block content %}
-
 <style>
   .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
-  .dm-hero {
-    text-align: center; margin-bottom: 1.75rem;
-  }
-  .dm-kicker {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(186,230,253,.85);
-  }
+  .dm-hero { text-align: center; margin-bottom: 1.75rem; }
+  .dm-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(186,230,253,.85); }
   .dm-title {
     margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
     background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
@@ -19,14 +13,8 @@
   .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
   .dm-card {
     background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.5rem;
+    border: 1px solid rgba(255,255,255,.12); border-radius: 1.5rem;
     box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
-  }
-  .dm-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
   }
   .dm-link-card {
     display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
@@ -40,7 +28,7 @@
   }
 </style>
 
-<div class="dm-page max-w-2xl">
+<div class="dm-page" style="max-width:42rem">
   <header class="dm-hero">
     <p class="dm-kicker">Support</p>
     <h1 class="dm-title">Contact us</h1>
@@ -48,6 +36,7 @@
   </header>
 
   <div class="space-y-3">
+    {% if current_user.is_authenticated %}
     <a href="{{ url_for('chat.inbox') }}" class="dm-link-card">
       <span class="dm-icon"><i class="fa-solid fa-comments"></i></span>
       <div class="min-w-0 flex-1">
@@ -56,11 +45,21 @@
       </div>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="dm-link-card">
+      <span class="dm-icon"><i class="fa-solid fa-comments"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">Live chat (in-app)</p>
+        <p class="text-xs text-zinc-500">Log in to message support</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
 
-    {% set s = support if support is defined else none %}
+    {% set s = support %}
     {% if s and s.whatsapp1_enabled and s.whatsapp1 %}
     <a href="https://wa.me/{{ s.whatsapp1|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+      <span class="dm-icon" style="color:#6ee7b7"><i class="fa-brands fa-whatsapp"></i></span>
       <div class="min-w-0 flex-1">
         <p class="font-semibold text-sm">WhatsApp</p>
         <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp1 }}</p>
@@ -68,9 +67,10 @@
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     {% endif %}
+
     {% if s and s.whatsapp2_enabled and s.whatsapp2 %}
     <a href="https://wa.me/{{ s.whatsapp2|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+      <span class="dm-icon" style="color:#6ee7b7"><i class="fa-brands fa-whatsapp"></i></span>
       <div class="min-w-0 flex-1">
         <p class="font-semibold text-sm">WhatsApp (alt)</p>
         <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp2 }}</p>
@@ -78,9 +78,10 @@
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     {% endif %}
+
     {% if s and s.telegram1_enabled and s.telegram1 %}
     <a href="{% if s.telegram1.startswith('http') %}{{ s.telegram1 }}{% else %}https://t.me/{{ s.telegram1|replace('@','') }}{% endif %}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon text-sky-300"><i class="fa-brands fa-telegram"></i></span>
+      <span class="dm-icon" style="color:#7dd3fc"><i class="fa-brands fa-telegram"></i></span>
       <div class="min-w-0 flex-1">
         <p class="font-semibold text-sm">Telegram</p>
         <p class="text-xs text-zinc-500 truncate">{{ s.telegram1 }}</p>
@@ -88,6 +89,18 @@
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     {% endif %}
+
+    {% if s and s.telegram2_enabled and s.telegram2 %}
+    <a href="{% if s.telegram2.startswith('http') %}{{ s.telegram2 }}{% else %}https://t.me/{{ s.telegram2|replace('@','') }}{% endif %}" target="_blank" rel="noopener" class="dm-link-card">
+      <span class="dm-icon" style="color:#7dd3fc"><i class="fa-brands fa-telegram"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">Telegram (alt)</p>
+        <p class="text-xs text-zinc-500 truncate">{{ s.telegram2 }}</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+
     {% if s and s.livechat_enabled and s.livechat %}
     <a href="{{ s.livechat }}" target="_blank" rel="noopener" class="dm-link-card">
       <span class="dm-icon"><i class="fa-solid fa-message"></i></span>
@@ -101,19 +114,32 @@
   </div>
 
   <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6">
-    {% for ep, label, icon in [
-      ('dashboard.about','About','fa-circle-info'),
-      ('dashboard.faq','FAQs','fa-circle-question'),
-      ('dashboard.terms','Terms','fa-file-contract'),
-      ('dashboard.public_status','System status','fa-heart-pulse'),
-      ('dashboard.stories','Success stories','fa-star'),
-      ('dashboard.daily_digest','Today\\'s digest','fa-calendar-day'),
-    ] %}
-    <a href="{{ url_for(ep) }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition">
-      <i class="fa-solid {{ icon }} text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">{{ label }}</p>
+    <a href="{{ url_for('dashboard.about') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-circle-info text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">About</p>
     </a>
-    {% endfor %}
+    <a href="{{ url_for('dashboard.faq') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-circle-question text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">FAQs</p>
+    </a>
+    <a href="{{ url_for('dashboard.terms') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-file-contract text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Terms</p>
+    </a>
+    <a href="{{ url_for('dashboard.public_status') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-heart-pulse text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">System status</p>
+    </a>
+    <a href="{{ url_for('dashboard.stories') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-star text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Success stories</p>
+    </a>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard.daily_digest') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
+      <i class="fa-solid fa-calendar-day text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Todays digest</p>
+    </a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

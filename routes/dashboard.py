@@ -161,13 +161,27 @@ def faq():
 
 @dashboard_bp.route("/contact", methods=["GET", "POST"])
 def contact():
-    from models.support import Support
-
-    support = Support.query.first()
-    if support is None:
-        support = Support()
-        db.session.add(support)
-        db.session.commit()
+    support = None
+    try:
+        from models.support import Support
+        support = Support.query.first()
+        if support is None:
+            support = Support()
+            db.session.add(support)
+            db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print("contact support load:", e)
+        # minimal stand-in so template never crashes
+        class _S:
+            whatsapp1 = whatsapp2 = telegram1 = telegram2 = livechat = None
+            whatsapp1_enabled = whatsapp2_enabled = False
+            telegram1_enabled = telegram2_enabled = False
+            livechat_enabled = False
+        support = _S()
 
     if request.method == "POST":
         flash("Thank you! Your message has been received.", "success")

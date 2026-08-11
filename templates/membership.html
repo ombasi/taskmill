@@ -72,10 +72,14 @@
         {% if is_current %}
         <div class="w-full text-center rounded-2xl bg-white/10 border border-white/10 py-3 text-sm font-bold text-zinc-300">Current plan</div>
         {% else %}
-        <a href="{{ url_for('dashboard.upgrade_membership', plan_id=m.id) }}"
-           class="block w-full text-center rounded-2xl pt-btn py-3 text-sm font-black bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900 hover:brightness-105 transition">
-          Upgrade
-        </a>
+        <form method="POST" action="{{ url_for('dashboard.upgrade_membership', plan_id=m.id) }}"
+              onsubmit="return confirm('Upgrade to {{ m.name }}? The plan price may be deducted from your balance.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit"
+                  class="w-full text-center rounded-2xl py-3 text-sm font-black bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900 hover:brightness-105 transition">
+            Upgrade
+          </button>
+        </form>
         {% endif %}
       </div>
     </article>
