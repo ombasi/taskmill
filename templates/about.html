@@ -1,129 +1,97 @@
 {% extends "base.html" %}
-{% block title %}About Taskmill{% endblock %}
+{% block title %}About{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-10 pb-16">
 
-  <section class="relative overflow-hidden rounded-[2rem] border border-white/10 p-8 md:p-12"
-           style="background: radial-gradient(90% 80% at 10% 0%, rgba(99,102,241,.35), transparent 55%), radial-gradient(70% 60% at 100% 20%, rgba(168,85,247,.25), transparent 50%), #0b1020;">
-    <p class="text-[11px] uppercase tracking-[0.25em] text-indigo-300 font-semibold">About us</p>
-    <h1 class="mt-3 text-3xl md:text-5xl font-black tracking-tight max-w-2xl">
-      Taskmill — structured earning through product work
-    </h1>
-    <p class="mt-4 text-zinc-300 max-w-2xl text-base md:text-lg leading-relaxed">
-      Taskmill is a task-earning platform where members complete product reviews, grow a transparent wallet,
-      and withdraw in their local currency. We combine clear rules, membership tiers, and real support so
-      everyday effort can turn into reliable income.
-    </p>
-    <div class="mt-8 flex flex-wrap gap-3">
-      {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard.index') }}" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-6 py-3 text-sm font-bold transition">Go to dashboard</a>
-      <a href="{{ url_for('task.index') }}" class="rounded-2xl border border-white/15 hover:bg-white/5 px-6 py-3 text-sm font-semibold transition">Start tasks</a>
-      {% else %}
-      <a href="{{ url_for('auth.register') }}" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-6 py-3 text-sm font-bold transition">Create account</a>
-      <a href="{{ url_for('auth.login') }}" class="rounded-2xl border border-white/15 hover:bg-white/5 px-6 py-3 text-sm font-semibold transition">Log in</a>
-      {% endif %}
-    </div>
-  </section>
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
 
-  <section class="grid md:grid-cols-3 gap-4">
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mb-4"><i class="fa-solid fa-list-check"></i></div>
-      <h3 class="font-bold text-lg">Daily product tasks</h3>
-      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Review products in structured sets. Earn commission on every successful submission — matched to your membership.</p>
-    </div>
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mb-4"><i class="fa-solid fa-wallet"></i></div>
-      <h3 class="font-bold text-lg">Transparent wallet</h3>
-      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Deposits, earnings, and withdrawals with a clear reserve for the next day. Balances shown in your local currency.</p>
-    </div>
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6">
-      <div class="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-300 flex items-center justify-center mb-4"><i class="fa-solid fa-users"></i></div>
-      <h3 class="font-bold text-lg">Team & referrals</h3>
-      <p class="text-sm text-zinc-400 mt-2 leading-relaxed">Invite others with your code, grow together, and get help from support and team leaders when you need it.</p>
-    </div>
-  </section>
+<div class="dm-page max-w-3xl">
+  <header class="dm-hero">
+    <p class="dm-kicker">About Taskmill</p>
+    <h1 class="dm-title">Built for focused earners</h1>
+    <p class="dm-sub">Product reviews, structured daily tasks, and a clear wallet — designed to be simple, fair, and mobile-first.</p>
+  </header>
 
-  <section class="rounded-[2rem] border border-indigo-500/25 overflow-hidden"
-           style="background: linear-gradient(135deg, rgba(79,70,229,.2), rgba(15,23,42,.95) 45%, rgba(168,85,247,.12));">
-    <div class="p-8 md:p-10">
-      <div class="flex flex-col sm:flex-row sm:items-start gap-6 mb-2">
-        <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-3xl overflow-hidden border-2 border-indigo-400/40 shadow-xl shadow-indigo-950/50 bg-indigo-500/20 shrink-0 mx-auto sm:mx-0">
-          <img src="{{ url_for('static', filename='images/ceo.jpg') }}"
-               alt="CEO of Taskmill"
-               class="w-full h-full object-cover"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="hidden absolute inset-0 items-center justify-center text-3xl font-black text-indigo-100 bg-indigo-500/30">T</div>
-        </div>
-        <div class="text-center sm:text-left flex-1">
-          <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Word from the CEO</p>
-          <h2 class="mt-2 text-2xl md:text-3xl font-black">A message of encouragement</h2>
-          <p class="mt-2 text-sm text-zinc-400">Leadership · Vision · Commitment to every member</p>
-        </div>
-      </div>
-      <blockquote class="mt-6 text-zinc-200 text-base md:text-lg leading-relaxed border-l-4 border-indigo-500 pl-5 md:pl-6">
-        <p class="mb-4">
-          Every great journey begins with a single step — and on Taskmill, that step is completing your first task with care.
-          I built this platform so that <strong class="text-white">discipline, honesty, and consistency</strong> are rewarded,
-          not empty promises. Whether you are opening your first set today or leading a growing team, your effort is seen.
-        </p>
-        <p class="mb-4">
-          There will be days when the balance dips, when a combo challenges you, or when progress feels slow.
-          That is part of the path. Clear the hold, finish the set, keep your reserve, and move forward.
-          <strong class="text-white">Results compound for those who show up.</strong>
-        </p>
-        <p>
-          Stay focused. Follow the process. Support one another. We are proud of every member who chooses integrity
-          and growth — and we are committed to making Taskmill a place where hard work is respected and paid fairly.
-          Thank you for trusting us with your time. The best chapters are still ahead.
-        </p>
-      </blockquote>
-      <div class="mt-8 flex items-center gap-4">
-        <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 border-indigo-400/50 shadow-lg shadow-indigo-900/40 bg-indigo-500/20 shrink-0">
-          <img src="{{ url_for('static', filename='images/ceo.jpg') }}"
-               alt="CEO, Taskmill"
-               class="w-full h-full object-cover"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="hidden absolute inset-0 items-center justify-center text-xl font-black text-indigo-100 bg-indigo-500/30">T</div>
-        </div>
+  <div class="space-y-4">
+    <section class="dm-card p-6">
+      <h2 class="font-bold text-lg mb-2">Our mission</h2>
+      <p class="text-sm text-zinc-400 leading-relaxed">
+        Help people earn through structured product optimization tasks with transparent balances,
+        membership tiers, and reliable support. We combine analytics-style workflows with an experience that stays easy on a phone.
+      </p>
+    </section>
+
+    {% if ceo_message or true %}
+    <section class="dm-card p-6">
+      <div class="flex items-start gap-4">
+        <img src="{{ url_for('static', filename='images/ceo.jpg') }}" alt="CEO"
+             class="w-16 h-16 rounded-2xl object-cover bg-zinc-800 ring-1 ring-white/15"
+             onerror="this.style.display='none'">
         <div>
-          <p class="font-bold text-lg">CEO, Taskmill</p>
-          <p class="text-sm text-indigo-200/70">Founder &amp; Chief Executive Officer</p>
+          <p class="dm-kicker !text-left">Word from the CEO</p>
+          <h2 class="font-bold text-lg mt-1">Stay consistent. Grow with the platform.</h2>
+          <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+            {{ ceo_message|default("Thank you for trusting Taskmill. Complete your sets daily, keep your account funded for tasks, and reach out to support whenever you need a hand. Discipline compounds — and so do results.") }}
+          </p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="text-2xl font-black mb-5">What we stand for</h2>
-    <div class="grid sm:grid-cols-2 gap-4">
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-shield-halved text-indigo-400"></i> Integrity</h3>
-        <p class="text-sm text-zinc-400 mt-2">Clear rules for tasks, deposits, and withdrawals. No hidden games with your balance.</p>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400"></i> Growth</h3>
-        <p class="text-sm text-zinc-400 mt-2">Membership paths from Starter to VIP so your earning power can scale with commitment.</p>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-handshake text-amber-400"></i> Partnership</h3>
-        <p class="text-sm text-zinc-400 mt-2">Agents, referrals, and support exist to lift the whole network — not only the top.</p>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5">
-        <h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-globe text-sky-400"></i> Inclusion</h3>
-        <p class="text-sm text-zinc-400 mt-2">Multi-country, multi-currency experience so members can work in the language of their wallet.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="text-center rounded-3xl border border-white/10 bg-zinc-900/50 p-8">
-    <h2 class="text-xl font-bold">Ready when you are</h2>
-    <p class="text-zinc-400 text-sm mt-2 max-w-lg mx-auto">Complete today’s sets, keep your reserve, and withdraw when the checklist is green. We’re with you.</p>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('task.index') }}" class="inline-flex mt-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-3 font-bold text-sm hover:brightness-110 transition">Start tasks</a>
-    {% else %}
-    <a href="{{ url_for('auth.register') }}" class="inline-flex mt-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-3 font-bold text-sm hover:brightness-110 transition">Join Taskmill</a>
+    </section>
     {% endif %}
-  </section>
 
+    <div class="grid sm:grid-cols-3 gap-3">
+      {% for n,l in [('500+','Projects'),('98%','Satisfaction'),('50+','Countries')] %}
+      <div class="dm-card p-4 text-center">
+        <p class="text-2xl font-black text-sky-100">{{ n }}</p>
+        <p class="text-[11px] uppercase tracking-wider text-zinc-500 mt-1">{{ l }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-3">
+      <a href="{{ url_for('dashboard.contact') }}" class="dm-link-card">
+        <span class="dm-icon"><i class="fa-solid fa-headset"></i></span>
+        <div><p class="font-semibold text-sm">Contact support</p><p class="text-xs text-zinc-500">WhatsApp, chat, Telegram</p></div>
+      </a>
+      <a href="{{ url_for('dashboard.faq') }}" class="dm-link-card">
+        <span class="dm-icon"><i class="fa-solid fa-circle-question"></i></span>
+        <div><p class="font-semibold text-sm">FAQs</p><p class="text-xs text-zinc-500">Quick answers</p></div>
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

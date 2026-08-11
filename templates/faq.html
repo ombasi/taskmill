@@ -1,29 +1,98 @@
 {% extends "base.html" %}
-{% block title %}FAQ
-<div id="faqBot" class="fixed bottom-20 md:bottom-6 right-4 z-40 w-[min(100%,20rem)]">
-  <button type="button" onclick="document.getElementById('faqPanel').classList.toggle('hidden')"
-          class="ml-auto flex items-center gap-2 rounded-full bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-sm font-bold shadow-lg">
-    Ask Taskmill
-  </button>
-  <div id="faqPanel" class="hidden mt-2 rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl overflow-hidden">
-    <div class="px-4 py-3 border-b border-white/10 font-semibold text-sm">Help assistant</div>
-    <div id="faqChat" class="h-56 overflow-y-auto p-3 space-y-2 text-sm"></div>
-    <form onsubmit="return faqAsk(event)" class="flex border-t border-white/10">
-      <input id="faqInput" class="flex-1 bg-transparent px-3 py-3 text-sm outline-none" placeholder="e.g. How do I withdraw?">
-      <button class="px-4 text-indigo-400 font-semibold text-sm">Send</button>
-    </form>
+{% block title %}FAQ{% endblock %}
+{% block content %}
+
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
+
+<div class="dm-page max-w-2xl">
+  <header class="dm-hero">
+    <p class="dm-kicker">Help center</p>
+    <h1 class="dm-title">Frequently asked questions</h1>
+    <p class="dm-sub">Everything you need to know about tasks, wallet, and memberships.</p>
+  </header>
+
+  <div class="space-y-2" id="faqList">
+    {% set items = [
+      ("What are the operating hours?", "Optimization services run daily from 10:00 AM to 10:00 PM (platform time). Support follows the same window."),
+      ("How do deposits work?", "Open Wallet → Deposit, choose an active method, upload proof. Admin reviews and credits your balance."),
+      ("How do withdrawals work?", "Complete required tasks, keep the reserve balance, set a confirmed payout method, then request withdraw with your PIN."),
+      ("What is a combo / hold?", "A high-value product may place a temporary hold. Deposit to clear it, then submit the product to release principal + commission."),
+      ("How do memberships work?", "Higher tiers improve commissions and daily task capacity. You can upgrade from Membership; only admin can downgrade."),
+      ("Do I need a referral code?", "Yes. Registration requires a valid referral code from an existing member."),
+      ("How do I contact support?", "Use Support / Contact for WhatsApp and live chat, or open in-app Chat."),
+    ] %}
+    {% for q,a in items %}
+    <details class="dm-card group open:shadow-lg">
+      <summary class="cursor-pointer list-none px-5 py-4 flex items-center justify-between gap-3 font-semibold text-sm">
+        <span>{{ q }}</span>
+        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
+      </summary>
+      <div class="px-5 pb-4 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">{{ a }}</div>
+    </details>
+    {% endfor %}
+  </div>
+
+  {# FAQ bot #}
+  <div id="faqBot" class="fixed bottom-20 md:bottom-6 right-4 z-40 w-[min(100%,20rem)]">
+    <button type="button" onclick="document.getElementById('faqPanel').classList.toggle('hidden')"
+            class="ml-auto flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg
+                   bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900">
+      Ask Taskmill
+    </button>
+    <div id="faqPanel" class="hidden mt-2 dm-card overflow-hidden">
+      <div class="px-4 py-3 border-b border-white/10 font-semibold text-sm">Help assistant</div>
+      <div id="faqChat" class="h-56 overflow-y-auto p-3 space-y-2 text-sm"></div>
+      <form onsubmit="return faqAsk(event)" class="flex border-t border-white/10">
+        <input id="faqInput" class="flex-1 bg-transparent px-3 py-3 text-sm outline-none" placeholder="e.g. How do I withdraw?">
+        <button class="px-4 text-sky-200 font-semibold text-sm">Send</button>
+      </form>
+    </div>
   </div>
 </div>
 <script>
 var FAQ_KB = [
-  {q:/withdraw|payout/i, a:"Complete your daily tasks, keep the reserve balance, set a confirmed payout method, then request withdraw from Wallet."},
-  {q:/deposit|pay/i, a:"Go to Wallet → Deposit, pick an active payment method, upload proof. Admin approves and balance updates."},
-  {q:/combo|hold|negative|escrow/i, a:"A high-value product may place a temporary hold. Deposit to clear the hold, then submit the product to release principal + commission."},
-  {q:/membership|upgrade/i, a:"Open Membership to upgrade. You cannot downgrade yourself — contact admin if needed."},
-  {q:/task|review|start/i, a:"You need the minimum balance for your plan. Open Tasks, review the product, submit. One pending task at a time."},
-  {q:/referral|invite/i, a:"Share your referral link from the Referral page. Bonus credits when your invitee deposits (per platform rules)."},
-  {q:/kyc|verify|id/i, a:"Large withdrawals need light KYC. Open Profile or /engagement/kyc and upload ID for admin review."},
-  {q:/spin|reward/i, a:"Lucky Spin is available when admin grants spins. Open Lucky Spin from the menu."}
+  {q:/withdraw|payout/i, a:"Complete tasks, keep reserve balance, set payout method, then withdraw from Wallet with your PIN."},
+  {q:/deposit|pay/i, a:"Wallet → Deposit → choose method → upload proof. Admin approves and credits balance."},
+  {q:/combo|hold|negative|escrow/i, a:"High-value product can hold balance. Deposit to clear, then submit the product to release funds + commission."},
+  {q:/membership|upgrade/i, a:"Open Membership to upgrade. Self-downgrade is not allowed — contact admin."},
+  {q:/referral|invite|code/i, a:"Registration requires a valid referral code. Share yours from the referral page after you join."},
+  {q:/task|review/i, a:"Open Tasks, review the product, submit. One pending task at a time."}
 ];
 function faqAsk(e){
   e.preventDefault();
@@ -31,101 +100,11 @@ function faqAsk(e){
   var box = document.getElementById('faqChat');
   var text = (input.value||'').trim();
   if(!text) return false;
-  box.innerHTML += '<div class="text-right"><span class="inline-block bg-indigo-600/30 rounded-xl px-3 py-1.5">'+text.replace(/</g,'&lt;')+'</span></div>';
-  var ans = "Sorry — try asking about deposit, withdraw, tasks, combo hold, membership, or KYC. Or open Chat with support.";
+  box.innerHTML += '<div class="text-right"><span class="inline-block bg-sky-500/25 rounded-xl px-3 py-1.5">'+text.replace(/</g,'&lt;')+'</span></div>';
+  var ans = "Try asking about deposit, withdraw, tasks, combo hold, membership, or referral. Or open Contact support.";
   for (var i=0;i<FAQ_KB.length;i++){ if(FAQ_KB[i].q.test(text)){ ans = FAQ_KB[i].a; break; } }
   box.innerHTML += '<div><span class="inline-block bg-white/5 rounded-xl px-3 py-1.5 text-zinc-300">'+ans+'</span></div>';
   input.value=''; box.scrollTop = box.scrollHeight; return false;
 }
 </script>
-{% endblock %}
-
-{% block content %}
-{% set reserve_txt = money(current_user, 15000) if current_user is defined and current_user.is_authenticated else "the platform reserve (shown in your currency)" %}
-<div class="max-w-3xl mx-auto space-y-8 pb-12">
-  <header class="text-center border-b border-white/10 pb-8">
-    <p class="text-[11px] tracking-[0.3em] uppercase text-zinc-500">Help centre</p>
-    <h1 class="mt-2 text-3xl md:text-5xl font-serif font-semibold">Frequently asked questions</h1>
-    <p class="mt-3 text-zinc-400 text-sm">Clear answers about tasks, wallet, membership, and withdrawals.</p>
-  </header>
-
-  <div class="space-y-3">
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        What are the operating hours?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        Optimization and support typically run daily from 10:00 AM to 10:00 PM. Chat and tickets outside those hours are answered as soon as the team is online.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        How do I start earning?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        Register, fund your wallet (keep at least <strong class="text-zinc-200">{{ reserve_txt }}</strong>), complete product review tasks in your daily sets, then withdraw when the checklist is green.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        Why was money held from my balance?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        When a task is assigned, the product price is held from your balance. When you submit the review, the price is returned plus your commission.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        What is a combo / negative balance?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        A high-value product may take your balance negative. Deposit enough to clear the hold to zero or above, then submit the product to unlock combo commission.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        How do withdrawals work?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        Add a payout method once (admin must confirm it). Request a withdrawal while leaving at least <strong class="text-zinc-200">{{ reserve_txt }}</strong> as reserve for the next day’s tasks. Enter your withdraw PIN. Admin reviews and pays out to your confirmed method. Amounts are shown in your local currency.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        How do referrals work?
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        Share your referral code. When a referred member activates and deposits according to platform rules, you may earn a referral bonus credited to your wallet.
-      </div>
-    </details>
-
-    <details class="group rounded-2xl border border-white/10 bg-zinc-900/50 open:bg-zinc-900/80">
-      <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-5 font-semibold text-sm md:text-base">
-        I forgot my password or withdraw PIN
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-5 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
-        Contact support or use live chat. An admin can reset your login password or withdraw PIN. After a password reset you will be asked to set a new one.
-      </div>
-    </details>
-  </div>
-
-  <p class="text-center text-sm text-zinc-500">
-    Still need help?
-    <a href="{{ url_for('dashboard.contact') }}" class="text-indigo-400 hover:underline">Contact support</a>
-    ·
-    <a href="{{ url_for('dashboard.about') }}" class="text-indigo-400 hover:underline">About Taskmill</a>
-  </p>
-</div>
 {% endblock %}

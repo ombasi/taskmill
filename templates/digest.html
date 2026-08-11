@@ -1,26 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Today's digest{% endblock %}
 {% block content %}
-<div class="max-w-xl mx-auto space-y-6 pb-12">
-  <header>
-    <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Daily overview</p>
-    <h1 class="text-3xl font-black mt-1">Today at a glance</h1>
-    <p class="text-sm text-zinc-400 mt-2">Tasks {{ done }}/{{ total }} · Deposits pending {{ pending_deps }} · Withdrawals open {{ pending_wds }}</p>
-  </header>
 
-  <div class="space-y-3">
-    {% for it in items %}
-    <a href="{{ it.url }}" class="block rounded-3xl border border-white/10 p-5 hover:bg-white/5 transition
-      {% if it.level == 'danger' %}bg-rose-500/10 border-rose-500/30
-      {% elif it.level == 'warn' %}bg-amber-500/10 border-amber-500/25
-      {% elif it.level == 'ok' %}bg-emerald-500/10 border-emerald-500/25
-      {% else %}bg-zinc-900/50{% endif %}">
-      <p class="font-bold">{{ it.title }}</p>
-      <p class="text-sm text-zinc-400 mt-1">{{ it.body }}</p>
-    </a>
-    {% else %}
-    <p class="text-center text-zinc-500 py-10">You're all clear for now.</p>
-    {% endfor %}
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
+
+<div class="dm-page max-w-lg">
+  <header class="dm-hero">
+    <p class="dm-kicker">Today</p>
+    <h1 class="dm-title">Your digest</h1>
+    <p class="dm-sub">A clean snapshot of today’s activity.</p>
+  </header>
+  <div class="dm-card p-5 space-y-3 text-sm">
+    <div class="flex justify-between"><span class="text-zinc-500">Balance</span><span class="font-bold">{{ money(current_user, current_user.available_balance or 0) }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Tasks today</span><span class="font-bold">{{ current_user.tasks_completed_today or 0 }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Sets done</span><span class="font-bold">{{ current_user.daily_sets_completed or 0 }}</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Streak</span><span class="font-bold text-amber-300">{{ current_user.streak_days or 0 }} days</span></div>
+    <div class="flex justify-between"><span class="text-zinc-500">Membership</span><span class="font-bold">{{ current_user.membership.name if current_user.membership else '—' }}</span></div>
+  </div>
+  <div class="grid grid-cols-2 gap-2 mt-4">
+    <a href="{{ url_for('task.index') }}" class="dm-card py-3 text-center text-sm font-bold hover:border-sky-300/30">Tasks</a>
+    <a href="{{ url_for('dashboard.index') }}" class="dm-card py-3 text-center text-sm font-bold hover:border-sky-300/30">Dashboard</a>
   </div>
 </div>
 {% endblock %}

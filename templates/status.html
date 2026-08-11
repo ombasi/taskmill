@@ -1,22 +1,69 @@
 {% extends "base.html" %}
 {% block title %}System status{% endblock %}
 {% block content %}
-{% macro badge(s) %}
-  {% set s = (s or 'normal')|lower %}
-  {% if s == 'normal' %}<span class="text-emerald-400">● Normal</span>
-  {% elif s == 'delayed' %}<span class="text-amber-400">● Delayed</span>
-  {% else %}<span class="text-rose-400">● Issue</span>{% endif %}
-{% endmacro %}
-<div class="max-w-xl mx-auto space-y-6 pb-12">
-  <header class="text-center">
-    <h1 class="text-3xl font-black">System status</h1>
-    <p class="text-zinc-400 text-sm mt-2">{{ settings.status_message if settings and settings.status_message else "All systems normal" }}</p>
+
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
+
+<div class="dm-page max-w-lg">
+  <header class="dm-hero">
+    <p class="dm-kicker">Status</p>
+    <h1 class="dm-title">System status</h1>
+    <p class="dm-sub">Live operational signals for core services.</p>
   </header>
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 divide-y divide-white/5">
-    <div class="flex justify-between p-5 text-sm"><span>Tasks</span>{{ badge(settings.status_tasks if settings else 'normal') }}</div>
-    <div class="flex justify-between p-5 text-sm"><span>Deposits</span>{{ badge(settings.status_deposits if settings else 'normal') }}</div>
-    <div class="flex justify-between p-5 text-sm"><span>Withdrawals</span>{{ badge(settings.status_withdrawals if settings else 'normal') }}</div>
+  {% set s = site_settings if site_settings is defined else none %}
+  <div class="space-y-2">
+    <div class="dm-card px-4 py-3.5 flex items-center justify-between gap-3">
+      <span class="text-sm font-semibold">Platform</span>
+      <span class="dm-chip text-emerald-200">{{ (s.status_message if s and s.status_message else 'All systems normal') }}</span>
+    </div>
+    <div class="dm-card px-4 py-3.5 flex items-center justify-between gap-3">
+      <span class="text-sm font-semibold">Deposits</span>
+      <span class="dm-chip text-emerald-200">{{ (s.status_deposits if s and s.status_deposits else 'Operational') }}</span>
+    </div>
+    <div class="dm-card px-4 py-3.5 flex items-center justify-between gap-3">
+      <span class="text-sm font-semibold">Withdrawals</span>
+      <span class="dm-chip text-emerald-200">{{ (s.status_withdrawals if s and s.status_withdrawals else 'Operational') }}</span>
+    </div>
+    <div class="dm-card px-4 py-3.5 flex items-center justify-between gap-3">
+      <span class="text-sm font-semibold">Tasks</span>
+      <span class="dm-chip text-emerald-200">{{ (s.status_tasks if s and s.status_tasks else 'Operational') }}</span>
+    </div>
   </div>
-  <p class="text-center text-xs text-zinc-500">Updated for members · Not a live uptime monitor</p>
 </div>
 {% endblock %}

@@ -1,161 +1,119 @@
 {% extends "base.html" %}
 {% block title %}Support{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
 
-  {# Classic masthead #}
-  <header class="text-center border-b border-white/10 pb-10">
-    <p class="text-[11px] tracking-[0.35em] uppercase text-zinc-500">Taskmill Concierge</p>
-    <h1 class="mt-3 text-3xl md:text-5xl font-serif font-semibold tracking-tight text-white">
-      Customer Support
-    </h1>
-    <p class="mt-4 text-zinc-400 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-      Our team is available to assist with deposits, withdrawals, membership, and account matters.
-      Choose a channel below — responses are typically within business hours.
-    </p>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('chat.inbox') }}"
-       class="inline-flex items-center gap-2 mt-6 rounded-full border border-white/20 bg-white text-zinc-900 px-6 py-2.5 text-sm font-semibold hover:bg-zinc-100 transition">
-      <i class="fa-solid fa-comments"></i>
-      Message support on platform
-    </a>
-    {% endif %}
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
+
+<div class="dm-page max-w-2xl">
+  <header class="dm-hero">
+    <p class="dm-kicker">Support</p>
+    <h1 class="dm-title">Contact us</h1>
+    <p class="dm-sub">WhatsApp, Telegram, live chat, or in-app messaging — pick what works for you.</p>
   </header>
 
-  {# Hours strip #}
-  <div class="grid sm:grid-cols-3 gap-3 text-center">
-    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5">
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Hours</p>
-      <p class="mt-2 text-sm font-medium">10:00 – 22:00</p>
-      <p class="text-xs text-zinc-500 mt-1">Daily</p>
-    </div>
-    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5">
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Response</p>
-      <p class="mt-2 text-sm font-medium">Usually under 2 hrs</p>
-      <p class="text-xs text-zinc-500 mt-1">During service hours</p>
-    </div>
-    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 px-4 py-5">
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Priority</p>
-      <p class="mt-2 text-sm font-medium">Deposits & withdrawals</p>
-      <p class="text-xs text-zinc-500 mt-1">Handled first</p>
-    </div>
+  <div class="space-y-3">
+    <a href="{{ url_for('chat.inbox') }}" class="dm-link-card">
+      <span class="dm-icon"><i class="fa-solid fa-comments"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">Live chat (in-app)</p>
+        <p class="text-xs text-zinc-500">Message support on Taskmill</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+
+    {% set s = support if support is defined else none %}
+    {% if s and s.whatsapp1_enabled and s.whatsapp1 %}
+    <a href="https://wa.me/{{ s.whatsapp1|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
+      <span class="dm-icon text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">WhatsApp</p>
+        <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp1 }}</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+    {% if s and s.whatsapp2_enabled and s.whatsapp2 %}
+    <a href="https://wa.me/{{ s.whatsapp2|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
+      <span class="dm-icon text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">WhatsApp (alt)</p>
+        <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp2 }}</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+    {% if s and s.telegram1_enabled and s.telegram1 %}
+    <a href="{% if s.telegram1.startswith('http') %}{{ s.telegram1 }}{% else %}https://t.me/{{ s.telegram1|replace('@','') }}{% endif %}" target="_blank" rel="noopener" class="dm-link-card">
+      <span class="dm-icon text-sky-300"><i class="fa-brands fa-telegram"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">Telegram</p>
+        <p class="text-xs text-zinc-500 truncate">{{ s.telegram1 }}</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+    {% if s and s.livechat_enabled and s.livechat %}
+    <a href="{{ s.livechat }}" target="_blank" rel="noopener" class="dm-link-card">
+      <span class="dm-icon"><i class="fa-solid fa-message"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold text-sm">External live chat</p>
+        <p class="text-xs text-zinc-500">Open chat widget</p>
+      </div>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
   </div>
 
-  {# Channels #}
-  <section>
-    <div class="flex items-end justify-between mb-4">
-      <h2 class="text-lg font-serif font-semibold tracking-wide">Contact channels</h2>
-      <span class="text-[11px] text-zinc-500 uppercase tracking-wider">Official only</span>
-    </div>
-
-    <div class="grid sm:grid-cols-2 gap-4">
-      {% if support.whatsapp1_enabled and support.whatsapp1 %}
-      <a href="https://wa.me/{{ support.whatsapp1|replace('+','')|replace(' ','')|replace('-','') }}"
-         target="_blank" rel="noopener"
-         class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 hover:border-emerald-500/40 hover:bg-zinc-900 transition">
-        <span class="w-14 h-14 rounded-2xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition">
-          <i class="fab fa-whatsapp"></i>
-        </span>
-        <div class="min-w-0">
-          <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">WhatsApp</p>
-          <p class="font-semibold mt-0.5">Primary line</p>
-          <p class="text-sm text-zinc-400 truncate">{{ support.whatsapp1 }}</p>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 ml-auto text-sm"></i>
-      </a>
-      {% endif %}
-
-      {% if support.whatsapp2_enabled and support.whatsapp2 %}
-      <a href="https://wa.me/{{ support.whatsapp2|replace('+','')|replace(' ','')|replace('-','') }}"
-         target="_blank" rel="noopener"
-         class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 hover:border-emerald-500/40 hover:bg-zinc-900 transition">
-        <span class="w-14 h-14 rounded-2xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center text-2xl shrink-0">
-          <i class="fab fa-whatsapp"></i>
-        </span>
-        <div class="min-w-0">
-          <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">WhatsApp</p>
-          <p class="font-semibold mt-0.5">Secondary line</p>
-          <p class="text-sm text-zinc-400 truncate">{{ support.whatsapp2 }}</p>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 ml-auto text-sm"></i>
-      </a>
-      {% endif %}
-
-      {% if support.telegram1_enabled and support.telegram1 %}
-      <a href="{% if support.telegram1.startswith('http') %}{{ support.telegram1 }}{% else %}https://t.me/{{ support.telegram1|replace('@','') }}{% endif %}"
-         target="_blank" rel="noopener"
-         class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 hover:border-sky-500/40 hover:bg-zinc-900 transition">
-        <span class="w-14 h-14 rounded-2xl bg-sky-500/15 text-sky-400 flex items-center justify-center text-2xl shrink-0">
-          <i class="fab fa-telegram"></i>
-        </span>
-        <div class="min-w-0">
-          <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Telegram</p>
-          <p class="font-semibold mt-0.5">Support desk</p>
-          <p class="text-sm text-zinc-400 truncate">{{ support.telegram1 }}</p>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 ml-auto text-sm"></i>
-      </a>
-      {% endif %}
-
-      {% if support.telegram2_enabled and support.telegram2 %}
-      <a href="{% if support.telegram2.startswith('http') %}{{ support.telegram2 }}{% else %}https://t.me/{{ support.telegram2|replace('@','') }}{% endif %}"
-         target="_blank" rel="noopener"
-         class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 hover:border-sky-500/40 hover:bg-zinc-900 transition">
-        <span class="w-14 h-14 rounded-2xl bg-sky-500/15 text-sky-400 flex items-center justify-center text-2xl shrink-0">
-          <i class="fab fa-telegram"></i>
-        </span>
-        <div class="min-w-0">
-          <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Telegram</p>
-          <p class="font-semibold mt-0.5">Alternate</p>
-          <p class="text-sm text-zinc-400 truncate">{{ support.telegram2 }}</p>
-        </div>
-        <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 ml-auto text-sm"></i>
-      </a>
-      {% endif %}
-
-      {% if support.livechat_enabled and support.livechat %}
-      <a href="{{ support.livechat }}" target="_blank" rel="noopener"
-         class="sm:col-span-2 group flex items-center gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 hover:border-indigo-500/40 transition">
-        <span class="w-14 h-14 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center text-2xl shrink-0">
-          <i class="fa-solid fa-headset"></i>
-        </span>
-        <div>
-          <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Live chat</p>
-          <p class="font-semibold mt-0.5">External live chat</p>
-          <p class="text-sm text-zinc-400">Open the hosted chat widget</p>
-        </div>
-      </a>
-      {% endif %}
-    </div>
-
-    {% if not (support.whatsapp1_enabled and support.whatsapp1)
-          and not (support.whatsapp2_enabled and support.whatsapp2)
-          and not (support.telegram1_enabled and support.telegram1)
-          and not (support.telegram2_enabled and support.telegram2)
-          and not (support.livechat_enabled and support.livechat) %}
-    <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-8 text-center text-zinc-500 text-sm mt-4">
-      Support channels are being configured. Please use in-app chat if you are signed in.
-      {% if current_user.is_authenticated %}
-      <div class="mt-4">
-        <a href="{{ url_for('chat.inbox') }}" class="text-indigo-400 font-semibold hover:underline">Open chat →</a>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-  </section>
-
-  {# Classic notice #}
-  <footer class="border-t border-white/10 pt-8 text-center space-y-2">
-    <p class="text-xs text-zinc-500 max-w-lg mx-auto leading-relaxed">
-      Never share your password or withdraw PIN. Taskmill staff will never ask you to send money to personal numbers outside the official channels listed above.
-    </p>
-    <div class="flex flex-wrap justify-center gap-4 text-xs pt-2">
-      <a href="{{ url_for('dashboard.faq') }}" class="text-zinc-400 hover:text-white">FAQ</a>
-      <span class="text-zinc-700">·</span>
-      <a href="{{ url_for('dashboard.terms') }}" class="text-zinc-400 hover:text-white">Terms</a>
-      <span class="text-zinc-700">·</span>
-      <a href="{{ url_for('dashboard.about') }}" class="text-zinc-400 hover:text-white">About</a>
-    </div>
-  </footer>
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6">
+    {% for ep, label, icon in [
+      ('dashboard.about','About','fa-circle-info'),
+      ('dashboard.faq','FAQs','fa-circle-question'),
+      ('dashboard.terms','Terms','fa-file-contract'),
+      ('dashboard.public_status','System status','fa-heart-pulse'),
+      ('dashboard.stories','Success stories','fa-star'),
+      ('dashboard.daily_digest','Today\\'s digest','fa-calendar-day'),
+    ] %}
+    <a href="{{ url_for(ep) }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition">
+      <i class="fa-solid {{ icon }} text-sky-200/90 text-sm"></i>
+      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">{{ label }}</p>
+    </a>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

@@ -1,38 +1,59 @@
 {% extends "base.html" %}
 {% block title %}Terms{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-8">
-  <header class="text-center border-b border-white/10 pb-8">
-    <p class="text-[11px] tracking-[0.3em] uppercase text-zinc-500">Legal</p>
-    <h1 class="mt-2 text-3xl md:text-5xl font-serif font-semibold">Terms &amp; Conditions</h1>
-    <p class="mt-3 text-zinc-400 text-sm">Please read carefully before using Taskmill.</p>
-  </header>
 
-  <article class="prose-invert space-y-6 text-sm text-zinc-300 leading-relaxed">
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">1. Eligibility</h2>
-      <p>Users must be at least 20 years of age. You are responsible for accurate registration details. Username cannot be changed after signup.</p>
-    </section>
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">2. Account security</h2>
-      <p>Keep your password and withdraw PIN confidential. Taskmill will never ask for your password via chat. Report suspicious activity immediately.</p>
-    </section>
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">3. Wallet &amp; tasks</h2>
-      <p>Product prices may be held during reviews and refunded with commission on completion. A minimum balance may be required to start tasks. Withdrawals may require leaving a reserve (UGX 15,000).</p>
-    </section>
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">4. Combo products</h2>
-      <p>High-value assignments can create a temporary negative balance. You must deposit to clear the hold before completing those products. Earnings are not guaranteed.</p>
-    </section>
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">5. Prohibited use</h2>
-      <p>Fraud, multi-accounting abuse, manipulation of referrals, or attempts to exploit the system may result in suspension and forfeiture of balances pending investigation.</p>
-    </section>
-    <section class="rounded-2xl border border-white/10 bg-zinc-900/40 p-6">
-      <h2 class="text-white font-semibold text-base mb-2">6. Changes</h2>
-      <p>We may update these terms. Continued use of the platform constitutes acceptance of the latest version.</p>
-    </section>
+<style>
+  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
+  .dm-hero {
+    text-align: center; margin-bottom: 1.75rem;
+  }
+  .dm-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dm-title {
+    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
+  .dm-card {
+    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  }
+  .dm-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  }
+  .dm-link-card {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  }
+  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
+  .dm-icon {
+    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  }
+</style>
+
+<div class="dm-page max-w-2xl">
+  <header class="dm-hero">
+    <p class="dm-kicker">Legal</p>
+    <h1 class="dm-title">Terms & Conditions</h1>
+    <p class="dm-sub">Please read these terms before using Taskmill.</p>
+  </header>
+  <article class="dm-card p-6 space-y-4 text-sm text-zinc-400 leading-relaxed">
+    <p><strong class="text-zinc-200">1. Eligibility.</strong> Users must be at least 20 years old and register with a valid referral code.</p>
+    <p><strong class="text-zinc-200">2. Account.</strong> Keep your login and withdraw PIN confidential. You are responsible for activity under your account.</p>
+    <p><strong class="text-zinc-200">3. Tasks & wallet.</strong> Task availability, commissions, and limits follow your membership. Combo holds may temporarily reduce available balance until cleared and submitted.</p>
+    <p><strong class="text-zinc-200">4. Deposits & withdrawals.</strong> Deposits require proof and admin review. Withdrawals may require completed tasks, reserve balance, confirmed payout details, and PIN.</p>
+    <p><strong class="text-zinc-200">5. Conduct.</strong> Fraud, multi-accounting abuse, or manipulation may result in suspension.</p>
+    <p><strong class="text-zinc-200">6. Support.</strong> Contact official channels listed on the Support page only.</p>
+    <p class="text-xs text-zinc-600 pt-2">Platform terms may be updated. Continued use means you accept the current version.</p>
   </article>
 </div>
 {% endblock %}
