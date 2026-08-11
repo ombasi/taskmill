@@ -1,97 +1,143 @@
 {% extends "base.html" %}
 {% block title %}Review Product{% endblock %}
 {% block content %}
-{% if current_user.membership and 'vip' in (current_user.membership.name or '')|lower %}
-<form method="POST" action="{{ url_for('task.skip_task') }}" class="mt-4 text-center" onsubmit="return confirm('Skip this product? Hold is refunded without commission.');">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-  <button class="text-sm text-amber-400 hover:underline">Skip product (VIP)</button>
-</form>
-{% endif %}
-<div class="max-w-5xl mx-auto space-y-4 md:space-y-6">
-  <div class="flex items-center justify-between gap-3">
+{% set bal = current_user.available_balance or 0 %}
+{% set price = task.product_price or 0 %}
+{% set commission = task.commission or 0 %}
+{% set after_submit = (bal|float) + (commission|float) %}
+{# If task holds product price on assign, adjust - show available + projected #}
+<style>
+  .pt-shell {
+    background:
+      radial-gradient(700px 320px at 15% -20%, rgba(226,232,240,.12), transparent 55%),
+      radial-gradient(500px 280px at 90% 0%, rgba(148,163,184,.1), transparent 50%),
+      linear-gradient(180deg, rgba(15,23,42,.96), rgba(7,11,20,.5));
+    border: 1px solid rgba(255,255,255,.1);
+  }
+  .pt-card {
+    background: linear-gradient(160deg, rgba(39,39,42,.92), rgba(15,23,42,.88));
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 24px 60px -36px rgba(0,0,0,.9);
+  }
+  .pt-metal {
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 35%, #94a3b8 55%, #e2e8f0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+</style>
+
+<div class="max-w-3xl mx-auto px-3 sm:px-4 pb-28 space-y-4">
+
+  {# Balance strip — always visible #}
+  <div class="pt-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Product review</p>
-      <h1 class="text-2xl md:text-3xl font-black mt-1">Complete this task</h1>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Your balance</p>
+      <p class="text-xl font-black {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
+        {{ money(current_user, bal) }}
+      </p>
     </div>
-    {% if progress %}
-    <div class="text-right text-xs text-zinc-500">
-      Set {{ progress.get('completed_today', today_completed)|default('') }}
+    <div class="flex gap-2 text-xs">
+      <span class="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-zinc-300">
+        Product {{ money(current_user, price) }}
+      </span>
+      <span class="rounded-full bg-emerald-500/10 border border-emerald-400/20 px-3 py-1 text-emerald-300">
+        +{{ money(current_user, commission) }} commission
+      </span>
     </div>
-    {% endif %}
   </div>
 
-  {% if current_user.available_balance is not none and (current_user.available_balance|float) < 0 %}
-  <div class="rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-600/25 via-rose-500/10 to-transparent p-4 md:p-5">
-    <div class="flex items-start gap-3">
-      <span class="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center shrink-0">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </span>
-      <div class="flex-1">
-        <p class="font-bold text-rose-100">Escrow hold · Combo hold</p>
-        <p class="text-sm text-rose-100/80 mt-1">
-          Balance {{ money(current_user, current_user.available_balance) }}. Deposit to release the hold, then submit this product to unlock commission.
-        </p>
-        <a href="{{ url_for('wallet.deposit') }}" class="inline-flex mt-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-sm font-semibold px-4 py-2">Deposit now</a>
-      </div>
+  {% if bal|float < 0 %}
+  <div class="rounded-2xl border border-rose-400/30 bg-gradient-to-r from-rose-600/25 to-transparent p-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="font-bold text-rose-100">Escrow hold active</p>
+      <p class="text-sm text-rose-100/75">Deposit to release the hold, then submit this product.</p>
     </div>
+    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-white text-rose-700 font-bold text-sm px-4 py-2.5">Deposit</a>
   </div>
   {% endif %}
 
-  <div class="rounded-3xl border border-white/10 overflow-hidden bg-zinc-900/50">
-    <div class="grid lg:grid-cols-2">
-      <div class="relative bg-black/40 min-h-[220px] md:min-h-[360px]">
-        <img src="{{ media(task.product_image) }}" alt="{{ task.product_name }}"
-             class="w-full h-full object-cover max-h-[420px]"
-             onerror="this.src='https://ui-avatars.com/api/?name=Product&background=312e81&color=fff&size=400'">
+  {# Product platinum card #}
+  <article class="pt-shell rounded-[1.75rem] overflow-hidden">
+    <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-5">
+      <div class="relative shrink-0 mx-auto sm:mx-0">
+        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-transparent blur-xl opacity-40"></div>
+        <img src="{{ media(task.product_image) }}" alt=""
+             class="relative w-40 h-40 sm:w-44 sm:h-44 rounded-3xl object-cover bg-zinc-800 ring-1 ring-white/20 shadow-2xl"
+             onerror="this.src='https://ui-avatars.com/api/?name=Product&background=334155&color=fff&size=200'">
       </div>
-      <div class="p-5 md:p-8 flex flex-col">
-        <h2 class="text-xl md:text-2xl font-black">{{ task.product_name }}</h2>
-        {% if task.product_description %}
-        <p class="text-sm text-zinc-400 mt-2 line-clamp-3">{{ task.product_description }}</p>
+      <div class="flex-1 min-w-0 text-center sm:text-left">
+        <p class="text-[11px] uppercase tracking-[0.25em] text-slate-300/80 font-semibold">Platinum review</p>
+        <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight">{{ task.product_name }}</h1>
+        {% if task.task_set == 99 %}
+        <span class="inline-block mt-2 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[11px] font-bold px-3 py-1">COMBO</span>
         {% endif %}
-
-        <div class="grid grid-cols-2 gap-3 mt-5">
-          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Held price</p>
-            <p class="text-xl font-black mt-1">{{ money(current_user, task.product_price) }}</p>
+        {% if task.product_description %}
+        <p class="text-sm text-zinc-400 mt-3 leading-relaxed line-clamp-4">{{ task.product_description }}</p>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-2 mt-4">
+          <div class="rounded-2xl bg-black/30 border border-white/10 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Price</p>
+            <p class="text-lg font-black pt-metal mt-0.5">{{ money(current_user, price) }}</p>
           </div>
-          <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4">
-            <p class="text-[11px] text-emerald-300/80 uppercase tracking-wider">Commission</p>
-            <p class="text-xl font-black text-emerald-400 mt-1">{{ money(current_user, task.commission) }}</p>
+          <div class="rounded-2xl bg-black/30 border border-white/10 p-3">
+            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Commission</p>
+            <p class="text-lg font-black text-emerald-300 mt-0.5">{{ money(current_user, commission) }}</p>
           </div>
         </div>
-
-        <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="mt-6 space-y-4 flex-1 flex flex-col">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div>
-            <label class="text-sm text-zinc-400">Your rating</label>
-            <select name="rating" required class="mt-1 w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
-              <option value="5">5 · Excellent</option>
-              <option value="4">4 · Good</option>
-              <option value="3">3 · Average</option>
-              <option value="2">2 · Poor</option>
-              <option value="1">1 · Bad</option>
-            </select>
-          </div>
-          <div class="flex-1">
-            <label class="text-sm text-zinc-400">Review</label>
-            <textarea name="review" required rows="4" minlength="10"
-                      placeholder="Write an honest short review (min 10 characters)..."
-                      class="mt-1 w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm"></textarea>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-2 pt-2">
-            <button type="submit" class="flex-1 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 font-bold shadow-lg shadow-indigo-600/20">
-              Submit review
-            </button>
-            <a href="{{ url_for('task.park', id=task.id) }}"
-               class="flex-1 rounded-2xl border border-white/15 bg-white/5 py-3.5 font-semibold text-center hover:bg-white/10">
-              Save as pending
-            </a>
-          </div>
-          <p class="text-[11px] text-zinc-500 text-center">Saving keeps this product pending — you cannot start another until you submit it.</p>
-        </form>
       </div>
     </div>
+
+    {# Review form #}
+    <div class="border-t border-white/10 bg-black/20 p-4 sm:p-6">
+      <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <div>
+          <label class="text-xs text-zinc-400 font-semibold">Your rating</label>
+          <div class="flex gap-2 mt-2 justify-center sm:justify-start" id="stars">
+            {% for i in range(1, 6) %}
+            <label class="cursor-pointer">
+              <input type="radio" name="rating" value="{{ i }}" class="sr-only peer" {% if i == 5 %}checked{% endif %}>
+              <span class="text-2xl text-zinc-600 peer-checked:text-amber-400 hover:text-amber-300 transition">★</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <label class="text-xs text-zinc-400 font-semibold">Review (optional)</label>
+          <textarea name="review" rows="3" placeholder="Share a short honest review..."
+                    class="w-full mt-1.5 rounded-2xl bg-zinc-950/80 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/30"></textarea>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+          <button type="submit"
+                  class="flex-1 rounded-2xl bg-gradient-to-r from-slate-100 via-slate-300 to-slate-100 text-zinc-900 font-black py-3.5 text-sm shadow-lg hover:opacity-95 transition">
+            Submit review
+          </button>
+          <a href="{{ url_for('task.history') }}"
+             class="sm:w-36 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition">
+            Cancel
+          </a>
+        </div>
+        <p class="text-[11px] text-zinc-500 text-center sm:text-left">
+          On submit: commission is credited · balance stays visible at all times
+        </p>
+      </form>
+
+      {% if current_user.membership and 'vip' in (current_user.membership.name or '')|lower %}
+      <form method="POST" action="{{ url_for('task.skip_task') }}" class="mt-3 text-center"
+            onsubmit="return confirm('Skip this product?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button class="text-xs text-amber-400/90 hover:underline">VIP: skip this product</button>
+      </form>
+      {% endif %}
+    </div>
+  </article>
+
+  {% if progress %}
+  <div class="pt-card rounded-2xl px-4 py-3 flex justify-between text-xs text-zinc-400">
+    <span>Today’s progress</span>
+    <span class="font-semibold text-zinc-200">{{ progress.get('completed_today', 0) }} / {{ progress.get('mandatory', '—') }}</span>
   </div>
+  {% endif %}
 </div>
 {% endblock %}
