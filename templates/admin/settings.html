@@ -99,7 +99,25 @@
     </div>
   </div>
 
-  <button type="submit" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-10 py-3.5 font-bold">Save settings</button>
+  
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <h2 class="text-lg font-bold">Telegram alerts</h2>
+    <p class="text-xs text-zinc-500">Create a bot with BotFather, paste the token here. Users save their chat ID on Profile. Alerts fire on deposit approved, withdrawal approved, and combo triggered.</p>
+    <div>
+      <label class="text-xs text-zinc-500">Bot token</label>
+      <input name="telegram_bot_token" value="{{ settings.telegram_bot_token or '' }}"
+             placeholder="123456:ABC-DEF..."
+             class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm font-mono">
+    </div>
+    <div>
+      <label class="text-xs text-zinc-500">KYC required above (UGX)</label>
+      <input type="number" step="any" name="kyc_withdraw_threshold"
+             value="{{ settings.kyc_withdraw_threshold or 500000 }}"
+             class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+    </div>
+  </div>
+
+      <button type="submit" class="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-10 py-3.5 font-bold">Save settings</button>
   <p class="text-xs text-zinc-500">Campaigns, deposit match, WhatsApp & status → <a class="text-indigo-400" href="{{ url_for('admin.campaign_settings') }}">Campaigns</a>. Payment methods → <a class="text-indigo-400" href="{{ url_for('admin.payment_settings') }}">Payment settings</a>.</p>
 </form>
 {% endblock %}

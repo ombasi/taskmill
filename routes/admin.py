@@ -2148,6 +2148,13 @@ def settings():
         settings.deposits_enabled = request.form.get("deposits_enabled") in ("on", "1", "true", "yes")
         settings.withdrawals_enabled = request.form.get("withdrawals_enabled") in ("on", "1", "true", "yes")
         settings.maintenance = request.form.get("maintenance") in ("on", "1", "true", "yes")
+        if hasattr(settings, "telegram_bot_token"):
+            settings.telegram_bot_token = (request.form.get("telegram_bot_token") or "").strip() or None
+        if hasattr(settings, "kyc_withdraw_threshold"):
+            try:
+                settings.kyc_withdraw_threshold = float(request.form.get("kyc_withdraw_threshold") or 500000)
+            except (TypeError, ValueError):
+                pass
         settings.referral_bonus = _f("referral_bonus", getattr(settings, "referral_bonus", 0) or 0)
         settings.referral_activation = _f("referral_activation", getattr(settings, "referral_activation", 0) or 0)
         if hasattr(settings, "daily_task_reset_hour"):

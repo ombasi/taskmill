@@ -311,7 +311,7 @@ class WalletService:
             )
             try:
                 from services.engagement_service import send_outbound_alert, add_xp
-                send_outbound_alert(user, "Deposit approved", f"Credited.")
+                send_outbound_alert(user, "Deposit approved", f"Your deposit was approved and credited.")
                 add_xp(user, 20, "deposit")
             except Exception:
                 pass
@@ -451,11 +451,14 @@ class WalletService:
         db.session.commit()
         try:
             from services.notification_service import NotificationService
-            NotificationService.send(
-                user,
-                "Withdrawal Approved",
-                f"Your withdrawal of {__import__('helpers.currency', fromlist=['money']).money(user, float(withdrawal.amount))} has been approved."
-            )
+            from helpers.currency import money as _money
+            _msg = f"Your withdrawal of {_money(user, float(withdrawal.amount))} has been approved."
+            NotificationService.send(user, "Withdrawal Approved", _msg)
+            try:
+                from services.engagement_service import send_outbound_alert
+                send_outbound_alert(user, "Withdrawal approved", _msg)
+            except Exception:
+                pass
         except Exception:
             pass
         return True

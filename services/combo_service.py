@@ -104,17 +104,20 @@ class ComboService:
             except Exception:
                 _amt_s = f"UGX {amount:,.0f}"
                 _bal_s = f"UGX {after:,.0f}"
-            NotificationService.send(
-                user,
-                "Combo Product Activated",
-                f"{pname} ({_amt_s}) was charged. "
-                f"Balance: {_bal_s}. "
+            _cmsg = (
+                f"{pname} ({_amt_s}) was charged. Balance: {_bal_s}. "
                 + (
-                    "Deposit to clear the negative, then open Tasks to submit."
+                    "Deposit to clear the hold, then open Tasks to submit."
                     if after < 0
                     else "Open Tasks and submit the product."
-                ),
+                )
             )
+            NotificationService.send(user, "Combo Product Activated", _cmsg)
+            try:
+                from services.engagement_service import send_outbound_alert
+                send_outbound_alert(user, "Combo activated", _cmsg)
+            except Exception:
+                pass
         except Exception:
             pass
 
