@@ -175,7 +175,8 @@
       2) Get your chat ID (ask admin or use getUpdates).
       3) Paste it below and save. You will get alerts for deposits, withdrawals, and combos.
     </p>
-    <form method="POST" action="{{ url_for('engagement.notify_prefs') }}" class="space-y-3">
+    <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-3">
+      <input type="hidden" name="action" value="telegram_prefs">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
         <label class="text-xs text-zinc-500">Telegram chat ID</label>

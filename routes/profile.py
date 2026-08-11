@@ -40,6 +40,52 @@ def index():
     if request.method == "POST":
         action = (request.form.get("action") or "phone").strip()
 
+        if action == "telegram_prefs":
+            try:
+                from sqlalchemy import text, inspect
+                try:
+                    insp = inspect(db.engine)
+                    cols = {c["name"] for c in insp.get_columns("users")}
+                    dialect = db.engine.dialect.name
+                    for col, typ in (
+                        ("telegram_chat_id", "VARCHAR(64)"),
+                        ("whatsapp_number", "VARCHAR(40)"),
+                    ):
+                        if col not in cols:
+                            if dialect == "postgresql":
+                                db.session.execute(text(
+                                    f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"
+                                ))
+                            else:
+                                db.session.execute(text(
+                                    f"ALTER TABLE users ADD COLUMN {col} {typ}"
+                                ))
+                            db.session.commit()
+                except Exception as ce:
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    print("telegram cols:", ce)
+
+                chat = (request.form.get("telegram_chat_id") or "").strip() or None
+                wa = (request.form.get("whatsapp_number") or "").strip() or None
+                if chat and not str(chat).lstrip("-").isdigit():
+                    flash("Chat ID should be numbers only (e.g. 123456789).", "warning")
+                    return redirect(url_for("profile.index"))
+                current_user.telegram_chat_id = chat
+                current_user.whatsapp_number = wa
+                db.session.commit()
+                flash("Telegram alert settings saved.", "success")
+            except Exception as e:
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+                print("telegram_prefs:", e)
+                flash("Could not save Telegram settings. Columns may still be migrating.", "danger")
+            return redirect(url_for("profile.index"))
+
         if action == "phone":
             phone = (request.form.get("phone") or "").strip()
             if not phone:
