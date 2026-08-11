@@ -46,6 +46,50 @@ card:"#18181b"
   }
   html { scroll-behavior: smooth; }
   body { -webkit-font-smoothing: antialiased; }
+
+  /* ===== Platinum theme (global) ===== */
+  :root {
+    --pt-1: #f8fafc;
+    --pt-2: #e2e8f0;
+    --pt-3: #cbd5e1;
+    --pt-4: #94a3b8;
+    --pt-5: #64748b;
+    --pt-glow: rgba(226, 232, 240, 0.18);
+    --pt-edge: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(203,213,225,.22) 40%, rgba(100,116,139,.18) 70%, rgba(255,255,255,.3) 100%);
+    --pt-fill: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 28%, #94a3b8 52%, #cbd5e1 78%, #f1f5f9 100%);
+    --pt-text: linear-gradient(120deg, #ffffff 0%, #e2e8f0 30%, #94a3b8 55%, #f8fafc 85%, #cbd5e1 100%);
+    --pt-deep: linear-gradient(165deg, rgba(30,41,59,.96) 0%, rgba(15,23,42,.94) 50%, rgba(9,12,20,.98) 100%);
+  }
+  body.theme-dark {
+    background: #070b14 !important;
+    color: #f1f5f9;
+  }
+  .pt-fill { background: var(--pt-fill); color: #0f172a; }
+  .pt-text {
+    background: var(--pt-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .pt-btn {
+    background: var(--pt-fill);
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 12px 28px -12px rgba(226,232,240,.45);
+  }
+  .pt-btn:hover { filter: brightness(1.05); }
+  .pt-card {
+    background: var(--pt-deep);
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 20px 50px -30px rgba(0,0,0,.8), 0 0 40px -20px var(--pt-glow);
+  }
+  /* Soften indigo accents toward platinum on shared chrome */
+  .tm-nav-link:hover { color: #e2e8f0 !important; }
+  header nav > div.backdrop-blur-xl {
+    border-color: rgba(226,232,240,.12) !important;
+    box-shadow: 0 12px 40px -20px rgba(0,0,0,.6), 0 0 30px -15px var(--pt-glow);
+  }
+
   .tm-nav-link {
     position: relative;
     padding: .4rem .15rem;
@@ -123,11 +167,11 @@ card:"#18181b"
 
 <div class="fixed inset-0 -z-50 overflow-hidden">
 
-<div class="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-indigo-600/20 blur-[140px]"></div>
+<div class="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-slate-300/15 blur-[140px]"></div>
 
-<div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-purple-700/20 blur-[140px]"></div>
+<div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-slate-500/15 blur-[140px]"></div>
 
-<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full bg-sky-500/10 blur-[120px]"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full bg-slate-400/10 blur-[120px]"></div>
 
 </div>
 
@@ -143,7 +187,7 @@ card:"#18181b"
 
 <a href="{{ url_for('dashboard.index') }}" class="flex items-center gap-4">
 
-<div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0">
+<div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center shadow-lg shadow-slate-400/20 shrink-0">
 
 <i class="fa-solid fa-cube text-2xl"></i>
 

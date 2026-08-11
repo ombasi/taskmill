@@ -8,6 +8,32 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+
+  /* Platinum admin chrome */
+  :root {
+    --pt-fill: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 28%, #94a3b8 52%, #cbd5e1 78%, #f1f5f9 100%);
+    --pt-glow: rgba(226, 232, 240, 0.16);
+  }
+  body { background: #070b14 !important; }
+  .sidebar {
+    border-right-color: rgba(226,232,240,.08) !important;
+  }
+  .sidebar-link:hover, .sidebar-link.active {
+    background: rgba(226,232,240,.08) !important;
+  }
+  .sidebar-link.active {
+    box-shadow: inset 3px 0 0 #cbd5e1;
+  }
+  .glass {
+    border-color: rgba(226,232,240,.1) !important;
+    box-shadow: 0 16px 40px -24px rgba(0,0,0,.7), 0 0 30px -18px var(--pt-glow);
+  }
+  .pt-btn {
+    background: var(--pt-fill);
+    color: #0f172a;
+    font-weight: 800;
+  }
+
     :root { --sidebar-w: 17rem; --sidebar-collapsed: 4.75rem; }
     body { background: #070b14; color: #f8fafc; font-family: Inter, system-ui, sans-serif; }
     body.nav-open { overflow: hidden; }
@@ -172,7 +198,7 @@
 
   <aside class="sidebar glass border-r border-white/10 flex flex-col sticky top-0 h-screen shrink-0" id="adminSidebar">
     <div class="p-4 flex items-center gap-3 border-b border-white/5 min-h-[4.5rem]">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-black shrink-0">T</div>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center font-black shrink-0">T</div>
       <div class="brand-text flex-1 min-w-0 overflow-hidden">
         <p class="font-black text-lg leading-none">Taskmill</p>
         <p class="text-[11px] text-zinc-500 mt-1">Admin console</p>

@@ -1,416 +1,170 @@
 {% extends "base.html" %}
-
-{% block title %}Create Account{% endblock %}
-
+{% block title %}Register · Taskmill{% endblock %}
 {% block content %}
-
-<div class="min-h-screen flex items-center justify-center px-6 py-16">
-
-    <div class="w-full max-w-3xl">
-
-        <!-- HERO -->
-
-        <div class="text-center mb-10">
-
-            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 mb-6 shadow-2xl shadow-indigo-500/40">
-
-                <i class="fa-solid fa-user-plus text-5xl text-white"></i>
-
-            </div>
-
-            <h1 class="text-5xl font-black text-white">
-
-                Join Taskmill
-
-            </h1>
-
-            <p class="text-zinc-400 text-lg mt-4">
-
-                Create your account and begin earning through product reviews.
-
-            </p>
-
-        </div>
-
-        <!-- REGISTER CARD -->
-
-        <div class="glass rounded-3xl p-10">
-
-            <form method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <div class="grid md:grid-cols-2 gap-6">
-
-                    <!-- FULL NAME -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Full Name
-
-                        </label>
-
-                        <input
-
-                            type="text"
-
-                            name="full_name"
-
-                            required
-
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-
-                    </div>
-
-                    <!-- USERNAME -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Username
-
-                        </label>
-
-                        <input
-
-                            type="text"
-
-                            name="username"
-
-                            required
-
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-
-                    </div>
-
-                    <!-- EMAIL -->
-
-                    <div class="md:col-span-2">
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Email Address
-
-                        </label>
-
-                        <input
-
-                            type="email"
-
-                            name="email"
-
-                            required
-
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-
-                    </div>
-
-                    <!-- PHONE -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Phone Number
-
-                        </label>
-
-                        <input
-
-                            type="text"
-
-                            name="phone"
-
-                            required
-
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-
-                    </div>
-
-                    <!-- COUNTRY -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Country
-
-                        </label>
-
-                        <select
-                            name="country"
-                            required
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-                            <option value="" disabled selected>Select your country</option>
-                            <optgroup label="East Africa">
-                              <option value="Uganda">Uganda</option>
-                              <option value="Kenya">Kenya</option>
-                              <option value="Tanzania">Tanzania</option>
-                              <option value="Rwanda">Rwanda</option>
-                              <option value="Burundi">Burundi</option>
-                              <option value="South Sudan">South Sudan</option>
-                              <option value="Ethiopia">Ethiopia</option>
-                              <option value="Somalia">Somalia</option>
-                              <option value="Djibouti">Djibouti</option>
-                              <option value="Eritrea">Eritrea</option>
-                            </optgroup>
-                            <optgroup label="Central Africa">
-                              <option value="DR Congo">DR Congo</option>
-                              <option value="Congo">Congo</option>
-                              <option value="Cameroon">Cameroon</option>
-                              <option value="Central African Republic">Central African Republic</option>
-                              <option value="Gabon">Gabon</option>
-                              <option value="Chad">Chad</option>
-                              <option value="Equatorial Guinea">Equatorial Guinea</option>
-                            </optgroup>
-                            <optgroup label="West Africa">
-                              <option value="Nigeria">Nigeria</option>
-                              <option value="Ghana">Ghana</option>
-                              <option value="Senegal">Senegal</option>
-                              <option value="Ivory Coast">Ivory Coast</option>
-                              <option value="Mali">Mali</option>
-                              <option value="Burkina Faso">Burkina Faso</option>
-                              <option value="Niger">Niger</option>
-                              <option value="Benin">Benin</option>
-                              <option value="Togo">Togo</option>
-                              <option value="Sierra Leone">Sierra Leone</option>
-                              <option value="Liberia">Liberia</option>
-                              <option value="Guinea">Guinea</option>
-                              <option value="Gambia">Gambia</option>
-                            </optgroup>
-                            <optgroup label="Southern Africa">
-                              <option value="South Africa">South Africa</option>
-                              <option value="Zambia">Zambia</option>
-                              <option value="Zimbabwe">Zimbabwe</option>
-                              <option value="Malawi">Malawi</option>
-                              <option value="Mozambique">Mozambique</option>
-                              <option value="Botswana">Botswana</option>
-                              <option value="Namibia">Namibia</option>
-                              <option value="Angola">Angola</option>
-                              <option value="Lesotho">Lesotho</option>
-                              <option value="Eswatini">Eswatini</option>
-                            </optgroup>
-                            <optgroup label="North Africa">
-                              <option value="Egypt">Egypt</option>
-                              <option value="Morocco">Morocco</option>
-                              <option value="Algeria">Algeria</option>
-                              <option value="Tunisia">Tunisia</option>
-                              <option value="Libya">Libya</option>
-                              <option value="Sudan">Sudan</option>
-                            </optgroup>
-                            <optgroup label="Other">
-                              <option value="United States">United States</option>
-                              <option value="United Kingdom">United Kingdom</option>
-                              <option value="United Arab Emirates">United Arab Emirates</option>
-                              <option value="India">India</option>
-                              <option value="China">China</option>
-                              <option value="Pakistan">Pakistan</option>
-                              <option value="Bangladesh">Bangladesh</option>
-                              <option value="Philippines">Philippines</option>
-                              <option value="Canada">Canada</option>
-                              <option value="Australia">Australia</option>
-                              <option value="Germany">Germany</option>
-                              <option value="France">France</option>
-                              <option value="Other">Other</option>
-                            </optgroup>
-
-                        </select>
-
-                    </div>
-                                        
-                    <!-- SEX & DOB -->
-                    <div>
-                        <label class="block text-zinc-300 mb-3 font-semibold">Sex</label>
-                        <select name="sex" required class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-                            <option value="" disabled selected>Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-zinc-300 mb-3 font-semibold">Date of birth</label>
-                        <input type="date" name="date_of_birth" required max="{{ max_dob }}"
-                               class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-                        <p class="text-xs text-zinc-500 mt-2">You must be at least 20 years old</p>
-                    </div>
-
-                    <!-- REFERRAL -->
-
-                    <div class="md:col-span-2">
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Referral Code
-
-                        </label>
-
-                        <input
-
-                            type="text"
-
-                            name="referral_code"
-
-                            placeholder="Required"
-
-                            required
-
-                            class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 focus:border-indigo-500 focus:outline-none">
-
-                    </div>
-
-                    <!-- PASSWORD -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Password
-
-                        </label>
-
-                        <div class="relative">
-
-                            <input
-
-                                id="password"
-
-                                type="password"
-
-                                name="password"
-
-                                required
-
-                                class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 pr-14 focus:border-indigo-500 focus:outline-none">
-
-                            <button
-                                type="button"
-                                onclick="togglePassword('password',this)"
-                                class="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400">
-
-                                <i class="fa-solid fa-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- CONFIRM PASSWORD -->
-
-                    <div>
-
-                        <label class="block text-zinc-300 mb-3 font-semibold">
-
-                            Confirm Password
-
-                        </label>
-
-                        <div class="relative">
-
-                            <input
-
-                                id="confirm_password"
-
-                                type="password"
-
-                                name="confirm_password"
-
-                                required
-
-                                class="w-full bg-zinc-900/60 border border-white/10 rounded-2xl px-5 py-4 pr-14 focus:border-indigo-500 focus:outline-none">
-
-                            <button
-                                type="button"
-                                onclick="togglePassword('confirm_password',this)"
-                                class="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400">
-
-                                <i class="fa-solid fa-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- TERMS -->
-                <div class="mt-8 flex items-start gap-3">
-                    <input type="checkbox" name="accept_terms" value="1" required id="reg_terms"
-                           class="mt-1 w-5 h-5 accent-indigo-600">
-                    <label for="reg_terms" class="text-zinc-400 leading-7">
-                        I am 20+ years old and I agree to the
-                        <a href="{{ url_for('dashboard.terms') }}" target="_blank" class="text-indigo-400 underline">Terms &amp; Conditions</a>
-                        and understand Taskmill's earning policy.
-                    </label>
-                </div>
-
-                <!-- BUTTON -->
-                <button type="submit"
-                    class="w-full mt-10 py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg hover:scale-[1.02] transition shadow-2xl shadow-indigo-600/30">
-                    Create My Account
-                </button>
-
-            </form>
-            
-            <!-- LOGIN -->
-
-            <div class="mt-10 text-center">
-
-                <p class="text-zinc-400">
-
-                    Already have an account?
-
-                    <a href="{{ url_for('auth.login') }}"
-                       class="text-indigo-400 hover:text-indigo-300 font-semibold">
-
-                        Login Here
-
-                    </a>
-
-                </p>
-
-            </div>
-
-        </div>
-
+<style>
+  .reg-wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 1rem 0.75rem 6rem;
+  }
+  .reg-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(15,23,42,.94));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.75rem;
+    box-shadow: 0 28px 70px -32px rgba(0,0,0,.85), 0 0 60px -20px rgba(226,232,240,.16);
+    position: relative;
+  }
+  .reg-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.45), rgba(203,213,225,.15) 40%, rgba(100,116,139,.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .pt-text {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 35%, #94a3b8 60%, #f8fafc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .pt-btn {
+    background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 28%, #94a3b8 52%, #cbd5e1 78%, #f1f5f9 100%);
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 14px 32px -14px rgba(226,232,240,.5);
+  }
+  .pt-btn:hover { filter: brightness(1.05); }
+  .pt-input {
+    background: linear-gradient(180deg, rgba(0,0,0,.5), rgba(15,23,42,.65));
+    border: 1px solid rgba(203,213,225,.14);
+    border-radius: 1rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.875rem;
+    color: #fff;
+  }
+  .pt-input:focus {
+    outline: none;
+    border-color: rgba(226,232,240,.4);
+    box-shadow: 0 0 0 3px rgba(148,163,184,.18);
+  }
+  .pt-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #71717a;
+    margin-bottom: 0.4rem;
+  }
+</style>
+
+<div class="reg-wrap">
+  <div class="text-center mb-6">
+    <div class="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center
+                bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 shadow-lg shadow-slate-400/25">
+      <i class="fa-solid fa-user-plus text-zinc-900 text-xl"></i>
     </div>
+    <h1 class="mt-4 text-3xl font-black pt-text">Create account</h1>
+    <p class="text-zinc-400 text-sm mt-2">Join Taskmill and start reviewing products</p>
+  </div>
 
+  <div class="reg-card p-6 sm:p-8">
+    <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4 relative">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="pt-label">Full name</label>
+          <input type="text" name="full_name" required class="pt-input" placeholder="Your full name">
+        </div>
+        <div>
+          <label class="pt-label">Username</label>
+          <input type="text" name="username" required class="pt-input" placeholder="Choose a username">
+        </div>
+      </div>
+
+      <div>
+        <label class="pt-label">Email</label>
+        <input type="email" name="email" required class="pt-input" placeholder="you@email.com">
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="pt-label">Phone</label>
+          <input type="text" name="phone" class="pt-input" placeholder="07XXXXXXXX">
+        </div>
+        <div>
+          <label class="pt-label">Country</label>
+          <select name="country" required class="pt-input">
+            <option value="" disabled selected>Select country</option>
+            {% for c in world_countries|default([]) %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% else %}
+            <option value="Uganda">Uganda</option>
+            <option value="Kenya">Kenya</option>
+            <option value="Tanzania">Tanzania</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="United States">United States</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Germany">Germany</option>
+            <option value="Other">Other</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="pt-label">Password</label>
+          <input type="password" name="password" required minlength="6" class="pt-input" placeholder="Min 6 characters">
+        </div>
+        <div>
+          <label class="pt-label">Confirm password</label>
+          <input type="password" name="confirm_password" required minlength="6" class="pt-input" placeholder="Repeat password">
+        </div>
+      </div>
+
+      <div>
+        <label class="pt-label">Referral code (optional)</label>
+        <input type="text" name="referral_code" value="{{ request.args.get('ref','') }}" class="pt-input" placeholder="Friend's code">
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="pt-label">Sex</label>
+          <select name="sex" class="pt-input">
+            <option value="">Prefer not to say</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div>
+          <label class="pt-label">Date of birth</label>
+          <input type="date" name="date_of_birth" class="pt-input" {% if max_dob %}max="{{ max_dob }}"{% endif %}>
+        </div>
+      </div>
+
+      <label class="flex items-start gap-2 text-xs text-zinc-400 cursor-pointer pt-1">
+        <input type="checkbox" name="accept_terms" value="1" required class="mt-0.5 rounded border-white/20 bg-zinc-900">
+        <span>I agree to the <a href="{{ url_for('dashboard.terms') }}" class="text-slate-200 underline">Terms & Conditions</a></span>
+      </label>
+
+      <button type="submit" class="pt-btn w-full rounded-2xl py-3.5 text-sm mt-2">
+        Create My Account
+      </button>
+    </form>
+
+    <p class="text-center text-xs text-zinc-500 mt-6 relative">
+      Already have an account?
+      <a href="{{ url_for('auth.login') }}" class="text-slate-200 font-semibold hover:text-white">Sign in</a>
+    </p>
+  </div>
 </div>
-
-<!-- Password Toggle -->
-
-<script>
-
-function togglePassword(id, btn){
-
-    const input=document.getElementById(id);
-
-    const icon=btn.querySelector("i");
-
-    if(input.type==="password"){
-
-        input.type="text";
-
-        icon.classList.remove("fa-eye");
-
-        icon.classList.add("fa-eye-slash");
-
-    }else{
-
-        input.type="password";
-
-        icon.classList.remove("fa-eye-slash");
-
-        icon.classList.add("fa-eye");
-
-    }
-
-}
-
-</script>
-
 {% endblock %}
