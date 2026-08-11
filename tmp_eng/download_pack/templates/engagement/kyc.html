@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Verify identity{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto space-y-6 pb-12">
+  <header>
+    <h1 class="text-3xl font-black">KYC (light)</h1>
+    <p class="text-sm text-zinc-400 mt-2">Optional ID for large withdrawals. Status: <strong>{{ current_user.kyc_status or 'None' }}</strong></p>
+  </header>
+  <form method="POST" enctype="multipart/form-data" class="rounded-3xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <div>
+      <label class="text-xs text-zinc-500">Document type</label>
+      <select name="doc_type" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+        <option value="id">National ID</option>
+        <option value="passport">Passport</option>
+        <option value="selfie">Selfie with ID</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-xs text-zinc-500">Upload (JPG / PNG / PDF)</label>
+      <input type="file" name="document" accept="image/*,.pdf" required class="w-full mt-1 text-sm">
+    </div>
+    <button class="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-3 font-bold">Submit for review</button>
+  </form>
+  <div class="space-y-2">
+    {% for d in docs %}
+    <div class="rounded-2xl border border-white/10 px-4 py-3 text-sm flex justify-between">
+      <span>{{ d.doc_type }} · {{ d.created_at.strftime('%d %b %Y') if d.created_at else '' }}</span>
+      <span class="{% if d.status=='Approved' %}text-emerald-400{% elif d.status=='Rejected' %}text-rose-400{% else %}text-amber-300{% endif %}">{{ d.status }}</span>
+    </div>
+    {% else %}
+    <p class="text-sm text-zinc-500">No documents yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

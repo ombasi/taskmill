@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Daily check-in{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto space-y-6 pb-12">
+  <header class="text-center">
+    <p class="text-[11px] uppercase tracking-[0.25em] text-emerald-300/80">Habit</p>
+    <h1 class="text-3xl font-black mt-1">Daily check-in</h1>
+    <p class="text-sm text-zinc-400 mt-2">Open the app · claim XP · build your streak</p>
+  </header>
+
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-6 text-center space-y-3">
+    <p class="text-5xl font-black text-emerald-400">{{ streak }}</p>
+    <p class="text-sm text-zinc-400">Day streak</p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <button class="mt-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-10 py-3.5 font-bold disabled:opacity-40"
+              {% if today_done %}disabled{% endif %}>
+        {% if today_done %}Checked in today{% else %}Check in now{% endif %}
+      </button>
+    </form>
+    <p class="text-[11px] text-zinc-500">Every 7th day in a row earns a small cash bonus.</p>
+  </div>
+
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+    <div class="flex justify-between text-sm mb-2">
+      <span class="font-semibold">Level {{ progress.level }}</span>
+      <span class="text-zinc-500">{{ progress.xp_in_level }} / {{ progress.xp_need }} XP</span>
+    </div>
+    <div class="h-3 rounded-full bg-black/40 overflow-hidden">
+      <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:{{ progress.percent }}%"></div>
+    </div>
+    <p class="text-[11px] text-zinc-500 mt-2">Quality score: {{ '%.0f'|format(quality) }}/100 · slight commission boost when high</p>
+  </div>
+
+  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
+    <h2 class="font-bold mb-3">This month</h2>
+    <div class="grid grid-cols-7 gap-1.5">
+      {% for d in calendar %}
+      <div class="aspect-square rounded-lg flex items-center justify-center text-xs
+        {% if d.checked %}bg-emerald-500/30 text-emerald-200 border border-emerald-400/30
+        {% elif d.is_today %}bg-indigo-500/20 text-indigo-200 border border-indigo-400/40
+        {% else %}bg-black/30 text-zinc-600{% endif %}">
+        {{ d.day }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

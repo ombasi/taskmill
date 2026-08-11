@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% block title %}Seasons{% endblock %}
+{% block page_title %}Leaderboard seasons{% endblock %}
+{% block content %}
+<form method="POST" class="glass rounded-3xl p-6 space-y-3 max-w-xl mb-8">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+  <input name="title" placeholder="Season title" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+  <input name="prize_note" placeholder="Prize note e.g. Top 3 share pool" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+  <input type="number" name="days" value="30" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-4 py-3">
+  <button class="rounded-xl bg-indigo-600 px-6 py-2.5 font-bold text-sm">Create season</button>
+</form>
+<div class="space-y-2">
+  {% for s in items %}
+  <div class="rounded-2xl border border-white/10 p-4 text-sm">
+    <p class="font-bold">{{ s.title }} {% if s.active %}<span class="text-emerald-400 text-xs">Active</span>{% endif %}</p>
+    <p class="text-zinc-500">{{ s.prize_note or '—' }} · ends {{ s.ends_at.strftime('%d %b %Y') if s.ends_at else '—' }}</p>
+  </div>
+  {% else %}<p class="text-zinc-500">No seasons yet.</p>{% endfor %}
+</div>
+{% endblock %}

@@ -97,11 +97,18 @@ class ComboService:
 
         try:
             from services.notification_service import NotificationService
+            try:
+                from helpers.currency import money as _money
+                _amt_s = _money(user, amount)
+                _bal_s = _money(user, after)
+            except Exception:
+                _amt_s = f"UGX {amount:,.0f}"
+                _bal_s = f"UGX {after:,.0f}"
             NotificationService.send(
                 user,
                 "Combo Product Activated",
-                f"{pname} (UGX {amount:,.0f}) was charged. "
-                f"Balance: UGX {after:,.0f}. "
+                f"{pname} ({_amt_s}) was charged. "
+                f"Balance: {_bal_s}. "
                 + (
                     "Deposit to clear the negative, then open Tasks to submit."
                     if after < 0
