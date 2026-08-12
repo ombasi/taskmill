@@ -358,51 +358,54 @@ Logout
 
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
-
-<div class="mb-8 space-y-4">
-
-{% for category, message in messages %}
-
-<div class="rounded-2xl px-6 py-5 border
-
-{% if category=='success' %}
-bg-emerald-500/15 border-emerald-500/30 text-emerald-300
-{% elif category=='error' %}
-bg-red-500/15 border-red-500/30 text-red-300
-{% elif category=='warning' %}
-bg-yellow-500/15 border-yellow-500/30 text-yellow-300
-{% else %}
-bg-indigo-500/15 border-indigo-500/30 text-indigo-300
-{% endif %}
-
-shadow-lg">
-
-<div class="flex items-center gap-4">
-
-{% if category=="success" %}
-<i class="fa-solid fa-circle-check text-xl"></i>
-{% elif category=="error" %}
-<i class="fa-solid fa-circle-xmark text-xl"></i>
-{% elif category=="warning" %}
-<i class="fa-solid fa-triangle-exclamation text-xl"></i>
-{% else %}
-<i class="fa-solid fa-circle-info text-xl"></i>
-{% endif %}
-
-<span class="font-medium">
-
-{{ message }}
-
-</span>
-
+<div id="flash-stack" class="fixed top-20 md:top-24 left-1/2 -translate-x-1/2 z-[110] w-[min(100%-1.5rem,26rem)] space-y-2.5 pointer-events-none">
+  {% for category, message in messages %}
+  {% set cat = category if category in ['success','error','danger','warning','info'] else 'info' %}
+  {% if cat == 'error' %}{% set cat = 'danger' %}{% endif %}
+  <div class="flash-card pointer-events-auto flex items-start gap-3 rounded-2xl px-4 py-3.5 border shadow-2xl backdrop-blur-xl
+              {% if cat == 'success' %}border-emerald-400/25 bg-gradient-to-br from-emerald-500/20 via-zinc-900/95 to-zinc-950 text-emerald-50
+              {% elif cat == 'danger' %}border-rose-400/30 bg-gradient-to-br from-rose-500/20 via-zinc-900/95 to-zinc-950 text-rose-50
+              {% elif cat == 'warning' %}border-amber-400/30 bg-gradient-to-br from-amber-500/15 via-zinc-900/95 to-zinc-950 text-amber-50
+              {% else %}border-white/15 bg-gradient-to-br from-slate-300/15 via-zinc-900/95 to-zinc-950 text-slate-50{% endif %}"
+       style="animation: flashIn .35s ease-out both; box-shadow: 0 20px 50px -20px rgba(0,0,0,.75), 0 0 40px -18px rgba(226,232,240,.12);">
+    <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+                 {% if cat == 'success' %}bg-emerald-400/15 text-emerald-300
+                 {% elif cat == 'danger' %}bg-rose-400/15 text-rose-300
+                 {% elif cat == 'warning' %}bg-amber-400/15 text-amber-300
+                 {% else %}bg-gradient-to-br from-white/20 to-sky-200/10 text-sky-100{% endif %}">
+      {% if cat == 'success' %}<i class="fa-solid fa-circle-check"></i>
+      {% elif cat == 'danger' %}<i class="fa-solid fa-circle-xmark"></i>
+      {% elif cat == 'warning' %}<i class="fa-solid fa-triangle-exclamation"></i>
+      {% else %}<i class="fa-solid fa-gem text-sm"></i>{% endif %}
+    </span>
+    <p class="flex-1 text-sm font-medium leading-relaxed pt-1.5">{{ message }}</p>
+    <button type="button" onclick="this.closest('.flash-card').remove()"
+            class="text-white/40 hover:text-white text-lg leading-none pt-0.5 shrink-0">&times;</button>
+  </div>
+  {% endfor %}
 </div>
-
-</div>
-
-{% endfor %}
-
-</div>
-
+<script>
+(function(){
+  var stack = document.getElementById('flash-stack');
+  if (!stack) return;
+  setTimeout(function(){
+    stack.querySelectorAll('.flash-card').forEach(function(el, i){
+      setTimeout(function(){
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-8px)';
+        el.style.transition = 'opacity .35s, transform .35s';
+        setTimeout(function(){ el.remove(); if(!stack.children.length) stack.remove(); }, 350);
+      }, 4200 + i * 400);
+    });
+  }, 50);
+})();
+</script>
+<style>
+@keyframes flashIn {
+  from { opacity: 0; transform: translateY(-12px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+</style>
 {% endif %}
 {% endwith %}
 
@@ -586,13 +589,24 @@ mobile.classList.toggle("hidden");
 function showToast(msg, type){
   var root = document.getElementById('toast-root');
   if(!root) return;
+  type = type || 'info';
+  if (type === 'error') type = 'danger';
   var el = document.createElement('div');
-  var colors = {success:'bg-emerald-600', danger:'bg-red-600', warning:'bg-amber-600', info:'bg-indigo-600'};
-  el.className = 'pointer-events-auto rounded-2xl px-4 py-3 text-sm font-medium shadow-xl text-white ' + (colors[type]||colors.info);
-  el.textContent = msg;
+  var border = {
+    success: 'border-emerald-400/25 from-emerald-500/20',
+    danger: 'border-rose-400/30 from-rose-500/20',
+    warning: 'border-amber-400/30 from-amber-500/15',
+    info: 'border-white/15 from-slate-300/15'
+  }[type] || 'border-white/15 from-slate-300/15';
+  var icon = {success:'fa-circle-check text-emerald-300', danger:'fa-circle-xmark text-rose-300', warning:'fa-triangle-exclamation text-amber-300', info:'fa-gem text-sky-100'}[type] || 'fa-gem text-sky-100';
+  el.className = 'pointer-events-auto flex items-start gap-3 rounded-2xl px-4 py-3.5 border bg-gradient-to-br via-zinc-900/95 to-zinc-950 shadow-2xl backdrop-blur-xl text-sm text-slate-50 ' + border;
+  el.style.boxShadow = '0 20px 50px -20px rgba(0,0,0,.75), 0 0 40px -18px rgba(226,232,240,.12)';
+  el.innerHTML = '<span class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0"><i class="fa-solid '+icon+'"></i></span><p class="flex-1 font-medium leading-relaxed pt-1.5"></p><button type="button" class="text-white/40 hover:text-white text-lg leading-none">&times;</button>';
+  el.querySelector('p').textContent = msg;
+  el.querySelector('button').onclick = function(){ el.remove(); };
   root.appendChild(el);
-  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .4s'; }, 2800);
-  setTimeout(function(){ el.remove(); }, 3400);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .35s'; }, 3200);
+  setTimeout(function(){ el.remove(); }, 3600);
 }
 </script>
 
@@ -692,7 +706,7 @@ function showToast(msg, type){
     var el = document.createElement('div');
     el.className = 'pointer-events-auto rounded-2xl border border-white/10 bg-zinc-900/95 shadow-xl p-4 backdrop-blur-xl animate-[slideIn_.25s_ease]';
     el.innerHTML = '<div class="flex gap-3 items-start">'
-      + '<span class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0"><i class="fa-solid fa-bell"></i></span>'
+      + '<span class="w-9 h-9 rounded-xl bg-gradient-to-br from-white/20 to-sky-200/10 text-sky-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-gem text-sm"></i></span>'
       + '<div class="flex-1 min-w-0">'
       + '<p class="text-sm font-semibold text-white"></p>'
       + '<p class="text-xs text-zinc-400 mt-1 leading-relaxed"></p>'
