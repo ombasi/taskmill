@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, request, Response
 from flask_login import current_user
 
 from config import Config
@@ -543,6 +543,22 @@ def create_app():
                 pass
             print("session_version check:", e)
             return None
+
+    
+    @app.route("/robots.txt")
+    def robots_txt():
+        return app.send_static_file("robots.txt")
+
+    @app.route("/sitemap.xml")
+    def sitemap_xml():
+        pages = ["/login", "/register", "/about", "/faq", "/terms", "/status", "/contact"]
+        base = request.url_root.rstrip("/")
+        body = ['<?xml version="1.0" encoding="UTF-8"?>',
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+        for path in pages:
+            body.append(f"  <url><loc>{base}{path}</loc></url>")
+        body.append("</urlset>")
+        return Response("\n".join(body), mimetype="application/xml")
 
     return app
 

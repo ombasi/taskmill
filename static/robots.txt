@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /about
+Allow: /faq
+Allow: /terms
+Allow: /status
+Disallow: /admin
+Disallow: /wallet
+Disallow: /tasks
+Disallow: /api/
+Disallow: /dashboard
+Sitemap: /sitemap.xml

@@ -4,34 +4,68 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#09090b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
 
-<title>{% block title %}Taskmill{% endblock %}</title>
+{# ========== SEO & branding ========== #}
+<title>{% block title %}Taskmill — Earn with product reviews{% endblock %}</title>
 
-{# Browser tab logo #}
+{% set _seo_desc %}{% block meta_description %}Taskmill is a product-review earning platform. Complete daily tasks, manage your wallet, upgrade memberships, and grow with referrals.{% endblock %}{% endset %}
+{% set _seo_keywords %}{% block meta_keywords %}Taskmill, product reviews, earn online, task platform, wallet, membership, referrals{% endblock %}{% endset %}
+{% set _seo_image = url_for('static', filename='img/taskmill-logo.png', _external=True) %}
+{% set _seo_url %}{% block canonical_url %}{{ request.url }}{% endblock %}{% endset %}
+{% set _seo_title %}{% block og_title %}Taskmill — Earn with product reviews{% endblock %}{% endset %}
+
+<meta name="description" content="{{ _seo_desc|trim }}">
+<meta name="keywords" content="{{ _seo_keywords|trim }}">
+<meta name="author" content="Taskmill">
+<meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
+<meta name="googlebot" content="{% block meta_googlebot %}index,follow{% endblock %}">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="application-name" content="Taskmill">
+<meta name="apple-mobile-web-app-title" content="Taskmill">
+<meta name="format-detection" content="telephone=no">
+<link rel="canonical" href="{{ _seo_url|trim }}">
+
+{# Favicon / app icons #}
 <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
 <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
 
-{# Link preview (WhatsApp, Telegram, Facebook, X, Slack, etc.) #}
-{% set _og_title = self.title() if self.title is defined else 'Taskmill' %}
-{% set _og_desc = 'Sign in to Taskmill — product review tasks, wallet, and memberships.' %}
-{% set _og_image = url_for('static', filename='img/taskmill-logo.png', _external=True) %}
-{% set _og_url = url_for('auth.login', _external=True) %}
-<meta name="description" content="{{ _og_desc }}">
-<meta property="og:type" content="website">
+{# Open Graph (Facebook, WhatsApp, Telegram, LinkedIn) #}
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
 <meta property="og:site_name" content="Taskmill">
-<meta property="og:title" content="{% block og_title %}Taskmill — Sign in{% endblock %}">
-<meta property="og:description" content="{% block og_description %}{{ _og_desc }}{% endblock %}">
-<meta property="og:image" content="{% block og_image %}{{ _og_image }}{% endblock %}">
-<meta property="og:url" content="{% block og_url %}{{ _og_url }}{% endblock %}">
+<meta property="og:locale" content="{% block og_locale %}en_US{% endblock %}">
+<meta property="og:title" content="{{ _seo_title|trim }}">
+<meta property="og:description" content="{% block og_description %}{{ _seo_desc|trim }}{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{{ _seo_image }}{% endblock %}">
+<meta property="og:image:alt" content="Taskmill logo">
+<meta property="og:url" content="{% block og_url %}{{ _seo_url|trim }}{% endblock %}">
+
+{# Twitter / X #}
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{% block twitter_title %}Taskmill — Sign in{% endblock %}">
-<meta name="twitter:description" content="{% block twitter_description %}{{ _og_desc }}{% endblock %}">
-<meta name="twitter:image" content="{% block twitter_image %}{{ _og_image }}{% endblock %}">
+<meta name="twitter:title" content="{% block twitter_title %}{{ _seo_title|trim }}{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}{{ _seo_desc|trim }}{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}{{ _seo_image }}{% endblock %}">
+
+{# JSON-LD Organization #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Taskmill",
+  "url": "{{ url_for('auth.login', _external=True) }}",
+  "applicationCategory": "BusinessApplication",
+  "description": {{ _seo_desc|trim|tojson }},
+  "image": "{{ _seo_image }}",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
 
 <!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
