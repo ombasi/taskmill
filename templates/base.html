@@ -8,7 +8,30 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
+
 <title>{% block title %}Taskmill{% endblock %}</title>
+
+{# Browser tab logo #}
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
+<link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/taskmill-logo.png') }}">
+
+{# Link preview (WhatsApp, Telegram, Facebook, X, Slack, etc.) #}
+{% set _og_title = self.title() if self.title is defined else 'Taskmill' %}
+{% set _og_desc = 'Sign in to Taskmill — product review tasks, wallet, and memberships.' %}
+{% set _og_image = url_for('static', filename='img/taskmill-logo.png', _external=True) %}
+{% set _og_url = url_for('auth.login', _external=True) %}
+<meta name="description" content="{{ _og_desc }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Taskmill">
+<meta property="og:title" content="{% block og_title %}Taskmill — Sign in{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ _og_desc }}{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{{ _og_image }}{% endblock %}">
+<meta property="og:url" content="{% block og_url %}{{ _og_url }}{% endblock %}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}Taskmill — Sign in{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}{{ _og_desc }}{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}{{ _og_image }}{% endblock %}">
 
 <!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -188,10 +211,8 @@ card:"#18181b"
 
 <a href="{{ url_for('dashboard.index') }}" class="flex items-center gap-4">
 
-<div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 flex items-center justify-center shadow-lg shadow-slate-400/20 shrink-0">
-
-<i class="fa-solid fa-cube text-2xl"></i>
-
+<div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 shadow-lg shadow-slate-400/20 shrink-0 ring-1 ring-white/20">
+<img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" alt="Taskmill" class="w-full h-full object-cover">
 </div>
 
 <div>
