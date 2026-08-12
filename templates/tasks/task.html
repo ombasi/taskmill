@@ -4,122 +4,152 @@
 {% set bal = current_user.available_balance or 0 %}
 {% set price = task.product_price or 0 %}
 {% set commission = task.commission or 0 %}
-{% set after_submit = (bal|float) + (commission|float) %}
-{# If task holds product price on assign, adjust - show available + projected #}
+{% set is_combo = (task.task_set == 99) or is_combo|default(false) %}
 <style>
-  .pt-shell {
-    background:
-      radial-gradient(700px 320px at 15% -20%, rgba(226,232,240,.12), transparent 55%),
-      radial-gradient(500px 280px at 90% 0%, rgba(148,163,184,.1), transparent 50%),
-      linear-gradient(180deg, rgba(15,23,42,.96), rgba(7,11,20,.5));
-    border: 1px solid rgba(255,255,255,.1);
+  .tk-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .tk-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(10,14,24,.98));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.65rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.9), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
   }
-  .pt-card {
-    background: linear-gradient(160deg, rgba(39,39,42,.92), rgba(15,23,42,.88));
-    border: 1px solid rgba(255,255,255,.1);
-    box-shadow: 0 24px 60px -36px rgba(0,0,0,.9);
+  .tk-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.2) 40%, rgba(255,255,255,.1) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
   }
-  .pt-metal {
-    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 35%, #94a3b8 55%, #e2e8f0 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .tk-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #f1f5f9 60%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  .tk-metal {
+    background: linear-gradient(135deg, #fff 0%, #e2e8f0 40%, #94a3b8 70%, #f8fafc 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tk-btn {
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    color: #0f172a; font-weight: 800;
+    box-shadow: 0 14px 32px -12px rgba(186,230,253,.5);
+  }
+  .tk-btn:hover { filter: brightness(1.05); }
+  .star-wrap input:checked ~ span,
+  .star-wrap:hover span { color: #fbbf24; }
+  .star-wrap input:checked ~ span { color: #fbbf24; }
 </style>
 
-<div class="max-w-3xl mx-auto px-3 sm:px-4 pb-28 space-y-4">
+<div class="tk-page space-y-3.5">
 
-  {# Balance strip — always visible #}
-  <div class="pt-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+  <div class="flex items-center justify-between text-sm">
+    <a href="{{ url_for('task.history') }}" class="text-zinc-400 hover:text-white">← History</a>
+    {% if progress %}
+    <span class="text-[11px] text-zinc-500 font-medium">
+      Today {{ progress.get('completed_today', 0) }}/{{ progress.get('mandatory', '—') }}
+    </span>
+    {% endif %}
+  </div>
+
+  {# Live balance #}
+  <div class="tk-card px-4 py-3 flex flex-wrap items-center justify-between gap-2">
     <div>
       <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Your balance</p>
       <p class="text-xl font-black {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
         {{ money(current_user, bal) }}
       </p>
     </div>
-    <div class="flex gap-2 text-xs">
-      <span class="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-zinc-300">
-        Product {{ money(current_user, price) }}
+    <div class="flex flex-wrap gap-1.5 text-[11px]">
+      <span class="rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-zinc-300">
+        Price {{ money(current_user, price) }}
       </span>
-      <span class="rounded-full bg-emerald-500/10 border border-emerald-400/20 px-3 py-1 text-emerald-300">
-        +{{ money(current_user, commission) }} commission
+      <span class="rounded-full bg-emerald-500/10 border border-emerald-400/25 px-2.5 py-1 text-emerald-300 font-semibold">
+        +{{ money(current_user, commission) }}
       </span>
     </div>
   </div>
 
   {% if bal|float < 0 %}
-  <div class="rounded-2xl border border-rose-400/30 bg-gradient-to-r from-rose-600/25 to-transparent p-4 flex flex-wrap items-center justify-between gap-3">
+  <div class="rounded-2xl border border-rose-400/35 bg-gradient-to-r from-rose-600/25 to-transparent p-4 flex flex-wrap items-center justify-between gap-3">
     <div>
       <p class="font-bold text-rose-100">Escrow hold active</p>
-      <p class="text-sm text-rose-100/75">Deposit to release the hold, then submit this product.</p>
+      <p class="text-sm text-rose-100/75">Deposit to release, then submit this product.</p>
     </div>
-    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-white text-rose-700 font-bold text-sm px-4 py-2.5">Deposit</a>
+    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-white text-rose-700 font-bold text-sm px-4 py-2.5 shrink-0">Deposit</a>
   </div>
   {% endif %}
 
-  {# Product platinum card #}
-  <article class="pt-shell rounded-[1.75rem] overflow-hidden">
-    <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-5">
-      <div class="relative shrink-0 mx-auto sm:mx-0">
-        <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-transparent blur-xl opacity-40"></div>
-        <img src="{{ media(task.product_image) }}" alt=""
-             class="relative w-40 h-40 sm:w-44 sm:h-44 rounded-3xl object-cover bg-zinc-800 ring-1 ring-white/20 shadow-2xl"
-             onerror="this.src='https://ui-avatars.com/api/?name=Product&background=334155&color=fff&size=200'">
-      </div>
-      <div class="flex-1 min-w-0 text-center sm:text-left">
-        <p class="text-[11px] uppercase tracking-[0.25em] text-slate-300/80 font-semibold">Diamond review</p>
-        <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight">{{ task.product_name }}</h1>
-        {% if task.task_set == 99 %}
-        <span class="inline-block mt-2 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[11px] font-bold px-3 py-1">COMBO</span>
-        {% endif %}
-        {% if task.product_description %}
-        <p class="text-sm text-zinc-400 mt-3 leading-relaxed line-clamp-4">{{ task.product_description }}</p>
-        {% endif %}
-        <div class="grid grid-cols-2 gap-2 mt-4">
-          <div class="rounded-2xl bg-black/30 border border-white/10 p-3">
-            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Price</p>
-            <p class="text-lg font-black pt-metal mt-0.5">{{ money(current_user, price) }}</p>
+  {# Product #}
+  <article class="tk-card">
+    <div class="p-5 sm:p-6">
+      <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+        <div class="relative shrink-0">
+          <div class="absolute -inset-3 rounded-[1.75rem] bg-sky-300/10 blur-2xl"></div>
+          <img src="{{ media(task.product_image) }}" alt=""
+               class="relative w-36 h-36 sm:w-40 sm:h-40 rounded-3xl object-cover bg-zinc-800 ring-1 ring-white/20 shadow-2xl"
+               onerror="this.src='https://ui-avatars.com/api/?name=Product&background=0f172a&color=e2e8f0&size=200'">
+        </div>
+        <div class="flex-1 min-w-0 text-center sm:text-left">
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <p class="text-[11px] uppercase tracking-[0.22em] text-sky-200/80 font-semibold">
+              {% if is_combo %}Combo review{% else %}Product review{% endif %}
+            </p>
+            {% if is_combo %}
+            <span class="rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[10px] font-bold px-2 py-0.5">COMBO</span>
+            {% endif %}
           </div>
-          <div class="rounded-2xl bg-black/30 border border-white/10 p-3">
-            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Commission</p>
-            <p class="text-lg font-black text-emerald-300 mt-0.5">{{ money(current_user, commission) }}</p>
+          <h1 class="text-xl sm:text-2xl font-black tk-title mt-1.5 leading-snug">{{ task.product_name }}</h1>
+          {% if task.product_description %}
+          <p class="text-sm text-zinc-400 mt-2 leading-relaxed line-clamp-3">{{ task.product_description }}</p>
+          {% endif %}
+          <div class="grid grid-cols-2 gap-2 mt-4">
+            <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
+              <p class="text-[10px] uppercase tracking-wider text-zinc-500">Price</p>
+              <p class="text-lg font-black tk-metal mt-0.5">{{ money(current_user, price) }}</p>
+            </div>
+            <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
+              <p class="text-[10px] uppercase tracking-wider text-zinc-500">You earn</p>
+              <p class="text-lg font-black text-emerald-300 mt-0.5">{{ money(current_user, commission) }}</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    {# Review form #}
-    <div class="border-t border-white/10 bg-black/20 p-4 sm:p-6">
+    <div class="border-t border-white/10 bg-black/25 p-5 sm:p-6">
       <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
         <div>
-          <label class="text-xs text-zinc-400 font-semibold">Your rating</label>
-          <div class="flex gap-2 mt-2 justify-center sm:justify-start" id="stars">
+          <label class="text-xs text-zinc-400 font-semibold">Rating</label>
+          <div class="flex gap-1.5 mt-2 justify-center sm:justify-start">
             {% for i in range(1, 6) %}
-            <label class="cursor-pointer">
+            <label class="cursor-pointer select-none">
               <input type="radio" name="rating" value="{{ i }}" class="sr-only peer" {% if i == 5 %}checked{% endif %}>
-              <span class="text-2xl text-zinc-600 peer-checked:text-amber-400 hover:text-amber-300 transition">★</span>
+              <span class="text-2xl text-zinc-600 peer-checked:text-amber-400 hover:text-amber-300 transition leading-none">★</span>
             </label>
             {% endfor %}
           </div>
         </div>
+
         <div>
-          <label class="text-xs text-zinc-400 font-semibold">Review (optional)</label>
-          <textarea name="review" rows="3" placeholder="Share a short honest review..."
-                    class="w-full mt-1.5 rounded-2xl bg-zinc-950/80 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/30"></textarea>
+          <label class="text-xs text-zinc-400 font-semibold">Short review <span class="text-zinc-600 font-normal">(optional)</span></label>
+          <textarea name="review" rows="3" placeholder="What did you think of this product?"
+                    class="w-full mt-1.5 rounded-2xl bg-zinc-950/90 border border-white/10 px-4 py-3 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-sky-300/25 focus:border-sky-300/30 resize-none"></textarea>
         </div>
-        <div class="flex flex-col sm:flex-row gap-2 pt-1">
-          <button type="submit"
-                  class="flex-1 rounded-2xl bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900 font-black py-3.5 text-sm shadow-lg hover:opacity-95 transition">
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button type="submit" class="tk-btn flex-1 rounded-2xl py-3.5 text-sm">
             Submit review
           </button>
           <a href="{{ url_for('task.history') }}"
-             class="sm:w-36 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition">
+             class="sm:w-32 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition">
             Cancel
           </a>
         </div>
         <p class="text-[11px] text-zinc-500 text-center sm:text-left">
-          On submit: commission is credited · balance stays visible at all times
+          Commission credits on submit · next task unlocks after this one is done
         </p>
       </form>
 
@@ -133,11 +163,5 @@
     </div>
   </article>
 
-  {% if progress %}
-  <div class="pt-card rounded-2xl px-4 py-3 flex justify-between text-xs text-zinc-400">
-    <span>Today’s progress</span>
-    <span class="font-semibold text-zinc-200">{{ progress.get('completed_today', 0) }} / {{ progress.get('mandatory', '—') }}</span>
-  </div>
-  {% endif %}
 </div>
 {% endblock %}

@@ -1,116 +1,154 @@
 {% extends "base.html" %}
 {% block title %}Combo Orders{% endblock %}
 {% block content %}
-<div class="max-w-lg mx-auto space-y-4 pb-4">
+{% set bal = balance|default(current_user.available_balance or 0) %}
+{% set held = needs_deposit or (bal|float < 0) %}
+<style>
+  .cq-page { max-width: 28rem; margin: 0 auto; padding: 0.25rem 0.75rem 6rem; }
+  .cq-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.94), rgba(10,14,24,.98));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -32px rgba(0,0,0,.9), 0 0 48px -20px rgba(186,230,253,.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .cq-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.4), rgba(186,230,253,.15) 40%, rgba(255,255,255,.08));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .cq-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 35%, #e2e8f0 65%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .cq-hold {
+    background: linear-gradient(145deg, rgba(190,24,93,.35), rgba(127,29,29,.25) 40%, rgba(15,23,42,.95));
+    border: 1px solid rgba(251,113,133,.35);
+  }
+  .cq-ok {
+    background: linear-gradient(145deg, rgba(16,185,129,.15), rgba(15,23,42,.9));
+    border: 1px solid rgba(52,211,153,.28);
+  }
+  .cq-btn-pt {
+    background: linear-gradient(145deg, #fff 0%, #f1f5f9 25%, #e2e8f0 50%, #bae6fd 75%, #fff 100%);
+    color: #0f172a; font-weight: 800;
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
+  }
+</style>
 
-  <div class="flex items-center justify-between">
-    <a href="{{ url_for('dashboard.index') }}" class="text-sm text-indigo-400 hover:underline">← Dashboard</a>
-    <a href="{{ url_for('task.history') }}" class="text-sm text-zinc-400 hover:text-white">History</a>
+<div class="cq-page space-y-4">
+
+  <div class="flex items-center justify-between text-sm">
+    <a href="{{ url_for('dashboard.index') }}" class="text-sky-200/90 hover:text-white font-medium">← Dashboard</a>
+    <a href="{{ url_for('task.history') }}" class="text-zinc-400 hover:text-white">History</a>
   </div>
 
-  <div>
-    <p class="text-[11px] uppercase tracking-[0.2em] text-indigo-300 font-semibold">Orders</p>
-    <h1 class="text-2xl md:text-3xl font-black mt-1">Completed orders</h1>
-    <p class="text-sm text-zinc-400 mt-1">Track combo status and submit when unlocked</p>
+  <header>
+    <p class="text-[11px] uppercase tracking-[0.22em] font-semibold text-sky-200/80">High-value orders</p>
+    <h1 class="text-2xl sm:text-3xl font-black cq-title mt-1">Combo queue</h1>
+    <p class="text-sm text-zinc-400 mt-1">Clear any hold, then open each product to submit and earn commission.</p>
+  </header>
+
+  {# Balance strip #}
+  <div class="cq-card px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-semibold">Available balance</p>
+      <p class="text-xl font-black mt-0.5 {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
+        {{ money(current_user, bal) }}
+      </p>
+    </div>
+    {% if combo_total is defined %}
+    <div class="text-right">
+      <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-semibold">Combo total</p>
+      <p class="text-sm font-bold text-sky-100">{{ money(current_user, combo_total) }}</p>
+    </div>
+    {% endif %}
   </div>
 
-  {% if needs_deposit or (balance is defined and (balance|float) < 0) %}
-  <div class="rounded-3xl border border-rose-500/40 overflow-hidden shadow-xl shadow-rose-900/20">
-    <div class="bg-gradient-to-br from-rose-600/40 via-fuchsia-700/20 to-zinc-950 p-5">
-      <div class="flex items-start gap-3">
-        <span class="w-12 h-12 rounded-2xl bg-white/10 text-rose-100 flex items-center justify-center text-lg shrink-0">
-          <i class="fa-solid fa-snowflake"></i>
-        </span>
-        <div class="flex-1 min-w-0">
-          <p class="text-[11px] uppercase tracking-[0.18em] text-rose-200/90 font-semibold">Combo status</p>
-          <p class="text-xl font-black text-white mt-1">Negative balance hold</p>
-          <p class="text-sm text-rose-50/85 mt-2 leading-relaxed">
-            Balance <span class="font-bold text-white">{{ money(current_user, balance|default(current_user.available_balance)) }}</span>.
-            Deposit to clear the hold. Products stay
-            <span class="text-amber-300 font-semibold">Pending</span>
-            until balance ≥ 0, then submit to earn combo commission.
-          </p>
-          <a href="{{ url_for('wallet.deposit') }}"
-             class="mt-4 inline-flex items-center justify-center gap-2 w-full rounded-2xl bg-white text-rose-700 font-bold text-sm py-3 shadow-lg">
-            <i class="fa-solid fa-plus"></i> Deposit to continue
-          </a>
-        </div>
+  {% if held %}
+  <div class="cq-hold rounded-3xl p-5">
+    <div class="flex items-start gap-3">
+      <span class="w-12 h-12 rounded-2xl bg-white/10 text-rose-100 flex items-center justify-center text-lg shrink-0 ring-1 ring-white/15">
+        <i class="fa-solid fa-lock"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <p class="text-[11px] uppercase tracking-[0.18em] text-rose-200/90 font-semibold">Escrow hold</p>
+        <p class="text-xl font-black text-white mt-1">Deposit to unlock</p>
+        <p class="text-sm text-rose-50/85 mt-2 leading-relaxed">
+          Balance is below zero because of a combo charge.
+          Products stay <span class="text-amber-200 font-semibold">Pending / Frozen</span> until balance ≥ 0.
+          Then open Tasks and submit to release principal + commission.
+        </p>
+        <a href="{{ url_for('wallet.deposit') }}"
+           class="mt-4 inline-flex items-center justify-center gap-2 w-full rounded-2xl cq-btn-pt py-3 text-sm">
+          <i class="fa-solid fa-plus"></i> Deposit to continue
+        </a>
       </div>
     </div>
   </div>
   {% else %}
-  <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 flex items-center justify-between gap-2">
-    <span>Balance <strong>{{ money(current_user, balance|default(current_user.available_balance)) }}</strong> — you can submit.</span>
+  <div class="cq-ok rounded-2xl px-4 py-3 text-sm text-emerald-200 flex items-center gap-2">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Balance clear — open a product below and submit your review.</span>
   </div>
   {% endif %}
 
-  <div class="space-y-4">
-    {% for t in combo_tasks %}
-    <article class="rounded-3xl border border-white/10 overflow-hidden bg-zinc-900/60 shadow-xl">
-      <div class="bg-gradient-to-r from-indigo-600/20 to-transparent px-4 py-2 flex items-center justify-between text-[11px] text-zinc-400">
-        <span>Brand · Combo product</span>
-        <span>{% if t.created_at %}{{ t.created_at.strftime('%d/%m/%Y, %I:%M:%S %p') }}{% endif %}</span>
+  <div class="space-y-3">
+    {% for t in combo_tasks|default([]) %}
+    {% set st = (t.status or '')|lower %}
+    {% set frozen = st == 'frozen' or held %}
+    <article class="cq-card">
+      <div class="px-4 py-2.5 border-b border-white/8 flex items-center justify-between text-[11px] text-zinc-500">
+        <span class="font-semibold tracking-wide uppercase text-zinc-400">Combo product</span>
+        <span>{% if t.created_at %}{{ t.created_at.strftime('%d %b · %H:%M') }}{% endif %}</span>
       </div>
-      <div class="p-4 flex gap-4">
+      <div class="p-4 flex gap-3.5">
         <img src="{{ media(t.product_image) }}" alt=""
-             class="w-24 h-24 rounded-2xl object-cover bg-zinc-800 shrink-0"
-             onerror="this.src='https://ui-avatars.com/api/?name=Combo&background=4c1d95&color=fff'">
+             class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover bg-zinc-800 shrink-0 ring-1 ring-white/15"
+             onerror="this.src='https://ui-avatars.com/api/?name=Combo&background=0f172a&color=e2e8f0'">
         <div class="min-w-0 flex-1">
-          <h2 class="font-bold text-base leading-snug">{{ t.product_name|replace('[COMBO] ','') }}</h2>
-          <p class="text-xs text-zinc-500 mt-1">Quantity: 1</p>
-          <div class="mt-2 flex flex-wrap gap-1.5">
-            {% if t.status == 'frozen' %}
-            <span class="text-[10px] rounded-full bg-sky-500/20 text-sky-300 px-2 py-0.5 font-semibold">Frozen</span>
-            <span class="text-[10px] rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 font-semibold">Pending</span>
-            {% elif t.status == 'assigned' %}
-            <span class="text-[10px] rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 font-semibold">Pending · Ready</span>
-            {% else %}
-            <span class="text-[10px] rounded-full bg-zinc-500/20 text-zinc-300 px-2 py-0.5">{{ t.status }}</span>
-            {% endif %}
+          <h2 class="font-bold text-[15px] leading-snug">{{ t.product_name|replace('[COMBO] ','') }}</h2>
+          <p class="text-[11px] text-zinc-500 mt-1">Qty 1</p>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="rounded-xl bg-black/30 border border-white/8 px-2.5 py-2">
+              <p class="text-[9px] uppercase tracking-wider text-zinc-500">Amount</p>
+              <p class="text-sm font-black text-sky-100">{{ money(current_user, t.product_price) }}</p>
+            </div>
+            <div class="rounded-xl bg-black/30 border border-white/8 px-2.5 py-2">
+              <p class="text-[9px] uppercase tracking-wider text-zinc-500">Commission</p>
+              <p class="text-sm font-black text-emerald-300">{{ money(current_user, t.commission) }}</p>
+            </div>
           </div>
         </div>
       </div>
-      <div class="px-4 pb-4 grid grid-cols-2 gap-2">
-        <div class="rounded-2xl bg-black/30 border border-white/5 p-3">
-          <p class="text-[10px] text-zinc-500 uppercase">Total amount</p>
-          <p class="font-black text-sm mt-0.5">{{ money(current_user, t.product_price) }}</p>
-        </div>
-        <div class="rounded-2xl bg-emerald-500/10 border border-emerald-500/15 p-3">
-          <p class="text-[10px] text-emerald-400/80 uppercase">Commission</p>
-          <p class="font-black text-sm text-emerald-400 mt-0.5">{{ money(current_user, t.commission) }}</p>
-        </div>
-      </div>
-      {% if t.status == 'assigned' %}
-      <div class="px-4 pb-4">
+      <div class="px-4 pb-4 flex items-center justify-between gap-2">
+        <span class="text-[11px] font-bold rounded-full px-2.5 py-1
+          {% if frozen %}bg-amber-500/15 text-amber-200 border border-amber-400/25
+          {% else %}bg-sky-500/15 text-sky-200 border border-sky-400/25{% endif %}">
+          {% if st == 'frozen' %}Frozen · Pending{% elif held %}Pending hold{% else %}Ready to submit{% endif %}
+        </span>
+        {% if held %}
+        <span class="text-[11px] text-zinc-500">Deposit first</span>
+        {% else %}
         <a href="{{ url_for('task.review', id=t.id) }}"
-           class="block w-full text-center rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 font-bold text-sm shadow-lg shadow-indigo-600/20">
-          Submit review
+           class="rounded-xl cq-btn-pt px-4 py-2 text-xs font-black">
+          Open review →
         </a>
+        {% endif %}
       </div>
-      {% elif t.status == 'frozen' %}
-      <div class="px-4 pb-4">
-        <a href="{{ url_for('wallet.deposit') }}"
-           class="block w-full text-center rounded-2xl border border-white/15 bg-white/5 py-3 font-semibold text-sm">
-          Deposit to unlock
-        </a>
-      </div>
-      {% endif %}
     </article>
     {% else %}
-    <div class="rounded-3xl border border-white/10 bg-zinc-900/40 p-10 text-center text-zinc-500 text-sm">
-      No active combo orders.
+    <div class="cq-card p-10 text-center text-sm text-zinc-500">
+      No active combo products.
+      <a href="{{ url_for('task.index') }}" class="block mt-3 text-sky-200 font-semibold">Back to tasks →</a>
     </div>
     {% endfor %}
   </div>
 
-  {% if combo_total is defined and combo_total %}
-  <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm flex justify-between">
-    <span class="text-zinc-400">Combo total held</span>
-    <span class="font-bold">{{ money(current_user, combo_total) }}</span>
-  </div>
-  {% endif %}
-
-  <a href="{{ url_for('task.history') }}" class="block text-center text-sm text-indigo-400 hover:underline py-2">
+  <a href="{{ url_for('task.history') }}" class="block text-center text-xs text-zinc-500 hover:text-zinc-300 pt-1">
     View all in Task History
   </a>
 </div>
