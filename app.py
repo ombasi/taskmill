@@ -450,6 +450,14 @@ def create_app():
 
     # Notifications available in ALL templates
 
+
+    # IP-based languages
+    try:
+        from utils.i18n import init_i18n
+        init_i18n(app)
+    except Exception as _i18n_e:
+        print("i18n init:", _i18n_e)
+
     @app.context_processor
     def inject_media():
         from flask import url_for

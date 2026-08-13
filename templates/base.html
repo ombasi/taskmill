@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang|default("en") }}">
 <head>
 
 <meta charset="UTF-8">
@@ -473,6 +473,28 @@ Logout
 </main>
 
 <!-- Footer -->
+
+
+{# Language switcher #}
+<div class="fixed bottom-24 lg:bottom-6 left-3 z-[60]">
+  <details class="group">
+    <summary class="list-none cursor-pointer rounded-full px-3 py-2 text-xs font-semibold
+                    bg-zinc-900/90 border border-white/15 shadow-xl backdrop-blur
+                    flex items-center gap-2 hover:border-sky-300/40">
+      <i class="fa-solid fa-language text-sky-200"></i>
+      <span>{{ lang_name|default(lang|default('EN')|upper) }}</span>
+    </summary>
+    <div class="mt-2 w-52 max-h-64 overflow-y-auto rounded-2xl border border-white/12 bg-zinc-950/95 shadow-2xl p-2 space-y-0.5">
+      <a href="{{ url_for('set_language', code='auto') }}" class="block rounded-xl px-3 py-2 text-xs text-zinc-400 hover:bg-white/5">{{ t('auto_language') if t is defined else 'Auto (from location)' }}</a>
+      {% for L in languages|default([]) %}
+      <a href="{{ url_for('set_language', code=L.code) }}"
+         class="block rounded-xl px-3 py-2 text-xs hover:bg-white/5 {% if lang == L.code %}bg-white/10 text-sky-100 font-semibold{% else %}text-zinc-300{% endif %}">
+        {{ L.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </details>
+</div>
 
 <footer class="site-footer border-t border-white/10 mt-20 hidden lg:block">
 
