@@ -273,47 +273,23 @@ Earn • Review • Grow
 
 <div class="hidden lg:flex items-center gap-8 text-sm font-medium">
 
-<a href="{{ url_for('dashboard.index') }}" class="tm-nav-link hover:text-indigo-300">
+<a href="{{ url_for('dashboard.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_dashboard') if t is defined else 'Dashboard' }}</a>
 
-Dashboard
+<a href="{{ url_for('task.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_tasks') if t is defined else 'Tasks' }}</a>
 
-</a>
+<a href="{{ url_for('wallet.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_wallet') if t is defined else 'Wallet' }}</a>
 
-<a href="{{ url_for('task.index') }}" class="tm-nav-link hover:text-indigo-300">
+<a href="{{ url_for('task.history') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_history') if t is defined else 'History' }}</a>
 
-Tasks
-
-</a>
-
-<a href="{{ url_for('wallet.index') }}" class="tm-nav-link hover:text-indigo-300">
-
-Wallet
-
-</a>
-
-<a href="{{ url_for('task.history') }}" class="tm-nav-link hover:text-indigo-300">
-
-History
-
-</a>
-
-<a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">Membership</a>
+<a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_membership') if t is defined else 'Membership' }}</a>
 <a href="{{ url_for('spin.index') }}" class="tm-nav-link hover:text-indigo-300">Spin</a>
 
-<a href="{{ url_for('chat.inbox') }}" class="tm-nav-link hover:text-indigo-300 relative pr-4">Chat<span data-badge="chat" class="absolute -top-1 right-0 min-w-[1rem] h-4 px-1 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></a>
+<a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">{{ t('support') if t is defined else 'Support' }}</a>
 
-<a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">
-
-Profile
-
-</a>
+<a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
 <a href="{{ url_for('auth.logout') }}"
-class="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 hover:scale-105 transition">
-
-Logout
-
-</a>
+class="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 hover:scale-105 transition">{{ t('nav_logout') if t is defined else 'Logout' }}</a>
 
 </div>
 
@@ -376,20 +352,20 @@ class="hidden mx-5 mt-4 backdrop-blur-xl bg-zinc-900/90 border border-white/10 r
 
 <div class="flex flex-col gap-5">
 
-<a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+<a href="{{ url_for('dashboard.index') }}">{{ t('nav_dashboard') if t is defined else 'Dashboard' }}</a>
 
-<a href="{{ url_for('task.index') }}">Tasks</a>
+<a href="{{ url_for('task.index') }}">{{ t('nav_tasks') if t is defined else 'Tasks' }}</a>
 
-<a href="{{ url_for('wallet.index') }}">Wallet</a>
+<a href="{{ url_for('wallet.index') }}">{{ t('nav_wallet') if t is defined else 'Wallet' }}</a>
 
-<a href="{{ url_for('task.history') }}">History</a>
+<a href="{{ url_for('task.history') }}">{{ t('nav_history') if t is defined else 'History' }}</a>
 
-<a href="{{ url_for('dashboard.membership') }}">Membership</a>
+<a href="{{ url_for('dashboard.membership') }}">{{ t('nav_membership') if t is defined else 'Membership' }}</a>
 <a href="{{ url_for('spin.index') }}">Lucky Spin</a>
 
-<a href="{{ url_for('chat.inbox') }}">Chat</a>
+<a href="{{ url_for('dashboard.contact') }}">{{ t('support') if t is defined else 'Support' }}</a>
 
-<a href="{{ url_for('profile.index') }}">Profile</a>
+<a href="{{ url_for('profile.index') }}">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
 <a href="{{ url_for('auth.logout') }}"
 class="text-red-400">
@@ -528,13 +504,13 @@ Navigation
 
 <div class="space-y-3 text-zinc-400">
 
-<p>Dashboard</p>
+<p>{{ t('nav_dashboard') if t is defined else 'Dashboard' }}</p>
 
-<p>Tasks</p>
+<p>{{ t('nav_tasks') if t is defined else 'Tasks' }}</p>
 
-<p>Wallet</p>
+<p>{{ t('nav_wallet') if t is defined else 'Wallet' }}</p>
 
-<p>Membership</p>
+<p>{{ t('nav_membership') if t is defined else 'Membership' }}</p>
 
 </div>
 
@@ -571,14 +547,14 @@ Support
 </h3>
 
 <div class="space-y-3 text-zinc-400">
-<a href="{{ url_for('dashboard.contact') }}" class="block hover:text-sky-200">Contact support</a>
+<a href="{{ url_for('dashboard.contact') }}" class="block hover:text-sky-200">{{ t('support') if t is defined else 'Contact support' }}</a>
 {% if site_settings and site_settings.whatsapp_number %}
 <a href="https://wa.me/{{ site_settings.whatsapp_number }}?text=Hello%20Taskmill%20support" target="_blank" rel="noopener" class="block hover:text-sky-200">WhatsApp</a>
 {% endif %}
 <a href="{{ url_for('chat.inbox') if current_user.is_authenticated else url_for('auth.login') }}" class="block hover:text-sky-200">Live chat</a>
-<a href="{{ url_for('dashboard.about') }}" class="block hover:text-sky-200">About</a>
-<a href="{{ url_for('dashboard.faq') }}" class="block hover:text-sky-200">FAQs</a>
-<a href="{{ url_for('dashboard.terms') }}" class="block hover:text-sky-200">Terms &amp; Conditions</a>
+<a href="{{ url_for('dashboard.about') }}" class="block hover:text-sky-200">{{ t('about') if t is defined else 'About' }}</a>
+<a href="{{ url_for('dashboard.faq') }}" class="block hover:text-sky-200">{{ t('faq') if t is defined else 'FAQs' }}</a>
+<a href="{{ url_for('dashboard.terms') }}" class="block hover:text-sky-200">{{ t('terms') if t is defined else 'Terms &amp; Conditions' }}</a>
 <a href="{{ url_for('dashboard.public_status') }}" class="block hover:text-sky-200">System status</a>
 <a href="{{ url_for('dashboard.stories') }}" class="block hover:text-sky-200">Success stories</a>
 <a href="{{ url_for('dashboard.daily_digest') }}" class="block hover:text-sky-200">Today's digest</a>
@@ -642,19 +618,19 @@ mobile.classList.toggle("hidden");
     </a>
     <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('task.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
       <span class="relative inline-block"><i class="fa-solid fa-list-check text-lg"></i><span data-badge="pending_tasks" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
-      <span>Tasks</span>
+      <span>{{ t('nav_tasks') if t is defined else 'Tasks' }}</span>
     </a>
     <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-wallet text-lg"></i>
-      <span>Wallet</span>
+      <span>{{ t('nav_wallet') if t is defined else 'Wallet' }}</span>
     </a>
     <a href="{{ url_for('task.history') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint == 'task.history' %}text-indigo-400{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-      <span>History</span>
+      <span>{{ t('nav_history') if t is defined else 'History' }}</span>
     </a>
     <a href="{{ url_for('profile.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('profile.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-user text-lg"></i>
-      <span>Profile</span>
+      <span>{{ t('nav_profile') if t is defined else 'Profile' }}</span>
     </a>
   </div>
 </nav>
