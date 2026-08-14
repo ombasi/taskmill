@@ -141,7 +141,21 @@ def index():
         recent_transactions=recent_transactions,
         membership_commission=membership_commission,
         upgrade_progress=upgrade_progress,
+        show_onboarding=not bool(getattr(current_user, "checklist_done", False)),
     )
+
+
+@dashboard_bp.route("/onboarding/complete", methods=["POST"])
+@login_required
+def complete_onboarding():
+    try:
+        current_user.checklist_done = True
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return {"ok": True}
+    return redirect(url_for("dashboard.index"))
 
 
 @dashboard_bp.route("/earn")

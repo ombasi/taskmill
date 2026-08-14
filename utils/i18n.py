@@ -142,6 +142,15 @@ TRANSLATIONS = {
         "success": "Success",
         "error": "Error",
         "warning": "Warning",
+        "onboard_welcome": "Quick start",
+        "faq_title": "Frequently asked questions",
+        "about_title": "About Taskmill",
+        "terms_title": "Terms & Conditions",
+        "contact_title": "Contact us",
+        "status_title": "System status",
+        "membership_title": "Choose your tier",
+        "hold_timeline": "Hold timeline",
+        "stuck_users": "Stuck users",
     },
     "de": {
         "app_name": "Taskmill",
@@ -202,6 +211,12 @@ TRANSLATIONS = {
         "success": "Erfolg",
         "error": "Fehler",
         "warning": "Warnung",
+        "faq_title": "Häufig gestellte Fragen",
+        "about_title": "Über Taskmill",
+        "terms_title": "Nutzungsbedingungen",
+        "contact_title": "Kontakt",
+        "status_title": "Systemstatus",
+        "membership_title": "Wähle deinen Tarif",
     },
     "sw": {
         "app_name": "Taskmill",
@@ -262,6 +277,12 @@ TRANSLATIONS = {
         "success": "Imefanikiwa",
         "error": "Hitilafu",
         "warning": "Onyo",
+        "faq_title": "Maswali yanayoulizwa mara kwa mara",
+        "about_title": "Kuhusu Taskmill",
+        "terms_title": "Sheria na Masharti",
+        "contact_title": "Wasiliana nasi",
+        "status_title": "Hali ya mfumo",
+        "membership_title": "Chagua kiwango chako",
     },
     "lg": {
         "app_name": "Taskmill",
@@ -535,11 +556,14 @@ def resolve_language() -> str:
 
 
 def translate(key: str, lang: str | None = None) -> str:
-    lang = lang or getattr(g, "lang", None) or "en"
-    table = TRANSLATIONS.get(lang) or {}
-    if key in table:
-        return table[key]
-    return TRANSLATIONS.get("en", {}).get(key, key)
+    try:
+        lang = lang or getattr(g, "lang", None) or "en"
+        table = TRANSLATIONS.get(lang) or {}
+        if key in table:
+            return table[key]
+        return TRANSLATIONS.get("en", {}).get(key, key)
+    except Exception:
+        return key
 
 
 def t(key: str, **_kwargs) -> str:

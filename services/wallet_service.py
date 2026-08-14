@@ -350,9 +350,9 @@ class WalletService:
 
         db.session.commit()
 
+        user = deposit.user
         try:
             from services.notification_service import NotificationService
-            user = deposit.user
             amount = float(deposit.amount)
             NotificationService.send(
                 user,
@@ -362,9 +362,19 @@ class WalletService:
         except Exception:
             pass
 
+        try:
+            from services.engagement_service import send_outbound_alert
+            send_outbound_alert(
+                user,
+                "Deposit rejected",
+                "Your deposit was rejected. Contact support if you need help.",
+            )
+        except Exception:
+            pass
+
         return True
 
-        # ============================================================
+    # ============================================================
     # CREATE WITHDRAWAL
     # ============================================================
 

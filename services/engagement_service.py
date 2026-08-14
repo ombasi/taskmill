@@ -129,23 +129,55 @@ def month_calendar(user, year: int = None, month: int = None) -> list:
 
 
 def send_outbound_alert(user, title: str, body: str):
-    """Best-effort Telegram + log WhatsApp link target."""
+    """Push money/ops alerts via Telegram and optional SMTP email."""
+    title = (title or "Taskmill").strip()
+    body = (body or "").strip()
+    text = f"{title}\n\n{body}".strip()
+
+    # In-app already handled by callers via NotificationService; this is outbound only.
+    # --- Telegram ---
     try:
         from models.settings import Settings
         s = Settings.query.first()
-    except Exception:
-        s = None
-    # Telegram
-    token = getattr(s, "telegram_bot_token", None) if s else None
-    chat = getattr(user, "telegram_chat_id", None)
-    if token and chat:
-        try:
+        token = getattr(s, "telegram_bot_token", None) if s else None
+        chat = getattr(user, "telegram_chat_id", None)
+        if token and chat:
             import urllib.request, urllib.parse, json
-            msg = f"*{title}*\n{body}"
             url = f"https://api.telegram.org/bot{token}/sendMessage"
-            data = urllib.parse.urlencode({"chat_id": chat, "text": msg, "parse_mode": "Markdown"}).encode()
-            urllib.request.urlopen(url, data=data, timeout=8)
-        except Exception as e:
-            print("telegram alert:", e)
-    # WhatsApp: store only; actual WA Business API needs provider — expose wa.me link in UI
-    return True
+            data = urllib.parse.urlencode({
+                "chat_id": str(chat).strip(),
+                "text": text[:4000],
+                "disable_web_page_preview": "true",
+            }).encode()
+            req = urllib.request.Request(url, data=data, method="POST")
+            with urllib.request.urlopen(req, timeout=8):
+                pass
+    except Exception as e:
+        print("telegram alert:", e)
+
+    # --- Email (optional: set MAIL_SERVER / MAIL_USERNAME / MAIL_PASSWORD / MAIL_FROM) ---
+    try:
+        import os, smtplib
+        from email.mime.text import MIMEText
+        host = os.environ.get("MAIL_SERVER") or os.environ.get("SMTP_HOST")
+        to_addr = (getattr(user, "email", None) or "").strip()
+        if host and to_addr and "@" in to_addr:
+            port = int(os.environ.get("MAIL_PORT") or os.environ.get("SMTP_PORT") or 587)
+            user_n = os.environ.get("MAIL_USERNAME") or os.environ.get("SMTP_USER") or ""
+            pwd = os.environ.get("MAIL_PASSWORD") or os.environ.get("SMTP_PASSWORD") or ""
+            from_addr = os.environ.get("MAIL_FROM") or user_n or "noreply@taskmill.app"
+            msg = MIMEText(body or title, "plain", "utf-8")
+            msg["Subject"] = f"Taskmill · {title}"
+            msg["From"] = from_addr
+            msg["To"] = to_addr
+            use_tls = (os.environ.get("MAIL_USE_TLS", "1") not in ("0", "false", "False"))
+            with smtplib.SMTP(host, port, timeout=12) as smtp:
+                if use_tls:
+                    smtp.starttls()
+                if user_n and pwd:
+                    smtp.login(user_n, pwd)
+                smtp.sendmail(from_addr, [to_addr], msg.as_string())
+    except Exception as e:
+        print("email alert:", e)
+
+
