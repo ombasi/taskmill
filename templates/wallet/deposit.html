@@ -1,112 +1,413 @@
 {% extends "base.html" %}
-{% block title %}Deposit{% endblock %}
+{% block title %}Deposit · Taskmill{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-5">
+{% set bal = current_user.available_balance or 0 %}
+{% set methods = payment_settings if payment_settings is defined and payment_settings else [] %}
+{% set sym = current_user.currency_symbol or current_user.currency or 'UGX' %}
+{% set cur = current_user.currency or 'UGX' %}
 
-  <div class="relative overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8"
-       style="background: radial-gradient(100% 80% at 0% 0%, rgba(16,185,129,.25), transparent 50%), radial-gradient(80% 60% at 100% 0%, rgba(99,102,241,.2), transparent 45%), #0c0f1a;">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<style>
+  .dx-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+
+  /* Diamond shell — same language as task page */
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.16);
+    position: relative;
+    overflow: hidden;
+  }
+  .dx-card::before {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(186,230,253,.28) 35%, rgba(255,255,255,.08) 70%, rgba(167,243,208,.2) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .dx-card > * { position: relative; z-index: 1; }
+
+  .dx-title {
+    background: linear-gradient(120deg, #ffffff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #ffffff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-metal {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 16px rgba(186,230,253,.28));
+  }
+  .dx-gem {
+    width: 3rem; height: 3rem; border-radius: 1.05rem;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(186,230,253,.12) 45%, rgba(148,163,184,.15));
+    border: 1px solid rgba(255,255,255,.28);
+    box-shadow: 0 10px 28px -12px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.4);
+    color: #e0f2fe;
+  }
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(15,23,42,.55));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+
+  .dx-method {
+    display: flex; gap: .8rem; align-items: center;
+    padding: .95rem 1rem;
+    border-radius: 1.2rem;
+    border: 1px solid rgba(255,255,255,.08);
+    background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(0,0,0,.25));
+    cursor: pointer;
+    transition: border-color .18s, box-shadow .18s, transform .18s, background .18s;
+  }
+  .dx-method input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .dx-method:hover {
+    border-color: rgba(255,255,255,.22);
+    transform: translateY(-1px);
+  }
+  .dx-method.on {
+    border-color: rgba(255,255,255,.42);
+    background: linear-gradient(145deg, rgba(255,255,255,.14), rgba(186,230,253,.1) 50%, rgba(15,23,42,.4));
+    box-shadow: 0 0 28px -10px rgba(186,230,253,.45), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  .dx-method-ico {
+    width: 2.5rem; height: 2.5rem; border-radius: .9rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(148,163,184,.12));
+    border: 1px solid rgba(255,255,255,.16);
+    color: #e2e8f0; font-size: .9rem;
+  }
+  .dx-method.on .dx-method-ico {
+    background: linear-gradient(145deg, #fff, #e0f2fe 50%, #cbd5e1);
+    color: #0f172a;
+    box-shadow: 0 6px 16px -8px rgba(255,255,255,.5);
+  }
+  .dx-check {
+    width: 1.25rem; height: 1.25rem; border-radius: 999px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.2);
+    display: grid; place-items: center;
+    margin-left: auto;
+  }
+  .dx-method.on .dx-check {
+    border-color: transparent;
+    background: linear-gradient(135deg, #fff, #bae6fd);
+    color: #0f172a;
+    font-size: 9px;
+  }
+  .dx-method.on .dx-check::after { content: "✓"; font-weight: 900; }
+
+  .dx-paybox {
+    margin-top: .85rem;
+    padding: 1rem 1.05rem;
+    border-radius: 1.2rem;
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(0,0,0,.35));
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .dx-paybox code {
+    display: block;
+    margin-top: .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    background: linear-gradient(120deg, #fff, #bae6fd);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    word-break: break-all;
+  }
+
+  .dx-label {
+    display: block;
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: #71717a; margin-bottom: .45rem;
+  }
+  .dx-input {
+    width: 100%;
+    border-radius: 1.1rem;
+    background: rgba(2,6,14,.85);
+    border: 1px solid rgba(255,255,255,.12);
+    padding: .95rem 1.05rem;
+    color: #f8fafc;
+    font-size: .95rem;
+    font-weight: 700;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .dx-input:focus {
+    border-color: rgba(186,230,253,.5);
+    box-shadow: 0 0 0 4px rgba(186,230,253,.12);
+  }
+  .dx-amount-wrap { position: relative; }
+  .dx-amount-wrap .sym {
+    position: absolute; left: 1.05rem; top: 50%; transform: translateY(-50%);
+    font-size: 11px; font-weight: 900; letter-spacing: .06em;
+    color: #94a3b8;
+  }
+  .dx-amount-wrap .dx-input {
+    padding-left: 3.6rem;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .dx-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+  .dx-chips button {
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    color: #e2e8f0;
+    font-size: 11px; font-weight: 800;
+    padding: .4rem .75rem;
+    transition: all .15s;
+  }
+  .dx-chips button:hover {
+    border-color: rgba(255,255,255,.35);
+    background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(186,230,253,.12));
+    color: #fff;
+    box-shadow: 0 0 16px -6px rgba(255,255,255,.35);
+  }
+
+  .dx-upload {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .35rem;
+    min-height: 8.5rem;
+    border-radius: 1.25rem;
+    border: 1px dashed rgba(255,255,255,.2);
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.08), transparent 55%),
+      rgba(0,0,0,.35);
+    cursor: pointer;
+    transition: border-color .18s, box-shadow .18s, background .18s;
+  }
+  .dx-upload:hover {
+    border-color: rgba(186,230,253,.45);
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.4);
+  }
+  .dx-upload i {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #fff, #bae6fd);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  .dx-btn {
+    width: 100%;
+    border: 0;
+    border-radius: 1.2rem;
+    padding: 1.05rem 1.25rem;
+    font-size: .95rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+    color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 16px 36px -12px rgba(186,230,253,.55), inset 0 1px 0 rgba(255,255,255,.9);
+    transition: filter .15s, transform .15s;
+  }
+  .dx-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .dx-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
+
+  .dx-steps li {
+    display: flex; gap: .7rem; align-items: flex-start;
+    font-size: 12.5px; color: #a1a1aa; line-height: 1.45;
+  }
+  .dx-steps li span.n {
+    width: 1.35rem; height: 1.35rem; border-radius: 999px; flex-shrink: 0;
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 900; color: #0f172a;
+    background: linear-gradient(135deg, #fff, #cbd5e1);
+  }
+</style>
+
+<div class="dx-page space-y-4">
+
+  {# HERO #}
+  <section class="dx-card p-5 sm:p-7">
+    <div class="flex items-start justify-between gap-3">
       <div>
-        <p class="text-[11px] uppercase tracking-[0.2em] text-emerald-300 font-semibold">Wallet</p>
-        <h1 class="text-2xl md:text-4xl font-black mt-1">Deposit funds</h1>
-        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Pay with your preferred method, upload proof, and we will credit after verification.</p>
+        <p class="dx-kicker">Wallet · Top up</p>
+        <h1 class="dx-title text-3xl font-black mt-1.5 tracking-tight">Deposit</h1>
+        <p class="text-sm text-zinc-400 mt-2 max-w-sm leading-relaxed">
+          Choose a diamond-secure method, send funds, upload proof — credit lands after approval.
+        </p>
       </div>
-      <div class="rounded-2xl border border-white/10 bg-black/30 px-5 py-4 min-w-[180px]">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500">Available</p>
-        <p class="text-2xl font-black text-emerald-400 mt-1">{{ money(current_user, current_user.available_balance or 0) }}</p>
+      <div class="dx-gem"><i class="fa-solid fa-gem"></i></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5 mt-6">
+      <div class="dx-tile p-3.5">
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Available</p>
+        <p class="dx-metal text-xl font-black mt-1">{{ money(current_user, bal) }}</p>
+      </div>
+      <div class="dx-tile p-3.5">
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Currency</p>
+        <p class="text-xl font-black mt-1 text-zinc-100">{{ cur }}</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <form method="POST" enctype="multipart/form-data" class="grid lg:grid-cols-5 gap-5">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <form method="POST" action="{{ url_for('wallet.deposit') }}" enctype="multipart/form-data" class="space-y-4" id="dx-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
     <input type="hidden" name="provider" id="providerField" value="">
 
-    <div class="lg:col-span-3 space-y-4">
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-5">
-        <h2 class="font-bold text-lg">Amount</h2>
-        <div>
-          <label class="text-xs text-zinc-400">Deposit amount ({{ current_user.currency or 'UGX' }})</label>
-          <div class="relative mt-1.5">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm font-semibold">{{ current_user.currency_symbol or 'UGX' }}</span>
-            <input type="number" name="amount" step="100" min="1000" required placeholder="e.g. 15000"
-                   class="w-full rounded-2xl bg-zinc-950 border border-white/10 pl-16 pr-4 py-3.5 text-lg font-bold focus:border-emerald-500 outline-none">
-          </div>
-          <div class="flex flex-wrap gap-2 mt-3">
-            {% for q in [15000, 30000, 50000, 100000] %}
-            <button type="button" onclick="this.form.amount.value='{{ q }}'"
-                    class="text-xs rounded-full border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10">{{ '{:,}'.format(q) }}</button>
-            {% endfor %}
-          </div>
-        </div>
+    {# METHODS #}
+    <section class="dx-card p-4 sm:p-5">
+      <div class="flex items-center justify-between mb-3.5">
+        <p class="text-[10px] font-800 uppercase tracking-[0.18em] text-zinc-500 font-bold">Payment method</p>
+        <span class="text-[10px] font-bold text-sky-200/70">{{ methods|length }} open</span>
+      </div>
 
-        <div>
-          <label class="text-xs text-zinc-400">Payment method</label>
-          <select name="payment_method" required id="payMethod"
-                  class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 focus:border-indigo-500 outline-none">
-            <option value="">Select method</option>
-            {% for m in payment_methods|default([]) %}
-            {% set label = m if m is string else (m.method or m.name or m.provider or '') %}
-            {% if label %}
-            <option value="{{ label }}">{{ label }}</option>
-            {% endif %}
+      {% if methods %}
+      <div class="space-y-2" id="dx-methods">
+        {% for s in methods %}
+        <label class="dx-method {% if loop.first %}on{% endif %}">
+          <input type="radio" name="payment_method" value="{{ s.method }}"
+                 {% if loop.first %}checked{% endif %}
+                 data-provider="{{ s.provider or s.method }}"
+                 data-name="{{ s.account_name or '' }}"
+                 data-number="{{ s.account_number or '' }}"
+                 data-instructions="{{ s.instructions or '' }}">
+          <span class="dx-method-ico">
+            {% set m = (s.method or '')|lower %}
+            {% if 'usdt' in m or 'btc' in m or 'eth' in m or 'bitcoin' in m %}
+              <i class="fa-brands fa-bitcoin"></i>
+            {% elif 'paypal' in m %}
+              <i class="fa-brands fa-paypal"></i>
+            {% elif 'bank' in m or 'sepa' in m %}
+              <i class="fa-solid fa-building-columns"></i>
             {% else %}
-            <option value="" disabled>No active payment methods — ask admin to enable them</option>
-            {% endfor %}
-          </select>
-        </div>
+              <i class="fa-solid fa-mobile-screen-button"></i>
+            {% endif %}
+          </span>
+          <span class="min-w-0">
+            <span class="block text-sm font-bold text-zinc-50">{{ s.method }}</span>
+            {% if s.provider and s.provider != s.method %}
+            <span class="block text-[11px] text-zinc-500 mt-0.5">{{ s.provider }}</span>
+            {% endif %}
+          </span>
+          <span class="dx-check"></span>
+        </label>
+        {% endfor %}
+      </div>
 
-        <div>
-          <label class="text-xs text-zinc-400">Transaction ID / reference</label>
-          <input type="text" name="transaction_id" required placeholder="e.g. MM123456789"
-                 class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 focus:border-indigo-500 outline-none">
-        </div>
-
-        <div>
-          <label class="text-xs text-zinc-400">Payment proof (screenshot)</label>
-          <label class="mt-1.5 flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/20 px-4 py-8 cursor-pointer hover:border-indigo-400/40 transition">
-            <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-2"></i>
-            <span class="text-sm text-zinc-400">Tap to upload image</span>
-            <span class="text-[11px] text-zinc-600 mt-1">PNG, JPG</span>
-            <input type="file" name="proof" accept="image/*" required class="hidden" onchange="document.getElementById('fileName').textContent=this.files[0]?this.files[0].name:'No file'">
-          </label>
-          <p id="fileName" class="text-xs text-zinc-500 mt-2">No file selected</p>
-        </div>
-
-        <button type="submit"
-                class="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 py-3.5 font-bold shadow-lg shadow-emerald-900/30">
-          Submit deposit
+      <div class="dx-paybox" id="dx-paybox">
+        <p class="text-[10px] uppercase tracking-[0.16em] text-zinc-500 font-bold">Send payment to</p>
+        <p class="text-sm font-bold text-zinc-100 mt-1.5" id="dx-acc-name">—</p>
+        <code id="dx-acc-num">—</code>
+        <p class="text-xs text-zinc-500 mt-2 leading-relaxed" id="dx-acc-inst"></p>
+        <button type="button" id="dx-copy"
+                class="mt-3 text-[11px] font-bold text-sky-200/90 hover:text-white inline-flex items-center gap-1.5">
+          <i class="fa-regular fa-copy"></i> Copy account number
         </button>
       </div>
-    </div>
+      {% else %}
+      <div class="dx-tile p-6 text-center text-sm text-zinc-500">
+        No active methods for your region. Contact support.
+      </div>
+      {% endif %}
+    </section>
 
-    <div class="lg:col-span-2 space-y-4">
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
-        <h2 class="font-bold mb-3">Payment details</h2>
-        {% if payment_settings %}
-        <div class="space-y-3">
-          {% for s in payment_settings %}
-          <div class="rounded-2xl bg-black/25 border border-white/5 p-4">
-            <p class="text-sm font-semibold">{{ s.method or s.provider or s.name or 'Method' }}</p>
-            {% if s.account_name %}<p class="text-xs text-zinc-400 mt-1">Name: <span class="text-white">{{ s.account_name }}</span></p>{% endif %}
-            {% if s.account_number %}<p class="text-xs text-zinc-400">Account: <span class="text-white font-mono">{{ s.account_number }}</span></p>{% endif %}
-            {% if s.instructions %}<p class="text-xs text-zinc-500 mt-2">{{ s.instructions }}</p>{% endif %}
-          </div>
+    {# AMOUNT + PROOF #}
+    <section class="dx-card p-4 sm:p-5 space-y-4">
+      <div>
+        <label class="dx-label">Amount · {{ cur }}</label>
+        <div class="dx-amount-wrap">
+          <span class="sym">{{ sym }}</span>
+          <input class="dx-input" type="number" name="amount" id="dx-amount" step="1" min="1" required placeholder="0">
+        </div>
+        <div class="dx-chips">
+          {% for q in [15000, 30000, 50000, 100000, 250000] %}
+          <button type="button" data-amt="{{ q }}">{{ "{:,}".format(q) }}</button>
           {% endfor %}
         </div>
-        {% else %}
-        <p class="text-sm text-zinc-500">Use the selected method and include the transaction ID on your proof.</p>
-        {% endif %}
       </div>
-    </div>
+
+      <div>
+        <label class="dx-label">Transaction reference</label>
+        <input class="dx-input" type="text" name="transaction_id" required placeholder="From your payment receipt" autocomplete="off">
+      </div>
+
+      <div>
+        <label class="dx-label">Proof of payment</label>
+        <label class="dx-upload">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span class="text-sm font-bold text-zinc-200">Drop or tap to upload</span>
+          <span class="text-[11px] text-zinc-500">PNG · JPG · WEBP · PDF</span>
+          <input type="file" name="proof" accept="image/*,application/pdf" required class="hidden"
+                 onchange="document.getElementById('dx-file').textContent=this.files[0]?this.files[0].name:'No file selected'">
+        </label>
+        <p id="dx-file" class="text-[11px] text-zinc-500 mt-2 text-center">No file selected</p>
+      </div>
+
+      <div>
+        <label class="dx-label">Note <span class="normal-case tracking-normal font-medium text-zinc-600">(optional)</span></label>
+        <textarea class="dx-input" name="notes" rows="2" placeholder="Optional message to admin…" style="font-weight:500;resize:none"></textarea>
+      </div>
+
+      <button type="submit" class="dx-btn" {% if not methods %}disabled{% endif %}>
+        Submit deposit
+      </button>
+    </section>
   </form>
+
+  <section class="dx-card p-5">
+    <p class="dx-kicker mb-3" style="letter-spacing:.18em">Process</p>
+    <ol class="dx-steps space-y-3">
+      <li><span class="n">1</span><span>Select method and copy the account shown above.</span></li>
+      <li><span class="n">2</span><span>Send the exact amount from your bank or wallet app.</span></li>
+      <li><span class="n">3</span><span>Paste the transaction ID and upload a clear screenshot.</span></li>
+      <li><span class="n">4</span><span>Admin approves — your available balance updates automatically.</span></li>
+    </ol>
+    <a href="{{ url_for('wallet.index') }}" class="inline-flex items-center gap-2 mt-5 text-sm font-bold text-sky-200/90 hover:text-white">
+      <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to wallet
+    </a>
+  </section>
 </div>
+
 <script>
 (function(){
-  var sel = document.getElementById('payMethod');
-  var hid = document.getElementById('providerField');
-  function sync(){ if (hid && sel) hid.value = sel.value || ''; }
-  if (sel) { sel.addEventListener('change', sync); sync(); }
+  function sync(){
+    var c = document.querySelector('input[name="payment_method"]:checked');
+    document.querySelectorAll('.dx-method').forEach(function(el){ el.classList.remove('on'); });
+    if (!c) return;
+    var lab = c.closest('.dx-method');
+    if (lab) lab.classList.add('on');
+    var prov = document.getElementById('providerField');
+    if (prov) prov.value = c.getAttribute('data-provider') || c.value || '';
+    var n = document.getElementById('dx-acc-name');
+    var num = document.getElementById('dx-acc-num');
+    var inst = document.getElementById('dx-acc-inst');
+    if (n) n.textContent = c.getAttribute('data-name') || '—';
+    if (num) num.textContent = c.getAttribute('data-number') || '—';
+    if (inst) inst.textContent = c.getAttribute('data-instructions') || '';
+  }
+  document.querySelectorAll('input[name="payment_method"]').forEach(function(r){
+    r.addEventListener('change', sync);
+  });
+  document.querySelectorAll('.dx-chips button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var a = document.getElementById('dx-amount');
+      if (a) { a.value = btn.getAttribute('data-amt') || ''; a.focus(); }
+    });
+  });
+  var copyBtn = document.getElementById('dx-copy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function(){
+      var num = document.getElementById('dx-acc-num');
+      var t = (num && num.textContent) ? num.textContent.trim() : '';
+      if (!t || t === '—') return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function(){
+          copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+          setTimeout(function(){ copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy account number'; }, 1500);
+        });
+      }
+    });
+  }
+  sync();
 })();
 </script>
 {% endblock %}
