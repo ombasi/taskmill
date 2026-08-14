@@ -1,67 +1,103 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }}{% endblock %}
 {% block content %}
-{% set bal = current_user.available_balance or 0 %}
-{% set mname = current_user.membership.name if current_user.membership else "Starter" %}
-{% set p = progress if progress is defined else {} %}
-{% set done = p.completed_today|default(today_completed|default(0)) %}
-{% set total = p.mandatory|default(tasks_per_set|default(16)) %}
-{% if total is number and total < 1 %}{% set total = 1 %}{% endif %}
-{% set pct_day = ((done / total) * 100)|int if total else 0 %}
-{% set _xp = current_user.xp_points or 0 %}
-{% set _lvl = current_user.user_level or 1 %}
-{% set _q = current_user.quality_score or 50 %}
-{% set name = current_user.full_name or current_user.username %}
-
+{% set mname = current_user.membership.name if current_user.membership else "Member" %}
+{% set _lvl = current_user.user_level if current_user.user_level is defined else 1 %}
 <style>
-  .dash-hero {
-    background:
-      radial-gradient(900px 400px at 10% -10%, rgba(99,102,241,.35), transparent 55%),
-      radial-gradient(700px 320px at 90% 0%, rgba(16,185,129,.2), transparent 50%),
-      linear-gradient(180deg, rgba(15,23,42,.95), rgba(7,11,20,.4));
-    border: 1px solid rgba(255,255,255,.08);
+  .dx-page { max-width: 72rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
   }
-  .dash-card {
-    background: linear-gradient(145deg, rgba(24,24,37,.9), rgba(15,23,42,.75));
-    border: 1px solid rgba(255,255,255,.08);
-    box-shadow: 0 20px 50px -30px rgba(0,0,0,.8);
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .dash-chip {
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.08);
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dash-action {
-    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  .dx-metal {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 14px rgba(186,230,253,.25));
   }
-  .dash-action:hover {
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dx-gem {
+    width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(186,230,253,.12) 45%, rgba(148,163,184,.14));
+    border: 1px solid rgba(255,255,255,.28);
+    box-shadow: 0 10px 28px -12px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.4);
+    color: #e0f2fe;
+  }
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(15,23,42,.55));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+  .dx-chip {
+    background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px;
+    padding: .3rem .7rem;
+    font-size: 11px; font-weight: 700;
+  }
+  .dx-action {
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .dx-action:hover {
     transform: translateY(-2px);
-    border-color: rgba(129,140,248,.4);
-    background: rgba(99,102,241,.12);
+    border-color: rgba(255,255,255,.28) !important;
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
   }
-  .ring-glow { box-shadow: 0 0 0 1px rgba(99,102,241,.25), 0 12px 40px -12px rgba(99,102,241,.45); }
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1rem; padding: .7rem 1.1rem;
+    font-size: .85rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.5), inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .dx-btn:hover { filter: brightness(1.05); }
+  .dx-progress {
+    height: .45rem; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden;
+  }
+  .dx-progress > span {
+    display: block; height: 100%; border-radius: inherit;
+    background: linear-gradient(90deg, #fff, #bae6fd, #e2e8f0);
+  }
 </style>
 
-<div class="max-w-6xl mx-auto px-3 sm:px-5 pb-24 space-y-5">
+<div class="dx-page space-y-4">
 
   {# HERO #}
-  <section class="dash-hero rounded-[1.75rem] p-5 sm:p-7 relative overflow-hidden">
+  <section class="dx-card p-5 sm:p-7 relative overflow-hidden">
     <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 relative">
       <div>
-        <p class="text-[11px] uppercase tracking-[0.22em] text-indigo-200/80 font-semibold">Welcome back</p>
-        <h1 class="text-2xl sm:text-3xl font-black mt-1 tracking-tight">{{ name }}</h1>
+        <p class="dx-kicker">Welcome back</p>
+        <h1 class="dx-title text-2xl sm:text-3xl font-black mt-1.5 tracking-tight">{{ name }}</h1>
         <div class="flex flex-wrap items-center gap-2 mt-3">
-          <span class="dash-chip rounded-full px-3 py-1 text-xs font-semibold text-indigo-100">{{ mname }}</span>
-          <span class="dash-chip rounded-full px-3 py-1 text-xs text-zinc-300">Level {{ _lvl }}</span>
-          <span class="dash-chip rounded-full px-3 py-1 text-xs text-amber-200/90">🔥 {{ streak|default(current_user.streak_days or 0) }} day streak</span>
+          <span class="dx-chip text-sky-100">{{ mname }}</span>
+          <span class="dx-chip text-zinc-300">Level {{ _lvl }}</span>
+          <span class="dx-chip text-amber-100">🔥 {{ streak|default(current_user.streak_days or 0) }} day streak</span>
         </div>
       </div>
       <div class="sm:text-right">
         <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Available balance</p>
-        <p class="text-3xl sm:text-4xl font-black mt-1 tracking-tight text-white">{{ money(current_user, bal) }}</p>
+        <p class="dx-metal text-3xl sm:text-4xl font-black mt-1 tracking-tight">{{ money(current_user, bal) }}</p>
         <div class="flex sm:justify-end gap-2 mt-3">
-          <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold px-4 py-2.5 transition">Deposit</a>
-          <a href="{{ url_for('wallet.withdraw') }}" class="rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold px-4 py-2.5 border border-white/10 transition">Withdraw</a>
+          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn !text-xs !py-2.5 !px-4">Deposit</a>
+          <a href="{{ url_for('wallet.withdraw') }}" class="rounded-xl text-xs font-bold px-4 py-2.5 border border-white/15 bg-white/5 hover:bg-white/10 transition">Withdraw</a>
         </div>
       </div>
     </div>
@@ -93,7 +129,7 @@
 
   {# TODAY + STATS #}
   <section class="grid lg:grid-cols-3 gap-4">
-    <div class="lg:col-span-2 dash-card rounded-[1.5rem] p-5 sm:p-6">
+    <div class="lg:col-span-2 dx-card p-5 sm:p-6">
       <div class="flex items-start justify-between gap-3 mb-4">
         <div>
           <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Today</p>
@@ -131,7 +167,7 @@
     </div>
 
     {# DIGEST / SNAPSHOT #}
-    <div class="dash-card rounded-[1.5rem] p-5 sm:p-6 flex flex-col">
+    <div class="dx-card p-5 sm:p-6 flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <div>
           <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Snapshot</p>
@@ -184,7 +220,7 @@
       ] %}
       {% for ep, icon, title, sub, grad, color in actions %}
       <a href="{{ safe_url_for(ep) if safe_url_for is defined else url_for(ep) }}"
-         class="dash-action dash-card rounded-2xl p-4 bg-gradient-to-br {{ grad }}">
+         class="dx-action dx-card p-4 bg-gradient-to-br {{ grad }}">
         <div class="w-10 h-10 rounded-xl bg-black/30 {{ color }} flex items-center justify-center mb-3">
           <i class="fa-solid {{ icon }}"></i>
         </div>
@@ -197,21 +233,21 @@
 
   {# SECONDARY LINKS #}
   <section class="grid sm:grid-cols-3 gap-3">
-    <a href="{{ url_for('wallet.index') }}" class="dash-card rounded-2xl px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
+    <a href="{{ url_for('wallet.index') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
       <div>
         <p class="font-semibold text-sm">Wallet history</p>
         <p class="text-[11px] text-zinc-500">Deposits, tasks, withdrawals</p>
       </div>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
-    <a href="{{ url_for('task.history') }}" class="dash-card rounded-2xl px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
+    <a href="{{ url_for('task.history') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
       <div>
         <p class="font-semibold text-sm">Task history</p>
         <p class="text-[11px] text-zinc-500">Pending & completed</p>
       </div>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
-    <a href="{{ url_for('profile.index') }}" class="dash-card rounded-2xl px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
+    <a href="{{ url_for('profile.index') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
       <div>
         <p class="font-semibold text-sm">Account & alerts</p>
         <p class="text-[11px] text-zinc-500">Telegram, PIN, photo</p>
@@ -224,7 +260,7 @@
 
 
   {# Referral progress #}
-  <section class="dash-card rounded-[1.5rem] p-5" id="referral-progress">
+  <section class="dx-card p-5" id="referral-progress">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="text-[11px] uppercase tracking-[0.18em] text-violet-200/80 font-semibold">Referrals</p>
@@ -246,8 +282,8 @@
         <span>{{ rc }} / {{ goal }} invites</span>
         <span>{{ pct|int }}%</span>
       </div>
-      <div class="h-2 rounded-full bg-white/10 overflow-hidden">
-        <div class="h-full rounded-full bg-gradient-to-r from-violet-400 to-sky-300 transition-all" style="width: {{ [pct, 100]|min }}%"></div>
+      <div class="dx-progress">
+        <div class="transition-all" style="display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#fff,#bae6fd,#e2e8f0)" style="width: {{ [pct, 100]|min }}%"></div>
       </div>
       <p class="text-[11px] text-zinc-500 mt-2">Keep sharing your code — bonuses apply when referred members activate.</p>
     </div>

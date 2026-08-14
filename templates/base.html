@@ -142,6 +142,67 @@ card:"#18181b"
     border-color: rgba(255,255,255,.1) !important;
     box-shadow: 0 16px 40px -24px rgba(0,0,0,.7), 0 0 30px -15px var(--pt-glow);
   }
+  
+  /* Diamond nav shell */
+  .tm-nav-shell {
+    background: linear-gradient(165deg, rgba(15,23,42,.88), rgba(8,12,22,.92)) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    box-shadow: 0 16px 48px -24px rgba(0,0,0,.75), 0 0 48px -18px rgba(186,230,253,.18) !important;
+    position: relative;
+  }
+  .tm-nav-shell::before {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(186,230,253,.22) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .tm-nav-link:hover { color: #e0f2fe !important; }
+  .tm-logout-btn {
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 30%, #fecdd3 70%, #fff 100%) !important;
+    color: #0f172a !important;
+    font-weight: 800 !important;
+    box-shadow: 0 10px 24px -12px rgba(253,164,175,.45) !important;
+  }
+  .mobile-bottom-nav {
+    background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(8,12,22,.98)) !important;
+    border-top: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow: 0 -12px 40px -16px rgba(0,0,0,.7), 0 0 40px -20px rgba(186,230,253,.12) !important;
+    backdrop-filter: blur(16px);
+  }
+  .mobile-bottom-nav a.active, .mobile-bottom-nav a:hover {
+    color: #e0f2fe !important;
+  }
+  footer.site-footer {
+    border-top-color: rgba(255,255,255,.1) !important;
+    background: linear-gradient(180deg, transparent, rgba(8,12,22,.6));
+  }
+  /* Global diamond card utility */
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
+  }
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-metal {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
   header nav > div.backdrop-blur-xl {
     border-color: rgba(255,255,255,.14) !important;
     background: rgba(15,23,42,.75) !important;
@@ -159,7 +220,7 @@ card:"#18181b"
     left: 0; right: 0; bottom: -4px;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg,#6366f1,#a855f7);
+    background: linear-gradient(90deg,#ffffff,#bae6fd,#e2e8f0);
     transform: scaleX(0);
     transition: transform .2s ease;
   }
@@ -239,7 +300,7 @@ card:"#18181b"
 
 <nav class="mx-auto max-w-7xl mt-2 md:mt-4 px-3 md:px-5">
 
-<div class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl px-4 md:px-8 py-3 md:py-5 flex justify-between items-center shadow-2xl gap-3">
+<div class="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl px-4 md:px-8 py-3 md:py-5 flex justify-between items-center shadow-2xl gap-3 tm-nav-shell">
 
 <!-- Logo -->
 
@@ -289,7 +350,7 @@ Earn • Review • Grow
 <a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
 <a href="{{ url_for('auth.logout') }}"
-class="px-5 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 hover:scale-105 transition">{{ t('nav_logout') if t is defined else 'Logout' }}</a>
+class="px-5 py-3 rounded-2xl tm-logout-btn hover:scale-105 transition">{{ t('nav_logout') if t is defined else 'Logout' }}</a>
 
 </div>
 
