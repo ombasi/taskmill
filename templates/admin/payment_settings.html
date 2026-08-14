@@ -1,12 +1,27 @@
 {% extends "admin/base.html" %}
 {% block title %}Payment Settings{% endblock %}
 {% block content %}
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    <a href="{{ url_for('admin.seed_local_payments') }}"
+       class="rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-100 text-xs font-bold px-4 py-2.5 hover:bg-sky-500/30"
+       onclick="return confirm('Add all country local methods as INACTIVE? You can toggle each on and edit account details.');">
+      + Seed all local methods (inactive)
+    </a>
+  </div>
+
 <form method="POST" action="{{ url_for('admin.seed_crypto_methods') }}" class="mb-4">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
   <button type="submit" class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-semibold">
     Add crypto methods (USDT / BTC / ETH) — start inactive
   </button>
-</form>
+
+            <div>
+              <label class="text-xs text-zinc-400">Countries (comma-separated or ALL)</label>
+              <input name="countries" value="{{ setting.countries or 'ALL' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="ALL or Uganda,Kenya">
+            </div>
+
+            </form>
 
 <div class="max-w-7xl mx-auto space-y-8">
 
@@ -132,6 +147,12 @@
       </div>
 
       <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold">
+        
+      <div>
+        <label class="block text-xs text-zinc-400 mb-1">Countries</label>
+        <input type="text" name="countries" value="ALL" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="ALL or Uganda,Kenya">
+        <p class="text-[11px] text-zinc-500 mt-1">Who can see this method when active. Use ALL for crypto / global.</p>
+      </div>
         Add payment method
       </button>
 

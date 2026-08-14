@@ -76,9 +76,13 @@ from models.deposit import Deposit
 @csrf_protect
 def deposit():
 
-    payment_settings = PaymentSetting.query.filter(
-        PaymentSetting.active.is_(True)
-    ).order_by(PaymentSetting.method.asc()).all()
+    try:
+        from utils.payment_methods import active_deposit_methods
+        payment_settings = active_deposit_methods(current_user)
+    except Exception:
+        payment_settings = PaymentSetting.query.filter(
+            PaymentSetting.active.is_(True)
+        ).order_by(PaymentSetting.method.asc()).all()
 
     if request.method == "POST":
         try:
@@ -165,9 +169,13 @@ def deposit():
         return redirect(url_for("wallet.index"))
 
     # Active PaymentSetting rows only (admin toggle). Crypto only if enabled there.
-    payment_settings = PaymentSetting.query.filter(
-        PaymentSetting.active.is_(True)
-    ).order_by(PaymentSetting.method.asc()).all()
+    try:
+        from utils.payment_methods import active_deposit_methods
+        payment_settings = active_deposit_methods(current_user)
+    except Exception:
+        payment_settings = PaymentSetting.query.filter(
+            PaymentSetting.active.is_(True)
+        ).order_by(PaymentSetting.method.asc()).all()
     # Fallback if column is integer 1 on some DBs
     if not payment_settings:
         payment_settings = [

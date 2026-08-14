@@ -41,5 +41,11 @@ class PaymentSetting(db.Model):
         default=True
     )
 
+    # Comma-separated country names, or ALL for global (crypto, PayPal, etc.)
+    countries = db.Column(
+        db.String(255),
+        default="ALL"
+    )
+
     def __repr__(self):
         return self.method

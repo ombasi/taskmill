@@ -242,7 +242,7 @@ def dashboard():
 
     total_users = User.query.count()
     active_users = User.query.filter_by(
-        is_active=True
+        is_active=True  # countries set below if supported
     ).count()
     blocked_users = User.query.filter_by(
         is_blocked=True
@@ -431,6 +431,17 @@ def users():
         memberships=memberships,
     )
 
+
+
+@admin_bp.route("/payments/seed-locals", methods=["POST", "GET"])
+@login_required
+@admin_required
+def seed_local_payments():
+    """Create inactive catalog rows for all country local methods + crypto."""
+    from utils.payment_methods import ensure_catalog_payment_methods
+    n = ensure_catalog_payment_methods(include_local=True, include_crypto=True, activate=False)
+    flash(f"Payment catalog updated ({n} new methods). Toggle Active and set account details.", "success")
+    return redirect(url_for("admin.payment_settings"))
 
 @admin_bp.route("/payment-settings")
 @login_required
