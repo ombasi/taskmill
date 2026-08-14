@@ -35,9 +35,75 @@
     box-shadow: 0 14px 32px -12px rgba(186,230,253,.5);
   }
   .tk-btn:hover { filter: brightness(1.05); }
-  .star-wrap input:checked ~ span,
-  .star-wrap:hover span { color: #fbbf24; }
-  .star-wrap input:checked ~ span { color: #fbbf24; }
+
+  /* Diamond star rating */
+  .dm-stars {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+  .dm-stars input { position: absolute; opacity: 0; pointer-events: none; }
+  .dm-stars label {
+    cursor: pointer;
+    width: 2.55rem;
+    height: 2.55rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.85rem;
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(15,23,42,.5));
+    border: 1px solid rgba(255,255,255,.1);
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    position: relative;
+  }
+  .dm-stars label::before {
+    content: "★";
+    font-size: 1.35rem;
+    line-height: 1;
+    background: linear-gradient(180deg, #64748b, #334155);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,.35));
+    transition: transform .18s ease, filter .18s ease;
+  }
+  .dm-stars label:hover,
+  .dm-stars label:hover ~ label,
+  .dm-stars input:checked ~ label {
+    border-color: rgba(255,255,255,.45);
+    background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(186,230,253,.12) 40%, rgba(148,163,184,.15));
+    box-shadow: 0 0 22px -6px rgba(255,255,255,.45), inset 0 1px 0 rgba(255,255,255,.25);
+    transform: translateY(-2px);
+  }
+  .dm-stars label:hover::before,
+  .dm-stars label:hover ~ label::before,
+  .dm-stars input:checked ~ label::before {
+    background: linear-gradient(140deg, #ffffff 0%, #e0f2fe 25%, #f8fafc 50%, #bae6fd 75%, #ffffff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 8px rgba(186,230,253,.75));
+    transform: scale(1.08);
+  }
+  .dm-stars label:active { transform: scale(0.96); }
+  .dm-rating-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+  }
+  .dm-rating-pill {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #e2e8f0;
+    background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(186,230,253,.08));
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+  }
 </style>
 
 <div class="tk-page space-y-3.5">
@@ -54,14 +120,14 @@
   {# Live balance #}
   <div class="tk-card px-4 py-3 flex flex-wrap items-center justify-between gap-2">
     <div>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Your balance</p>
+      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">{{ t('available_balance') if t is defined else 'Your balance' }}</p>
       <p class="text-xl font-black {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
         {{ money(current_user, bal) }}
       </p>
     </div>
     <div class="flex flex-wrap gap-1.5 text-[11px]">
       <span class="rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-zinc-300">
-        Price {{ money(current_user, price) }}
+        {{ t('price') if t is defined else 'Price' }} {{ money(current_user, price) }}
       </span>
       <span class="rounded-full bg-emerald-500/10 border border-emerald-400/25 px-2.5 py-1 text-emerald-300 font-semibold">
         +{{ money(current_user, commission) }}
@@ -92,7 +158,7 @@
         <div class="flex-1 min-w-0 text-center sm:text-left">
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <p class="text-[11px] uppercase tracking-[0.22em] text-sky-200/80 font-semibold">
-              {% if is_combo %}Combo review{% else %}Product review{% endif %}
+              {% if is_combo %}Combo review{% else %}{{ t('product_review') if t is defined else 'Product review' }}{% endif %}
             </p>
             {% if is_combo %}
             <span class="rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[10px] font-bold px-2 py-0.5">COMBO</span>
@@ -104,7 +170,7 @@
           {% endif %}
           <div class="grid grid-cols-2 gap-2 mt-4">
             <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
-              <p class="text-[10px] uppercase tracking-wider text-zinc-500">Price</p>
+              <p class="text-[10px] uppercase tracking-wider text-zinc-500">{{ t('price') if t is defined else 'Price' }}</p>
               <p class="text-lg font-black tk-metal mt-0.5">{{ money(current_user, price) }}</p>
             </div>
             <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
@@ -121,16 +187,39 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
         <div>
-          <label class="text-xs text-zinc-400 font-semibold">Rating</label>
-          <div class="flex gap-1.5 mt-2 justify-center sm:justify-start">
-            {% for i in range(1, 6) %}
-            <label class="cursor-pointer select-none">
-              <input type="radio" name="rating" value="{{ i }}" class="sr-only peer" {% if i == 5 %}checked{% endif %}>
-              <span class="text-2xl text-zinc-600 peer-checked:text-amber-400 hover:text-amber-300 transition leading-none">★</span>
-            </label>
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs text-zinc-400 font-semibold tracking-wide uppercase">Your rating</label>
+            <span class="text-[10px] text-zinc-500">Tap a diamond star</span>
+          </div>
+          <div class="dm-stars mt-3" id="dm-stars" role="radiogroup" aria-label="Product rating">
+            {# reverse order so CSS ~ sibling fill works left-to-right #}
+            {% for i in range(5, 0, -1) %}
+            <input type="radio" name="rating" id="rate-{{ i }}" value="{{ i }}" {% if i == 5 %}checked{% endif %}>
+            <label for="rate-{{ i }}" title="{{ i }} star{{ 's' if i != 1 else '' }}"></label>
             {% endfor %}
           </div>
+          <div class="dm-rating-meta">
+            <span class="dm-rating-pill" id="dm-rating-label">Excellent · 5</span>
+            <span class="text-[11px] text-zinc-500">Required to submit</span>
+          </div>
         </div>
+        <script>
+        (function(){
+          var labels = {1:'Poor',2:'Fair',3:'Good',4:'Very good',5:'Excellent'};
+          var box = document.getElementById('dm-stars');
+          var out = document.getElementById('dm-rating-label');
+          if(!box||!out) return;
+          function sync(){
+            var c = box.querySelector('input[name="rating"]:checked');
+            var v = c ? parseInt(c.value,10) : 5;
+            out.textContent = (labels[v]||'') + ' · ' + v;
+          }
+          box.querySelectorAll('input[name="rating"]').forEach(function(r){
+            r.addEventListener('change', sync);
+          });
+          sync();
+        })();
+        </script>
 
         <div>
           <label class="text-xs text-zinc-400 font-semibold">Short review <span class="text-zinc-600 font-normal">(optional)</span></label>
@@ -141,15 +230,15 @@
 
         <div class="flex flex-col sm:flex-row gap-2">
           <button type="submit" class="tk-btn flex-1 rounded-2xl py-3.5 text-sm">
-            Submit review
+            {{ t('submit_review') if t is defined else 'Submit review' }}
           </button>
           <a href="{{ url_for('task.history') }}"
              class="sm:w-32 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition">
-            Cancel
+            {{ t('cancel') if t is defined else 'Cancel' }}
           </a>
         </div>
         <p class="text-[11px] text-zinc-500 text-center sm:text-left">
-          Commission credits on submit · next task unlocks after this one is done
+          {{ t('commission') if t is defined else 'Commission' }} credits on submit · next task unlocks after this one is done
         </p>
       </form>
 
