@@ -818,5 +818,54 @@ function showToast(msg, type){
 </style>
 {% endif %}
 
+
+<!-- PWA install prompt -->
+<div id="pwa-install" class="hidden fixed bottom-24 lg:bottom-6 right-3 z-[60] max-w-xs">
+  <div class="rounded-2xl border border-white/15 bg-zinc-950/95 backdrop-blur-xl shadow-2xl p-4">
+    <div class="flex items-start gap-3">
+      <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" alt="" class="w-10 h-10 rounded-xl object-cover bg-zinc-800 shrink-0"
+           onerror="this.style.display='none'">
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-bold">Add Taskmill</p>
+        <p class="text-[11px] text-zinc-400 mt-0.5">Install on your home screen for faster access.</p>
+        <div class="flex gap-2 mt-3">
+          <button type="button" id="pwa-install-btn" class="rounded-xl bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900 text-xs font-black px-3 py-2">Install</button>
+          <button type="button" id="pwa-dismiss" class="rounded-xl border border-white/15 text-xs font-semibold px-3 py-2 text-zinc-400">Not now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var deferred = null;
+  var box = document.getElementById('pwa-install');
+  var btn = document.getElementById('pwa-install-btn');
+  var dismiss = document.getElementById('pwa-dismiss');
+  if (!box) return;
+  try {
+    if (localStorage.getItem('tm-pwa-dismiss') === '1') return;
+  } catch(e){}
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferred = e;
+    box.classList.remove('hidden');
+  });
+  if (btn) btn.addEventListener('click', function(){
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function(){ box.classList.add('hidden'); deferred = null; });
+  });
+  if (dismiss) dismiss.addEventListener('click', function(){
+    box.classList.add('hidden');
+    try { localStorage.setItem('tm-pwa-dismiss', '1'); } catch(e){}
+  });
+  // register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(function(){});
+  }
+})();
+</script>
+
 </body>
 </html>

@@ -222,6 +222,37 @@
 
 </div>
 
+
+  {# Referral progress #}
+  <section class="dash-card rounded-[1.5rem] p-5" id="referral-progress">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-[11px] uppercase tracking-[0.18em] text-violet-200/80 font-semibold">Referrals</p>
+        <h2 class="text-lg font-black mt-1">Invite progress</h2>
+        <p class="text-sm text-zinc-400 mt-1">
+          {{ referral_count|default(0) }} invited
+          {% if current_user.referral_code %}
+          · code <span class="font-mono text-sky-200">{{ current_user.referral_code }}</span>
+          {% endif %}
+        </p>
+      </div>
+      <a href="{{ url_for('dashboard.earn') }}" class="text-xs font-bold text-sky-200 hover:text-white">Share →</a>
+    </div>
+    {% set rc = referral_count|default(0)|int %}
+    {% set goal = 5 if rc < 5 else (10 if rc < 10 else (25 if rc < 25 else rc + 5)) %}
+    {% set pct = (rc / goal * 100) if goal else 0 %}
+    <div class="mt-4">
+      <div class="flex justify-between text-[11px] text-zinc-500 mb-1.5">
+        <span>{{ rc }} / {{ goal }} invites</span>
+        <span>{{ pct|int }}%</span>
+      </div>
+      <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+        <div class="h-full rounded-full bg-gradient-to-r from-violet-400 to-sky-300 transition-all" style="width: {{ [pct, 100]|min }}%"></div>
+      </div>
+      <p class="text-[11px] text-zinc-500 mt-2">Keep sharing your code — bonuses apply when referred members activate.</p>
+    </div>
+  </section>
+
 {% if show_onboarding %}
 <div id="onboard-overlay" class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-6"
      style="background:rgba(5,8,16,.82);backdrop-filter:blur(8px)">
