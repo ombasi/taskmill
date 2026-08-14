@@ -6,191 +6,192 @@
 {% set combo = current_user.combo_balance or 0 %}
 {% set earned = current_user.total_earned or 0 %}
 {% set withdrawn = current_user.total_withdrawn or 0 %}
+
 <style>
-  .dm-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
-  .dm-shell {
-    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(10,14,24,.98));
+  .dx-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.75rem;
-    box-shadow: 0 28px 70px -34px rgba(0,0,0,.9), 0 0 56px -22px rgba(186,230,253,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.16);
     position: relative; overflow: hidden;
   }
-  .dm-shell::before {
+  .dx-card::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.22) 40%, rgba(255,255,255,.08) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(186,230,253,.28) 35%, rgba(255,255,255,.08) 70%, rgba(167,243,208,.2) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
   }
-  .dm-title {
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #f1f5f9 60%, #bae6fd 100%);
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dm-amount {
-    background: linear-gradient(120deg, #ffffff 0%, #e0f2fe 35%, #f8fafc 65%, #bae6fd 100%);
+  .dx-metal {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 0 18px rgba(186,230,253,.25));
+    filter: drop-shadow(0 0 16px rgba(186,230,253,.28));
   }
-  .dm-amount.neg {
+  .dx-metal.neg {
     background: linear-gradient(120deg, #fecaca, #fda4af 40%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dm-tile {
-    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.55));
+  .dx-gem {
+    width: 3rem; height: 3rem; border-radius: 1.05rem; display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(186,230,253,.12) 45%, rgba(148,163,184,.15));
+    border: 1px solid rgba(255,255,255,.28);
+    box-shadow: 0 10px 28px -12px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.4);
+    color: #e0f2fe;
+  }
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(15,23,42,.55));
     border: 1px solid rgba(255,255,255,.1);
     border-radius: 1.15rem;
   }
-  .dm-btn-primary {
-    background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 40%, #cbd5e1 100%);
-    color: #0f172a; font-weight: 900;
-    box-shadow: 0 12px 30px -12px rgba(255,255,255,.45);
+  .dx-btn {
+    display: block; text-align: center; border-radius: 1.15rem; padding: .95rem 1rem;
+    font-size: .9rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 14px 32px -12px rgba(186,230,253,.5), inset 0 1px 0 rgba(255,255,255,.9);
+    transition: filter .15s, transform .15s;
   }
-  .dm-btn-ghost {
-    background: rgba(255,255,255,.05);
+  .dx-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .dx-btn-ghost {
+    display: block; text-align: center; border-radius: 1.15rem; padding: .95rem 1rem;
+    font-size: .9rem; font-weight: 800; color: #f1f5f9;
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
     border: 1px solid rgba(255,255,255,.14);
-    font-weight: 800;
+    transition: filter .15s, transform .15s;
   }
-  .dm-btn-primary:hover, .dm-btn-ghost:hover { filter: brightness(1.06); transform: translateY(-1px); }
-  .dm-btn-primary, .dm-btn-ghost { transition: transform .15s ease, filter .15s ease; }
+  .dx-btn-ghost:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .dx-link {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .9rem 1rem; border-radius: 1.15rem;
+    transition: background .15s;
+  }
+  .dx-link:hover { background: rgba(255,255,255,.04); }
+  .dx-link-ico {
+    width: 2.5rem; height: 2.5rem; border-radius: .9rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.14), rgba(148,163,184,.1));
+    border: 1px solid rgba(255,255,255,.14);
+    color: #e2e8f0;
+  }
 </style>
 
-<div class="dm-page space-y-4">
+<div class="dx-page space-y-4">
 
-  {# Hero balance #}
-  <section class="dm-shell p-5 sm:p-7">
-    <div class="relative z-[1]">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-[11px] uppercase tracking-[0.22em] text-sky-200/80 font-semibold">Wallet</p>
-          <h1 class="dm-title text-2xl sm:text-3xl font-black mt-1">{{ t('nav_wallet') if t is defined else 'Your funds' }}</h1>
-        </div>
-        <span class="w-11 h-11 rounded-2xl bg-gradient-to-br from-white/20 to-sky-300/10 border border-white/20 flex items-center justify-center text-sky-100 shadow-lg shadow-sky-500/10">
-          <i class="fa-solid fa-gem text-lg"></i>
-        </span>
+  <section class="dx-card p-5 sm:p-7">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="dx-kicker">Funds</p>
+        <h1 class="dx-title text-3xl font-black mt-1.5 tracking-tight">{{ t('nav_wallet') if t is defined else 'Wallet' }}</h1>
       </div>
-
-      <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500 mt-6 font-semibold">{{ t('available_balance') if t is defined else 'Available balance' }}</p>
-      <p class="text-4xl sm:text-5xl font-black mt-1 tracking-tight {% if bal|float < 0 %}dm-amount neg{% else %}dm-amount{% endif %}">
-        {{ money(current_user, bal) }}
-      </p>
-
-      <div class="grid grid-cols-2 gap-2.5 mt-6">
-        <div class="dm-tile p-3.5">
-          <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">{{ t('pending') if t is defined else 'Pending' }}</p>
-          <p class="text-sm font-bold mt-1 text-zinc-100">{{ money(current_user, pending) }}</p>
-        </div>
-        <div class="dm-tile p-3.5">
-          <p class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Combo hold</p>
-          <p class="text-sm font-bold mt-1 text-zinc-100">{{ money(current_user, combo) }}</p>
-        </div>
+      <div class="dx-gem"><i class="fa-solid fa-gem"></i></div>
+    </div>
+    <p class="text-[10px] uppercase tracking-[0.16em] text-zinc-500 font-bold mt-6">{{ t('available_balance') if t is defined else 'Available balance' }}</p>
+    <p class="text-4xl sm:text-5xl font-black mt-1 {% if bal|float < 0 %}dx-metal neg{% else %}dx-metal{% endif %}">
+      {{ money(current_user, bal) }}
+    </p>
+    <div class="grid grid-cols-2 gap-2.5 mt-5">
+      <div class="dx-tile p-3.5">
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">{{ t('pending') if t is defined else 'Pending' }}</p>
+        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, pending) }}</p>
       </div>
-
-      <div class="grid grid-cols-2 gap-2.5 mt-4">
-        <a href="{{ url_for('wallet.deposit') }}" class="dm-btn-primary rounded-2xl py-3.5 text-sm text-center">
-          {{ t('deposit') if t is defined else 'Deposit' }}
-        </a>
-        <a href="{{ url_for('wallet.withdraw') }}" class="dm-btn-ghost rounded-2xl py-3.5 text-sm text-center">
-          {{ t('withdraw') if t is defined else 'Withdraw' }}
-        </a>
+      <div class="dx-tile p-3.5">
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Combo hold</p>
+        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, combo) }}</p>
       </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2.5 mt-4">
+      <a href="{{ url_for('wallet.deposit') }}" class="dx-btn">{{ t('deposit') if t is defined else 'Deposit' }}</a>
+      <a href="{{ url_for('wallet.withdraw') }}" class="dx-btn-ghost">{{ t('withdraw') if t is defined else 'Withdraw' }}</a>
     </div>
   </section>
 
   {% if bal|float < 0 or (current_user.combo_active if current_user.combo_active is defined else false) %}
-  <section class="dm-shell p-5 border border-rose-400/25">
-    <div class="relative z-[1] flex items-start gap-3">
-      <span class="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-200 flex items-center justify-center shrink-0 border border-rose-400/25">
-        <i class="fa-solid fa-lock"></i>
-      </span>
-      <div class="flex-1 min-w-0">
-        <p class="text-[11px] uppercase tracking-[0.18em] text-rose-200/80 font-semibold">Hold timeline</p>
+  <section class="dx-card p-5">
+    <div class="flex items-start gap-3">
+      <span class="dx-gem !w-11 !h-11 !rounded-xl text-rose-200"><i class="fa-solid fa-lock"></i></span>
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.16em] text-rose-200/80 font-bold">Hold timeline</p>
         <p class="font-bold text-white mt-1">Combo / escrow hold active</p>
-        <p class="text-sm text-zinc-400 mt-1">
-          Balance {{ money(current_user, bal) }}. Deposit until balance ≥ 0, then open Tasks and submit the held product.
-        </p>
-        <ol class="mt-3 space-y-1.5 text-xs text-zinc-400 list-decimal list-inside">
+        <p class="text-sm text-zinc-400 mt-1">Balance {{ money(current_user, bal) }}. Deposit until ≥ 0, then submit the held product.</p>
+        <ol class="mt-3 space-y-1 text-xs text-zinc-500 list-decimal list-inside">
           <li>High-value product created a temporary hold</li>
-          <li>Deposit to bring balance to zero or above</li>
-          <li>Open the pending product and submit review</li>
+          <li>Deposit to clear the negative</li>
+          <li>Open Tasks and submit the product</li>
           <li>Principal + commission credit back</li>
         </ol>
         <div class="flex flex-wrap gap-2 mt-4">
-          <a href="{{ url_for('wallet.deposit') }}" class="dm-btn-primary rounded-xl text-xs px-4 py-2.5">Deposit now</a>
-          <a href="{{ url_for('task.index') }}" class="dm-btn-ghost rounded-xl text-xs px-4 py-2.5">Open tasks</a>
+          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn !w-auto !px-4 !py-2.5 !text-xs">Deposit now</a>
+          <a href="{{ url_for('task.index') }}" class="dx-btn-ghost !w-auto !px-4 !py-2.5 !text-xs">Open tasks</a>
         </div>
       </div>
     </div>
   </section>
   {% endif %}
 
-  {# Snapshot tiles #}
   <section class="grid grid-cols-2 gap-3">
-    <div class="dm-shell p-4">
-      <div class="relative z-[1]">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Total earned</p>
-        <p class="text-lg font-black mt-1 text-emerald-200/90">{{ money(current_user, earned) }}</p>
-      </div>
+    <div class="dx-card p-4">
+      <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Total earned</p>
+      <p class="text-lg font-black mt-1 text-emerald-200/90">{{ money(current_user, earned) }}</p>
     </div>
-    <div class="dm-shell p-4">
-      <div class="relative z-[1]">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Withdrawn</p>
-        <p class="text-lg font-black mt-1 text-zinc-100">{{ money(current_user, withdrawn) }}</p>
-      </div>
+    <div class="dx-card p-4">
+      <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Withdrawn</p>
+      <p class="text-lg font-black mt-1 text-zinc-100">{{ money(current_user, withdrawn) }}</p>
     </div>
   </section>
 
-  {# Quick links #}
-  <section class="dm-shell p-2">
-    <div class="relative z-[1] divide-y divide-white/5">
-      <a href="{{ url_for('wallet.deposit') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
-        <span class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center border border-emerald-400/20"><i class="fa-solid fa-arrow-down"></i></span>
-        <span class="flex-1">
-          <span class="block text-sm font-bold">{{ t('deposit') if t is defined else 'Deposit' }}</span>
-          <span class="block text-[11px] text-zinc-500">Top up your available balance</span>
-        </span>
-        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-      </a>
-      <a href="{{ url_for('wallet.withdraw') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
-        <span class="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-300 flex items-center justify-center border border-rose-400/20"><i class="fa-solid fa-arrow-up"></i></span>
-        <span class="flex-1">
-          <span class="block text-sm font-bold">{{ t('withdraw') if t is defined else 'Withdraw' }}</span>
-          <span class="block text-[11px] text-zinc-500">Cash out to your payout method</span>
-        </span>
-        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-      </a>
-      <a href="{{ url_for('task.history') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
-        <span class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-300 flex items-center justify-center border border-sky-400/20"><i class="fa-solid fa-clock-rotate-left"></i></span>
-        <span class="flex-1">
-          <span class="block text-sm font-bold">{{ t('nav_history') if t is defined else 'History' }}</span>
-          <span class="block text-[11px] text-zinc-500">Tasks, holds & activity</span>
-        </span>
-        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-      </a>
-    </div>
+  <section class="dx-card p-2">
+    <a href="{{ url_for('wallet.deposit') }}" class="dx-link">
+      <span class="dx-link-ico text-emerald-300"><i class="fa-solid fa-arrow-down"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">{{ t('deposit') if t is defined else 'Deposit' }}</span>
+        <span class="block text-[11px] text-zinc-500">Top up available balance</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    <a href="{{ url_for('wallet.withdraw') }}" class="dx-link">
+      <span class="dx-link-ico text-rose-300"><i class="fa-solid fa-arrow-up"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">{{ t('withdraw') if t is defined else 'Withdraw' }}</span>
+        <span class="block text-[11px] text-zinc-500">Cash out to payout method</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    <a href="{{ url_for('task.history') }}" class="dx-link">
+      <span class="dx-link-ico text-sky-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">{{ t('nav_history') if t is defined else 'History' }}</span>
+        <span class="block text-[11px] text-zinc-500">Tasks, holds & activity</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
   </section>
 
   {% if recent_transactions is defined and recent_transactions %}
-  <section class="dm-shell p-5">
-    <div class="relative z-[1]">
-      <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-semibold mb-3">Recent activity</p>
-      <div class="space-y-2">
-        {% for tx in recent_transactions[:8] %}
-        <div class="dm-tile px-3.5 py-3 flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-sm font-semibold truncate">{{ tx.description or tx.transaction_type or 'Transaction' }}</p>
-            <p class="text-[11px] text-zinc-500 mt-0.5">
-              {% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}
-            </p>
-          </div>
-          <p class="text-sm font-black shrink-0 {% if (tx.amount or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
-            {{ money(current_user, tx.amount) }}
-          </p>
+  <section class="dx-card p-5">
+    <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500 font-bold mb-3">Recent activity</p>
+    <div class="space-y-2">
+      {% for tx in recent_transactions[:8] %}
+      <div class="dx-tile px-3.5 py-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-sm font-semibold truncate">{{ tx.description or tx.transaction_type or 'Transaction' }}</p>
+          <p class="text-[11px] text-zinc-500 mt-0.5">{% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}</p>
         </div>
-        {% endfor %}
+        <p class="text-sm font-black shrink-0 {% if (tx.amount or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
+          {{ money(current_user, tx.amount) }}
+        </p>
       </div>
+      {% endfor %}
     </div>
   </section>
   {% endif %}
-
 </div>
 {% endblock %}
