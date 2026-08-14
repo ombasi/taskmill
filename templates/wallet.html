@@ -9,6 +9,16 @@
 
 <style>
   .dx-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  @media (min-width: 1024px) {
+    .dx-page { max-width: 56rem; padding: 1rem 1.5rem 3rem; }
+    .dx-page.dx-wide-split {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.15rem;
+      align-items: start;
+      max-width: 64rem;
+    }
+  }
   .dx-card {
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);

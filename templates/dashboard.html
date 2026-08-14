@@ -1,20 +1,100 @@
 {% extends "base.html" %}
-{% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }}{% endblock %}
+{% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }} · Taskmill{% endblock %}
 {% block content %}
 {% set mname = current_user.membership.name if current_user.membership else "Member" %}
-{% set _lvl = current_user.user_level if current_user.user_level is defined else 1 %}
+{% set name = current_user.full_name or current_user.username or "Member" %}
+{% set bal = current_user.available_balance or 0 %}
+{% set _xp = current_user.xp if current_user.xp is defined and current_user.xp is not none else 0 %}
+{% set _q = current_user.quality_score if current_user.quality_score is defined and current_user.quality_score is not none else 100 %}
+{% set _lvl = current_user.user_level if current_user.user_level is defined and current_user.user_level is not none else 1 %}
+{% if p is not defined or p is none %}
+  {% set p = {
+    "sets_completed": current_user.daily_sets_completed or 0,
+    "daily_sets": 2,
+    "tasks_today": today_completed|default(current_user.tasks_completed_today or 0),
+    "daily_goal": maximum|default(tasks_per_set)|default(16),
+    "percent": upgrade_progress|default(0),
+  } %}
+{% endif %}
+{% set done = p.tasks_today if p.tasks_today is defined else (today_completed|default(0)) %}
+{% set goal = p.daily_goal if p.daily_goal is defined else (maximum|default(16)) %}
+{% set pct = p.percent if p.percent is defined else (upgrade_progress|default(0)) %}
+{% set sets_done = p.sets_completed if p.sets_completed is defined else (current_user.daily_sets_completed or 0) %}
+{% set sets_max = p.daily_sets if p.daily_sets is defined else 2 %}
+{% set st = streak|default(current_user.streak_days or 0) %}
+{% set ref_n = referral_count|default(0)|int %}
+
 <style>
-  .dx-page { max-width: 72rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .dx-page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0.5rem 0.85rem 6.75rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-page { padding: 1rem 1.5rem 3rem; }
+  }
+  .dx-grid-main {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-grid-main {
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.15rem;
+      align-items: start;
+    }
+  }
+  .dx-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  @media (min-width: 640px) {
+    .dx-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .dx-grid-3 { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+  }
+  .dx-grid-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  @media (min-width: 640px) {
+    .dx-grid-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .dx-hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-hero-inner {
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .dx-hero-left { flex: 1.2; min-width: 0; }
+    .dx-hero-right {
+      flex: 0.9;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 16rem;
+    }
+  }
+
   .dx-card {
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.7rem;
-    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    border-radius: 1.75rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.16);
     position: relative; overflow: hidden;
   }
   .dx-card::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(186,230,253,.28) 35%, rgba(255,255,255,.08) 70%, rgba(167,243,208,.18) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
@@ -27,15 +107,19 @@
   .dx-metal {
     background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 0 14px rgba(186,230,253,.25));
+    filter: drop-shadow(0 0 16px rgba(186,230,253,.28));
+  }
+  .dx-metal.neg {
+    background: linear-gradient(120deg, #fecaca, #fda4af 40%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .dx-kicker {
     font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
-    color: rgba(186,230,253,.85);
+    color: rgba(186,230,253,.88);
   }
   .dx-gem {
-    width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: grid; place-items: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(186,230,253,.12) 45%, rgba(148,163,184,.14));
+    width: 3rem; height: 3rem; border-radius: 1.05rem; display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(186,230,253,.12) 45%, rgba(148,163,184,.14));
     border: 1px solid rgba(255,255,255,.28);
     box-shadow: 0 10px 28px -12px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.4);
     color: #e0f2fe;
@@ -46,227 +130,283 @@
     border-radius: 1.15rem;
   }
   .dx-chip {
-    background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03));
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 999px;
-    padding: .3rem .7rem;
-    font-size: 11px; font-weight: 700;
-  }
-  .dx-action {
-    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-  }
-  .dx-action:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255,255,255,.28) !important;
-    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.03));
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 999px; padding: .32rem .7rem;
+    font-size: 11px; font-weight: 700; color: #e2e8f0;
   }
   .dx-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 1rem; padding: .7rem 1.1rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border-radius: 1.05rem; padding: .75rem 1.15rem;
     font-size: .85rem; font-weight: 900; color: #0f172a;
     background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
     box-shadow: 0 12px 28px -12px rgba(186,230,253,.5), inset 0 1px 0 rgba(255,255,255,.9);
+    transition: filter .15s, transform .15s;
   }
-  .dx-btn:hover { filter: brightness(1.05); }
-  .dx-progress {
-    height: .45rem; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden;
+  .dx-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .dx-btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1.05rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 800; color: #f1f5f9;
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.14);
   }
-  .dx-progress > span {
+  .dx-bar {
+    height: .55rem; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden;
+  }
+  .dx-bar > i {
     display: block; height: 100%; border-radius: inherit;
-    background: linear-gradient(90deg, #fff, #bae6fd, #e2e8f0);
+    background: linear-gradient(90deg, #ffffff, #bae6fd 45%, #e2e8f0);
+  }
+  .dx-action {
+    display: flex; flex-direction: column; gap: .55rem;
+    padding: 1rem; border-radius: 1.25rem;
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(0,0,0,.25));
+    border: 1px solid rgba(255,255,255,.1);
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .dx-action:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,.28);
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.4);
+  }
+  .dx-action .ico {
+    width: 2.4rem; height: 2.4rem; border-radius: .85rem;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(148,163,184,.1));
+    border: 1px solid rgba(255,255,255,.14);
+    color: #e0f2fe; font-size: .9rem;
+  }
+  .dx-row {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .85rem 1rem; border-radius: 1.15rem;
+    transition: background .15s;
+  }
+  .dx-row:hover { background: rgba(255,255,255,.04); }
+  .dx-row .ico {
+    width: 2.4rem; height: 2.4rem; border-radius: .85rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(148,163,184,.08));
+    border: 1px solid rgba(255,255,255,.12); color: #e2e8f0;
   }
 </style>
 
 <div class="dx-page space-y-4">
 
   {# HERO #}
-  <section class="dx-card p-5 sm:p-7 relative overflow-hidden">
-    <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5 relative">
-      <div>
-        <p class="dx-kicker">Welcome back</p>
-        <h1 class="dx-title text-2xl sm:text-3xl font-black mt-1.5 tracking-tight">{{ name }}</h1>
-        <div class="flex flex-wrap items-center gap-2 mt-3">
-          <span class="dx-chip text-sky-100">{{ mname }}</span>
-          <span class="dx-chip text-zinc-300">Level {{ _lvl }}</span>
-          <span class="dx-chip text-amber-100">🔥 {{ streak|default(current_user.streak_days or 0) }} day streak</span>
+  <section class="dx-card p-5 sm:p-7">
+    <div class="dx-hero-inner">
+      <div class="dx-hero-left">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="dx-kicker">Welcome back</p>
+            <h1 class="dx-title text-2xl sm:text-4xl font-black mt-1.5 tracking-tight">{{ name }}</h1>
+            <div class="flex flex-wrap gap-1.5 mt-3">
+              <span class="dx-chip">{{ mname }}</span>
+              <span class="dx-chip">Level {{ _lvl }}</span>
+              <span class="dx-chip">🔥 {{ st }} day streak</span>
+            </div>
+          </div>
+          <div class="dx-gem shrink-0 lg:hidden"><i class="fa-solid fa-gem"></i></div>
+        </div>
+        <p class="text-[10px] uppercase tracking-[0.16em] text-zinc-500 font-bold mt-6">Available balance</p>
+        <p class="text-4xl sm:text-5xl lg:text-6xl font-black mt-1 {% if bal|float < 0 %}dx-metal neg{% else %}dx-metal{% endif %}">
+          {{ money(current_user, bal) }}
+        </p>
+        <div class="mt-4 max-w-md">
+          <div class="flex justify-between text-[11px] text-zinc-500 mb-1.5">
+            <span>Level {{ _lvl }} · {{ _xp }} XP</span>
+            <span>Quality {{ '%.0f'|format(_q|float) }}</span>
+          </div>
+          <div class="dx-bar"><i style="width:{{ [100, (_xp % 100)]|min }}%"></i></div>
         </div>
       </div>
-      <div class="sm:text-right">
-        <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Available balance</p>
-        <p class="dx-metal text-3xl sm:text-4xl font-black mt-1 tracking-tight">{{ money(current_user, bal) }}</p>
-        <div class="flex sm:justify-end gap-2 mt-3">
-          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn !text-xs !py-2.5 !px-4">Deposit</a>
-          <a href="{{ url_for('wallet.withdraw') }}" class="rounded-xl text-xs font-bold px-4 py-2.5 border border-white/15 bg-white/5 hover:bg-white/10 transition">Withdraw</a>
+      <div class="dx-hero-right">
+        <div class="hidden lg:flex justify-end mb-4">
+          <div class="dx-gem !w-14 !h-14 !rounded-2xl text-xl"><i class="fa-solid fa-gem"></i></div>
         </div>
-      </div>
-    </div>
-
-    {# XP bar #}
-    <div class="mt-6 rounded-2xl bg-black/25 border border-white/5 px-4 py-3">
-      <div class="flex justify-between text-[11px] mb-1.5">
-        <span class="text-zinc-400">Level {{ _lvl }} progress</span>
-        <span class="text-zinc-500">{{ _xp }} XP · Quality {{ '%.0f'|format(_q) }}</span>
-      </div>
-      <div class="h-2 rounded-full bg-zinc-800 overflow-hidden">
-        <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500" style="width:{{ [100, (_xp % 100)]|min }}%"></div>
+        <div class="dx-tile p-4 mb-3 hidden sm:block">
+          <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Quick stats</p>
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <p class="text-[10px] text-zinc-500">Tasks today</p>
+              <p class="text-lg font-black">{{ done }}/{{ goal }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-zinc-500">Sets</p>
+              <p class="text-lg font-black">{{ sets_done }}/{{ sets_max }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-zinc-500">Pending</p>
+              <p class="text-lg font-black">{{ pending|default(0) }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-zinc-500">Referrals</p>
+              <p class="text-lg font-black">{{ ref_n }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn text-center">Deposit</a>
+          <a href="{{ url_for('wallet.withdraw') }}" class="dx-btn-ghost text-center">Withdraw</a>
+        </div>
+        <a href="{{ url_for('task.index') }}" class="dx-btn w-full mt-2.5 text-center !py-3">Continue tasks</a>
       </div>
     </div>
   </section>
 
-  {% set _tps = current_user.membership.tasks_per_set if current_user.membership and current_user.membership.tasks_per_set else 16 %}
-  {% set _ds = current_user.membership.daily_sets if current_user.membership and current_user.membership.daily_sets else 2 %}
-  {% set _total_day = (_tps|int) * (_ds|int) %}
-  {% if (current_user.tasks_completed_today or 0) >= _total_day and not current_user.mystery_opened_today %}
-  <a href="{{ url_for('task.mystery_box') }}" class="flex items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 to-orange-500/10 px-5 py-4 hover:from-amber-500/20 transition ring-glow">
-    <div>
-      <p class="font-bold text-amber-100">Mystery box unlocked</p>
-      <p class="text-xs text-amber-100/70 mt-0.5">You finished today’s sets — claim a reward</p>
+  {% if combo %}
+  <section class="dx-card p-4 border border-rose-400/20">
+    <div class="flex items-start gap-3">
+      <span class="dx-gem !w-11 !h-11 !rounded-xl text-rose-200"><i class="fa-solid fa-lock"></i></span>
+      <div class="min-w-0 flex-1">
+        <p class="text-[10px] uppercase tracking-[0.16em] text-rose-200/80 font-bold">Combo hold</p>
+        <p class="text-sm font-bold text-white mt-0.5">High-value product is pending</p>
+        <p class="text-xs text-zinc-400 mt-1">Deposit to clear the negative, then open Tasks and submit to earn combo commission.</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn !py-2 !px-3 !text-xs">Deposit</a>
+          <a href="{{ url_for('task.index') }}" class="dx-btn-ghost !py-2 !px-3 !text-xs">Open tasks</a>
+        </div>
+      </div>
     </div>
-    <span class="text-xs font-black text-amber-300 bg-amber-400/10 border border-amber-400/20 rounded-full px-3 py-1.5">Open →</span>
+  </section>
+  {% endif %}
+
+  {% if current_user.mystery_box_ready is defined and current_user.mystery_box_ready and not current_user.mystery_opened_today %}
+  <a href="{{ url_for('task.mystery_box') }}" class="dx-card p-4 flex items-center justify-between gap-3 hover:border-amber-300/30 transition block">
+    <div class="flex items-center gap-3">
+      <span class="dx-gem !w-11 !h-11 !rounded-xl text-amber-200"><i class="fa-solid fa-gift"></i></span>
+      <div>
+        <p class="text-sm font-bold">Mystery box ready</p>
+        <p class="text-[11px] text-zinc-500">Open your daily reward</p>
+      </div>
+    </div>
+    <span class="text-xs font-black text-amber-200">Open →</span>
   </a>
   {% endif %}
 
-  {# TODAY + STATS #}
-  <section class="grid lg:grid-cols-3 gap-4">
-    <div class="lg:col-span-2 dx-card p-5 sm:p-6">
-      <div class="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Today</p>
-          <h2 class="text-xl font-black mt-1">Task progress</h2>
-        </div>
-        <a href="{{ url_for('task.index') }}" class="text-xs font-bold text-indigo-300 hover:text-indigo-200">Open tasks →</a>
+  <div class="dx-grid-main">
+  {# TODAY PROGRESS #}
+  <section class="dx-card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="dx-kicker" style="letter-spacing:.18em">Today</p>
+        <h2 class="dx-title text-xl font-black mt-1">Task progress</h2>
       </div>
+      <a href="{{ url_for('task.index') }}" class="text-xs font-bold text-sky-200/90 hover:text-white">Open tasks →</a>
+    </div>
 
-      <div class="flex items-end justify-between mb-2">
-        <p class="text-3xl font-black">{{ done }}<span class="text-zinc-500 text-xl font-bold">/{{ total }}</span></p>
-        <p class="text-sm font-semibold text-emerald-300">{{ [pct_day, 100]|min }}%</p>
-      </div>
-      <div class="h-3 rounded-full bg-zinc-800/80 overflow-hidden mb-5">
-        <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all" style="width:{{ [pct_day,100]|min }}%"></div>
-      </div>
+    <div class="flex items-end justify-between mb-2">
+      <p class="text-3xl font-black text-white">{{ done }}<span class="text-zinc-500 text-xl font-bold">/{{ goal }}</span></p>
+      <p class="text-sm font-bold text-emerald-300">{{ [pct|int, 100]|min }}%</p>
+    </div>
+    <div class="dx-bar mb-5"><i style="width:{{ [pct|int, 100]|min }}%"></i></div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Membership</p>
-          <p class="text-sm font-bold mt-1 truncate">{{ mname }}</p>
-        </div>
-        <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Sets</p>
-          <p class="text-sm font-bold mt-1">{{ p.sets_completed|default(current_user.daily_sets_completed or 0) }}/{{ p.daily_sets|default(_ds) }}</p>
-        </div>
-        <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Earned</p>
-          <p class="text-sm font-bold mt-1 text-emerald-300">{{ money(current_user, current_user.total_earned or 0) }}</p>
-        </div>
-        <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Tasks life</p>
-          <p class="text-sm font-bold mt-1">{{ current_user.completed_tasks or 0 }}</p>
-        </div>
+    <div class="dx-grid-stats">
+      <div class="dx-tile p-3">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Membership</p>
+        <p class="text-sm font-bold mt-1 truncate">{{ mname }}</p>
+      </div>
+      <div class="dx-tile p-3">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Sets</p>
+        <p class="text-sm font-bold mt-1">{{ sets_done }}/{{ sets_max }}</p>
+      </div>
+      <div class="dx-tile p-3">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Earned</p>
+        <p class="text-sm font-bold mt-1 text-emerald-300">{{ money(current_user, total_earned|default(current_user.total_earned or 0)) }}</p>
+      </div>
+      <div class="dx-tile p-3">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Lifetime tasks</p>
+        <p class="text-sm font-bold mt-1">{{ current_user.completed_tasks or 0 }}</p>
       </div>
     </div>
 
-    {# DIGEST / SNAPSHOT #}
-    <div class="dx-card p-5 sm:p-6 flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <p class="text-[11px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">Snapshot</p>
-          <h2 class="text-lg font-black mt-1">Today’s digest</h2>
-        </div>
-        <span class="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center">
-          <i class="fa-solid fa-chart-simple"></i>
-        </span>
-      </div>
-      <ul class="space-y-3 text-sm flex-1">
-        <li class="flex justify-between gap-3">
-          <span class="text-zinc-400">Balance</span>
-          <span class="font-semibold">{{ money(current_user, bal) }}</span>
-        </li>
-        <li class="flex justify-between gap-3">
-          <span class="text-zinc-400">Tasks done</span>
-          <span class="font-semibold">{{ done }} / {{ total }}</span>
-        </li>
-        <li class="flex justify-between gap-3">
-          <span class="text-zinc-400">Streak</span>
-          <span class="font-semibold text-amber-300">{{ streak|default(current_user.streak_days or 0) }} days</span>
-        </li>
-        <li class="flex justify-between gap-3">
-          <span class="text-zinc-400">Check-in</span>
-          <span class="font-semibold">{{ current_user.checkin_streak or 0 }} day streak</span>
-        </li>
-      </ul>
-      <a href="{{ url_for('dashboard.daily_digest') }}"
-         class="mt-5 block text-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 py-2.5 text-xs font-bold transition">
-        Full digest
-      </a>
-    </div>
+    <a href="{{ url_for('task.index') }}" class="dx-btn w-full mt-5">Continue tasks</a>
   </section>
 
-  {# QUICK ACTIONS #}
-  <section>
-    <div class="flex items-center justify-between mb-3 px-1">
-      <h2 class="text-sm font-bold text-zinc-300 tracking-wide">Quick actions</h2>
+  {# SNAPSHOT #}
+  <section class="dx-card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="dx-kicker" style="letter-spacing:.18em">Snapshot</p>
+        <h2 class="dx-title text-lg font-black mt-1">Today’s digest</h2>
+      </div>
+      <span class="dx-gem !w-10 !h-10 !rounded-xl text-sm"><i class="fa-solid fa-chart-simple"></i></span>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {% set actions = [
-        ('task.index', 'fa-list-check', 'Tasks', 'Review products', 'from-indigo-500/20 to-violet-500/10', 'text-indigo-300'),
-        ('wallet.deposit', 'fa-arrow-down', 'Deposit', 'Add funds', 'from-emerald-500/20 to-teal-500/10', 'text-emerald-300'),
-        ('wallet.withdraw', 'fa-arrow-up', 'Withdraw', 'Cash out', 'from-sky-500/20 to-blue-500/10', 'text-sky-300'),
-        ('engagement.check_in', 'fa-calendar-check', 'Check-in', 'Claim XP', 'from-amber-500/20 to-orange-500/10', 'text-amber-300'),
-        ('spin.index', 'fa-gift', 'Lucky Spin', 'Rewards', 'from-fuchsia-500/20 to-pink-500/10', 'text-fuchsia-300'),
-        ('chat.inbox', 'fa-comments', 'Support', 'Message admin', 'from-cyan-500/20 to-sky-500/10', 'text-cyan-300'),
-        ('profile.index', 'fa-user', 'Profile', 'Account', 'from-zinc-500/20 to-slate-500/10', 'text-zinc-300'),
-        ('engagement.kyc', 'fa-id-card', 'KYC', 'Verify ID', 'from-rose-500/15 to-red-500/10', 'text-rose-300'),
-      ] %}
-      {% for ep, icon, title, sub, grad, color in actions %}
-      <a href="{{ safe_url_for(ep) if safe_url_for is defined else url_for(ep) }}"
-         class="dx-action dx-card p-4 bg-gradient-to-br {{ grad }}">
-        <div class="w-10 h-10 rounded-xl bg-black/30 {{ color }} flex items-center justify-center mb-3">
-          <i class="fa-solid {{ icon }}"></i>
+    <ul class="space-y-3 text-sm">
+      <li class="flex justify-between gap-3">
+        <span class="text-zinc-500">Available</span>
+        <span class="font-bold">{{ money(current_user, bal) }}</span>
+      </li>
+      <li class="flex justify-between gap-3">
+        <span class="text-zinc-500">Pending tasks</span>
+        <span class="font-bold">{{ pending|default(0) }}</span>
+      </li>
+      <li class="flex justify-between gap-3">
+        <span class="text-zinc-500">Streak</span>
+        <span class="font-bold text-amber-200">{{ st }} days</span>
+      </li>
+      <li class="flex justify-between gap-3">
+        <span class="text-zinc-500">Month earned</span>
+        <span class="font-bold text-emerald-300">{{ money(current_user, month_total|default(0)) }}</span>
+      </li>
+      <li class="flex justify-between gap-3">
+        <span class="text-zinc-500">Referrals</span>
+        <span class="font-bold">{{ ref_n }}</span>
+      </li>
+    </ul>
+    {% if weekly_data is defined and weekly_data %}
+    <div class="mt-5 pt-4 border-t border-white/5">
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mb-3">7-day activity</p>
+      <div class="flex items-end gap-1.5 h-16">
+        {% set wmax = weekly_data|max if weekly_data|max > 0 else 1 %}
+        {% for amt in weekly_data %}
+        <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+          <div class="w-full rounded-t-md bg-gradient-to-t from-sky-500/20 to-white/40" style="height:{{ ((amt / wmax) * 100)|int }}%; min-height:4px"></div>
+          <span class="text-[9px] text-zinc-600">{{ weekly_labels[loop.index0] if weekly_labels is defined else '' }}</span>
         </div>
-        <p class="font-bold text-sm">{{ title }}</p>
-        <p class="text-[11px] text-zinc-400 mt-0.5">{{ sub }}</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  </div>
+
+  {# QUICK ACTIONS #}
+  <section class="dx-card p-4">
+    <p class="dx-kicker px-1 mb-3" style="letter-spacing:.18em">Quick actions</p>
+    <div class="dx-grid-3">
+      {% set actions = [
+        ('task.index', 'fa-clipboard-check', 'Tasks', 'Review products'),
+        ('wallet.deposit', 'fa-arrow-down', 'Deposit', 'Top up wallet'),
+        ('wallet.withdraw', 'fa-arrow-up', 'Withdraw', 'Cash out'),
+        ('spin.index', 'fa-dharmachakra', 'Spin', 'Lucky rewards'),
+        ('dashboard.contact', 'fa-headset', 'Support', 'Get help'),
+        ('profile.index', 'fa-user', 'Profile', 'Account'),
+      ] %}
+      {% for ep, icon, title, sub in actions %}
+      <a href="{{ url_for(ep) }}" class="dx-action">
+        <span class="ico"><i class="fa-solid {{ icon }}"></i></span>
+        <span>
+          <span class="block text-sm font-bold">{{ title }}</span>
+          <span class="block text-[11px] text-zinc-500">{{ sub }}</span>
+        </span>
       </a>
       {% endfor %}
     </div>
   </section>
 
-  {# SECONDARY LINKS #}
-  <section class="grid sm:grid-cols-3 gap-3">
-    <a href="{{ url_for('wallet.index') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
-      <div>
-        <p class="font-semibold text-sm">Wallet history</p>
-        <p class="text-[11px] text-zinc-500">Deposits, tasks, withdrawals</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a href="{{ url_for('task.history') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
-      <div>
-        <p class="font-semibold text-sm">Task history</p>
-        <p class="text-[11px] text-zinc-500">Pending & completed</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a href="{{ url_for('profile.index') }}" class="dx-card px-4 py-4 flex items-center justify-between hover:border-indigo-400/30 transition">
-      <div>
-        <p class="font-semibold text-sm">Account & alerts</p>
-        <p class="text-[11px] text-zinc-500">Telegram, PIN, photo</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-  </section>
-
-</div>
-
-
-  {# Referral progress #}
+  <div class="dx-grid-main">
+  {# REFERRALS #}
   <section class="dx-card p-5" id="referral-progress">
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-start justify-between gap-3 mb-3">
       <div>
-        <p class="text-[11px] uppercase tracking-[0.18em] text-violet-200/80 font-semibold">Referrals</p>
-        <h2 class="text-lg font-black mt-1">Invite progress</h2>
-        <p class="text-sm text-zinc-400 mt-1">
-          {{ referral_count|default(0) }} invited
+        <p class="dx-kicker" style="letter-spacing:.18em">Growth</p>
+        <h2 class="dx-title text-lg font-black mt-1">Referrals</h2>
+        <p class="text-xs text-zinc-500 mt-1">
+          {{ ref_n }} invited
           {% if current_user.referral_code %}
           · code <span class="font-mono text-sky-200">{{ current_user.referral_code }}</span>
           {% endif %}
@@ -274,91 +414,72 @@
       </div>
       <a href="{{ url_for('dashboard.earn') }}" class="text-xs font-bold text-sky-200 hover:text-white">Share →</a>
     </div>
-    {% set rc = referral_count|default(0)|int %}
-    {% set goal = 5 if rc < 5 else (10 if rc < 10 else (25 if rc < 25 else rc + 5)) %}
-    {% set pct = (rc / goal * 100) if goal else 0 %}
-    <div class="mt-4">
-      <div class="flex justify-between text-[11px] text-zinc-500 mb-1.5">
-        <span>{{ rc }} / {{ goal }} invites</span>
-        <span>{{ pct|int }}%</span>
-      </div>
-      <div class="dx-progress">
-        <div class="transition-all" style="display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#fff,#bae6fd,#e2e8f0)" style="width: {{ [pct, 100]|min }}%"></div>
-      </div>
-      <p class="text-[11px] text-zinc-500 mt-2">Keep sharing your code — bonuses apply when referred members activate.</p>
-    </div>
+    {% set ref_goal = 10 %}
+    {% set ref_pct = [((ref_n / ref_goal) * 100)|int, 100]|min %}
+    <div class="dx-bar"><i style="width:{{ ref_pct }}%"></i></div>
+    <p class="text-[11px] text-zinc-500 mt-2">{{ ref_n }} / {{ ref_goal }} toward next milestone</p>
+    <p class="text-sm font-bold text-emerald-300 mt-3">{{ money(current_user, referral_earnings|default(0)) }} earned from referrals</p>
   </section>
 
-{% if show_onboarding %}
-<div id="onboard-overlay" class="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-6"
-     style="background:rgba(5,8,16,.82);backdrop-filter:blur(8px)">
-  <div class="w-full max-w-md rounded-[1.75rem] border border-white/15 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl overflow-hidden">
-    <div class="px-5 pt-5 pb-3 flex items-center justify-between">
-      <div>
-        <p class="text-[11px] uppercase tracking-[0.2em] text-sky-200/80 font-semibold">Welcome</p>
-        <h2 class="text-xl font-black mt-1" id="ob-title">Quick start</h2>
-      </div>
-      <button type="button" id="ob-skip" class="text-xs text-zinc-500 hover:text-white">Skip</button>
-    </div>
-    <div class="px-5 pb-2">
-      <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div id="ob-bar" class="h-full bg-gradient-to-r from-sky-300 to-white transition-all duration-300" style="width:25%"></div>
-      </div>
-      <p class="text-[11px] text-zinc-500 mt-2"><span id="ob-step-num">1</span> / 4</p>
-    </div>
-    <div class="px-5 py-4 min-h-[140px]">
-      <p id="ob-body" class="text-sm text-zinc-300 leading-relaxed"></p>
-    </div>
-    <div class="px-5 pb-5 flex gap-2">
-      <button type="button" id="ob-back" class="hidden flex-1 rounded-2xl border border-white/15 py-3 text-sm font-bold">Back</button>
-      <button type="button" id="ob-next" class="flex-1 rounded-2xl py-3 text-sm font-black text-zinc-900
-        bg-gradient-to-r from-white via-sky-100 to-slate-200">Next</button>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  var steps = [
-    {title:'Fund your wallet', body:'Make a deposit so you can start product reviews. Keep a small reserve for the next day after withdrawals.', href:'{{ url_for("wallet.deposit") }}'},
-    {title:'Complete daily tasks', body:'Open Tasks, rate products, and submit reviews. Finish your sets to unlock withdrawals.', href:'{{ url_for("task.index") }}'},
-    {title:'Combo holds', body:'Sometimes a high-value product places a temporary hold. Deposit to clear it, then submit to earn combo commission.', href:'{{ url_for("task.index") }}'},
-    {title:'Support is here', body:'Need help? Use Support for WhatsApp, Telegram, or in-app help. You can change language anytime from the language button.', href:'{{ url_for("dashboard.contact") }}'}
-  ];
-  var i = 0;
-  var title = document.getElementById('ob-title');
-  var body = document.getElementById('ob-body');
-  var bar = document.getElementById('ob-bar');
-  var num = document.getElementById('ob-step-num');
-  var back = document.getElementById('ob-back');
-  var next = document.getElementById('ob-next');
-  var overlay = document.getElementById('onboard-overlay');
-  function render(){
-    var s = steps[i];
-    title.textContent = s.title;
-    body.textContent = s.body;
-    num.textContent = String(i+1);
-    bar.style.width = ((i+1)/steps.length*100)+'%';
-    back.classList.toggle('hidden', i===0);
-    next.textContent = i===steps.length-1 ? 'Finish' : 'Next';
-  }
-  function finish(){
-    fetch('{{ url_for("dashboard.complete_onboarding") }}', {
-      method:'POST',
-      headers:{'X-Requested-With':'XMLHttpRequest','Content-Type':'application/json'},
-      credentials:'same-origin',
-      body:'{}'
-    }).catch(function(){});
-    if(overlay) overlay.remove();
-  }
-  back.onclick = function(){ if(i>0){ i--; render(); } };
-  next.onclick = function(){
-    if(i < steps.length-1){ i++; render(); }
-    else finish();
-  };
-  document.getElementById('ob-skip').onclick = finish;
-  render();
-})();
-</script>
-{% endif %}
+  {# LINKS #}
+  <section class="dx-card p-2">
+    <a href="{{ url_for('wallet.index') }}" class="dx-row">
+      <span class="ico text-emerald-300"><i class="fa-solid fa-wallet"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">Wallet</span>
+        <span class="block text-[11px] text-zinc-500">Balance, deposit, withdraw</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    <a href="{{ url_for('task.history') }}" class="dx-row">
+      <span class="ico text-sky-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">History</span>
+        <span class="block text-[11px] text-zinc-500">Tasks & holds</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+    <a href="{{ url_for('profile.index') }}" class="dx-row">
+      <span class="ico text-violet-300"><i class="fa-solid fa-user"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">Profile</span>
+        <span class="block text-[11px] text-zinc-500">PIN, photo, Telegram</span>
+      </span>
+      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    </a>
+  </section>
 
+  </div>
+
+  {% if show_onboarding %}
+  <section class="dx-card p-5" id="onboarding">
+    <p class="dx-kicker mb-2">Getting started</p>
+    <h2 class="dx-title text-lg font-black">Quick tour</h2>
+    <ol class="mt-3 space-y-2.5 text-sm text-zinc-400 list-decimal list-inside">
+      <li>Deposit to fund your wallet</li>
+      <li>Open Tasks and submit product reviews</li>
+      <li>Finish sets to unlock withdrawals</li>
+      <li>Use Support if you need help</li>
+    </ol>
+    <button type="button" id="ob-done" class="dx-btn w-full mt-4">Got it</button>
+  </section>
+  <script>
+  (function(){
+    var b = document.getElementById('ob-done');
+    if (!b) return;
+    b.addEventListener('click', function(){
+      fetch('{{ url_for("dashboard.complete_onboarding") }}', {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json'},
+        body: '{}'
+      }).then(function(){
+        var el = document.getElementById('onboarding');
+        if (el) el.remove();
+      }).catch(function(){});
+    });
+  })();
+  </script>
+  {% endif %}
+
+</div>
 {% endblock %}

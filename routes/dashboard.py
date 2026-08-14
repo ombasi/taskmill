@@ -107,8 +107,32 @@ def index():
     membership_commission = float(getattr(membership, "commission_percent", 15) or 15) if membership else 15
     upgrade_progress = min(100, int((today_completed / max(mandatory, 1)) * 100))
 
+    # Progress object for dashboard template (TaskService.progress returns a dict)
+    try:
+        mem_ds = int(getattr(membership, "daily_sets", None) or 2)
+        mem_tps = int(getattr(membership, "tasks_per_set", None) or mandatory or 16)
+    except Exception:
+        mem_ds = 2
+        mem_tps = int(mandatory or 16)
+    sets_done = int(getattr(current_user, "daily_sets_completed", 0) or 0)
+    p = {
+        "sets_completed": sets_done,
+        "daily_sets": mem_ds,
+        "tasks_completed": int(today_completed or 0),
+        "tasks_per_set": mem_tps,
+        "tasks_today": int(today_completed or 0),
+        "daily_goal": int(mandatory or mem_tps or 16),
+        "percent": int(upgrade_progress or 0),
+        "current_set": min(sets_done + 1, mem_ds),
+        "max_sets": mem_ds,
+        "progress": int(upgrade_progress or 0),
+        "mandatory": int(mandatory or 0),
+        "completed_today": int(today_completed or 0),
+    }
+
     return render_template(
         "dashboard.html",
+        p=p,
         completed=completed,
         pending=pending,
         maximum=mandatory,
