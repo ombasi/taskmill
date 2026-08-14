@@ -1,176 +1,196 @@
 {% extends "base.html" %}
-{% block title %}Withdraw{% endblock %}
+{% block title %}Withdraw · Taskmill{% endblock %}
 {% block content %}
 {% set bal = current_user.available_balance or 0 %}
-{% set reserve = 15000 %}
-{% set max_wd = (bal|float) - reserve %}
-{% if max_wd < 0 %}{% set max_wd = 0 %}{% endif %}
-{% set has_payout = current_user.payout_method and current_user.payout_account_number %}
-{% set payout_ok = has_payout and current_user.payout_confirmed %}
+{% set reserve = reserve|default(15000) %}
+{% set max_wd = max_wd|default(0) %}
+{% set has_payout = current_user.payout_confirmed if current_user.payout_confirmed is defined else true %}
+<style>
+  .dm-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .dm-shell {
+    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(10,14,24,.98));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.75rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.9), 0 0 56px -22px rgba(251,113,133,.12);
+    position: relative; overflow: hidden;
+  }
+  .dm-shell::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,.45) 0%, rgba(251,113,133,.18) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .dm-title {
+    background: linear-gradient(120deg, #fff 0%, #fecdd3 35%, #f1f5f9 70%, #fda4af 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-amount {
+    background: linear-gradient(120deg, #ffffff 0%, #e0f2fe 40%, #f8fafc 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dm-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.55));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+  .dm-input {
+    width: 100%;
+    margin-top: 0.4rem;
+    border-radius: 1rem;
+    background: rgba(3,7,18,.9);
+    border: 1px solid rgba(255,255,255,.12);
+    padding: 0.9rem 1rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .dm-input:focus {
+    border-color: rgba(253,164,175,.45);
+    box-shadow: 0 0 0 3px rgba(251,113,133,.12);
+  }
+  .dm-btn {
+    background: linear-gradient(135deg, #fff 0%, #fecdd3 35%, #e2e8f0 100%);
+    color: #0f172a;
+    font-weight: 900;
+    box-shadow: 0 14px 32px -14px rgba(251,113,133,.55);
+    transition: filter .15s, transform .15s;
+  }
+  .dm-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .dm-check-ok { color: #6ee7b7; }
+  .dm-check-bad { color: #fda4af; }
+</style>
 
-<div class="max-w-5xl mx-auto space-y-5">
+<div class="dm-page space-y-4">
 
-  <div class="relative overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8"
-       style="background: radial-gradient(100% 80% at 0% 0%, rgba(244,63,94,.2), transparent 50%), radial-gradient(80% 60% at 100% 0%, rgba(99,102,241,.2), transparent 45%), #0c0f1a;">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <p class="text-[11px] uppercase tracking-[0.2em] text-rose-300 font-semibold">Wallet</p>
-        <h1 class="text-2xl md:text-4xl font-black mt-1">Withdraw</h1>
-        <p class="text-sm text-zinc-400 mt-2 max-w-lg">Cash out to your saved payout method. Leave {{ money(current_user, reserve) }} for the next day’s tasks.</p>
-      </div>
-      <div class="grid grid-cols-2 gap-2 min-w-[220px]">
-        <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Balance</p>
-          <p class="text-lg font-black text-emerald-400 mt-0.5">{{ money(current_user, bal) }}</p>
-        </div>
-        <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
-          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Withdrawable</p>
-          <p class="text-lg font-black text-white mt-0.5">{{ money(current_user, max_wd) }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% if checklist %}
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5">
-    <h2 class="font-bold text-sm mb-3">Withdrawal checklist</h2>
-    <ul class="space-y-2">
-      {% for item in checklist.get("items", []) %}
-      <li class="flex items-start gap-3 text-sm">
-        <span class="mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0
-          {% if item.ok %}bg-emerald-500/20 text-emerald-400{% else %}bg-rose-500/20 text-rose-400{% endif %}">
-          <i class="fa-solid {% if item.ok %}fa-check{% else %}fa-xmark{% endif %}"></i>
-        </span>
+  <section class="dm-shell p-5 sm:p-7">
+    <div class="relative z-[1]">
+      <div class="flex items-start justify-between gap-3">
         <div>
-          <p class="font-medium {% if item.ok %}text-zinc-200{% else %}text-zinc-400{% endif %}">{{ item.label }}</p>
-          <p class="text-[11px] text-zinc-500">{{ item.detail }}</p>
+          <p class="text-[11px] uppercase tracking-[0.22em] text-rose-200/80 font-semibold">Cash out</p>
+          <h1 class="dm-title text-2xl sm:text-3xl font-black mt-1">{{ t('withdraw') if t is defined else 'Withdraw' }}</h1>
         </div>
-      </li>
-      {% endfor %}
-    </ul>
-    {% if not checklist.get("all_ok") %}
-    <p class="text-xs text-amber-300/90 mt-4">Fix the red items before submitting a withdrawal.</p>
-    {% endif %}
-  </div>
+        <span class="w-11 h-11 rounded-2xl bg-gradient-to-br from-white/15 to-rose-300/15 border border-white/20 flex items-center justify-center text-rose-100">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        </span>
+      </div>
+      <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500 mt-5 font-semibold">Available</p>
+      <p class="text-3xl sm:text-4xl font-black mt-1 dm-amount">{{ money(current_user, bal) }}</p>
+      <div class="grid grid-cols-2 gap-2.5 mt-4">
+        <div class="dm-tile p-3">
+          <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Reserve</p>
+          <p class="text-sm font-bold mt-1">{{ money(current_user, reserve) }}</p>
+        </div>
+        <div class="dm-tile p-3">
+          <p class="text-[10px] text-zinc-500 uppercase tracking-wider">Max withdraw</p>
+          <p class="text-sm font-bold mt-1">{{ money(current_user, max_wd) }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# Checklist #}
+  {% if checklist is defined and checklist %}
+  <section class="dm-shell p-5">
+    <div class="relative z-[1]">
+      <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-semibold mb-3">Eligibility</p>
+      <div class="space-y-2">
+        {% set cl_items = checklist.get('items', []) if checklist is mapping else checklist %}
+        {% for item in cl_items %}
+          {% if item is mapping %}
+          <div class="dm-tile px-3.5 py-3 flex items-start gap-3">
+            <i class="fa-solid mt-0.5 {% if item.ok %}fa-circle-check dm-check-ok{% else %}fa-circle-xmark dm-check-bad{% endif %}"></i>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold {% if item.ok %}text-zinc-200{% else %}text-zinc-400{% endif %}">{{ item.label }}</p>
+              {% if item.detail %}<p class="text-[11px] text-zinc-500 mt-0.5">{{ item.detail }}</p>{% endif %}
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
   {% endif %}
 
-  {# --- Payout method card --- #}
-  <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 md:p-6 space-y-4">
-    <div class="flex items-center justify-between gap-3 flex-wrap">
-      <h2 class="font-bold text-sm uppercase tracking-wider text-zinc-300">Payout method</h2>
-      {% if payout_ok %}
-      <span class="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Confirmed</span>
-      {% elif has_payout %}
-      <span class="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-200">Pending admin confirmation</span>
+  {# Payout method #}
+  <section class="dm-shell p-5">
+    <div class="relative z-[1]">
+      <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-semibold mb-2">Payout method</p>
+      {% if current_user.payout_method %}
+      <div class="dm-tile p-4">
+        <p class="text-sm font-bold">{{ current_user.payout_method }}</p>
+        <p class="text-xs text-zinc-400 mt-1">{{ current_user.payout_account_name or '—' }} · {{ current_user.payout_account_number or '—' }}</p>
+        {% if current_user.payout_confirmed %}
+        <span class="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-1 border border-emerald-400/20">Confirmed</span>
+        {% else %}
+        <span class="inline-block mt-2 text-[10px] font-bold uppercase tracking-wide rounded-full bg-amber-500/15 text-amber-200 px-2 py-1 border border-amber-400/20">Awaiting admin</span>
+        {% endif %}
+      </div>
       {% else %}
-      <span class="text-xs px-3 py-1 rounded-full bg-zinc-700 text-zinc-300">Not set</span>
+      <div class="dm-tile p-4 text-sm text-zinc-400">
+        No payout method yet.
+        <a href="{{ url_for('profile.index') }}" class="text-sky-300 font-semibold ml-1">Add payout →</a>
+      </div>
       {% endif %}
     </div>
+  </section>
 
-    {% if has_payout %}
-    <div class="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm space-y-1">
-      <p><span class="text-zinc-500">Method:</span> <strong>{{ current_user.payout_method }}</strong></p>
-      <p><span class="text-zinc-500">Name:</span> {{ current_user.payout_account_name or "—" }}</p>
-      <p><span class="text-zinc-500">Account:</span> {{ current_user.payout_account_number }}</p>
-      {% if not payout_ok %}
-      <p class="text-amber-300/90 text-xs mt-2">Waiting for admin to confirm. You cannot withdraw until confirmed.</p>
-      {% endif %}
-      <p class="text-xs text-zinc-500 mt-2">To change this method, contact admin via chat / support.</p>
-    </div>
-    {% else %}
-    <p class="text-sm text-zinc-400">Add your payout destination once. Admin must confirm it before withdrawals work.</p>
-    <form method="POST" action="{{ url_for('wallet.set_payout_method') }}" class="grid md:grid-cols-2 gap-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div>
-        <label class="text-xs text-zinc-400">Payment method</label>
-        <select name="payment_method" required class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
-          <option value="">Select…</option>
-          <option>MTN Mobile Money</option>
-          <option>Airtel Money</option>
-          <option>M-Pesa</option>
-          <option>Bank Transfer</option>
-          <option>USDT (TRC20)</option>
-          <option>USDT (ERC20)</option>
-          <option>Bitcoin (BTC)</option>
-          <option>Ethereum (ETH)</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs text-zinc-400">Provider (optional)</label>
-        <input type="text" name="provider" placeholder="e.g. MTN" class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
-      </div>
-      <div>
-        <label class="text-xs text-zinc-400">Account name</label>
-        <input type="text" name="account_name" value="{{ current_user.full_name }}" class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
-      </div>
-      <div>
-        <label class="text-xs text-zinc-400">Phone / account / wallet</label>
-        <input type="text" name="account_number" required placeholder="07XXXXXXXX or wallet address"
-               class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5">
-      </div>
-      <div class="md:col-span-2">
-        <button type="submit" class="w-full md:w-auto rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-8 py-3 font-bold">
-          Save payout method
+  {% if current_user.payout_method and current_user.payout_confirmed %}
+  <section class="dm-shell p-5 sm:p-6">
+    <div class="relative z-[1]">
+      <p class="text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-semibold mb-4">Request</p>
+      <form method="POST" action="{{ url_for('wallet.withdraw') }}" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+
+        <div>
+          <label class="text-xs text-zinc-400 font-semibold">Amount ({{ current_user.currency or 'UGX' }})</label>
+          <input type="number" name="amount" step="{{ amount_step|default(1) }}" min="{{ min_wd_local|default(1) }}"
+                 max="{{ max_wd_local|default(max_wd)|default(0) }}" required placeholder="0"
+                 class="dm-input text-lg font-bold">
+          <p class="text-[11px] text-zinc-500 mt-1.5">
+            Leave at least {{ money(current_user, reserve) }} · Max {{ money(current_user, max_wd_local|default(max_wd)) }}
+          </p>
+        </div>
+
+        {% if current_user.has_withdraw_pin is defined and not current_user.has_withdraw_pin() %}
+        <div class="dm-tile p-4 text-sm border border-amber-400/20">
+          Set a withdraw PIN first.
+          <a href="{{ url_for('profile.set_withdraw_pin') }}" class="text-amber-300 font-semibold underline ml-1">Set PIN</a>
+        </div>
+        {% else %}
+        <div>
+          <label class="text-xs text-zinc-400 font-semibold">Withdraw PIN</label>
+          <input type="password" name="withdraw_pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" required
+                 placeholder="••••••" class="dm-input tracking-[0.35em] text-center text-lg font-bold">
+        </div>
+        {% endif %}
+
+        <button type="submit" class="dm-btn w-full rounded-2xl py-3.5 text-sm">
+          Submit withdrawal
         </button>
-      </div>
-    </form>
-    {% endif %}
-  </div>
-
-  {# --- Withdraw form only if payout confirmed --- #}
-  {% if payout_ok %}
-  <form method="POST" class="grid lg:grid-cols-5 gap-5">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-    <div class="lg:col-span-3 space-y-4 rounded-3xl border border-white/10 bg-zinc-900/40 p-5 md:p-6">
-      <div>
-        <label class="text-xs text-zinc-400">Amount</label>
-        <input type="number" name="amount"
-               step="{{ amount_step|default(1) }}"
-               min="{{ min_wd_local|default(1) }}"
-               max="{{ max_wd_local|default(0) }}"
-               required
-               placeholder="Max {{ money(current_user, max_wd|default(0)) }}"
-               class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500">
-        <p class="text-[11px] text-zinc-500 mt-1">
-          Min {{ money(current_user, 1000) }} · Max {{ money(current_user, max_wd|default(0)) }}
-          (enter amount in {{ current_user.currency or 'UGX' }})
-        </p>
-      </div>
-      {% if current_user.has_withdraw_pin is defined and not current_user.has_withdraw_pin() %}
-      <div class="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm">
-        Set a withdraw PIN first.
-        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="text-amber-300 font-semibold underline ml-1">Set PIN</a>
-      </div>
-      {% else %}
-      <div>
-        <label class="text-xs text-zinc-400">Withdraw PIN</label>
-        <input type="password" name="withdraw_pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" required
-               placeholder="••••"
-               class="w-full mt-1.5 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-3.5 outline-none focus:border-indigo-500 tracking-widest">
-      </div>
-      {% endif %}
-      <button type="submit"
-              class="w-full rounded-2xl bg-gradient-to-r from-rose-600 to-orange-600 hover:brightness-110 py-3.5 font-bold shadow-lg shadow-rose-900/30">
-        Submit withdrawal
-      </button>
+      </form>
     </div>
-    <div class="lg:col-span-2 space-y-4">
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/50 p-5 space-y-3 text-sm text-zinc-400">
-        <p class="text-rose-300 font-semibold text-xs uppercase tracking-wider">Rules</p>
-        <ul class="space-y-2">
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Leave at least {{ money(current_user, reserve) }} in the wallet</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Complete required task sets</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Clear any combo negative balance</li>
-          <li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i> Paid only to your confirmed payout method</li>
-        </ul>
-      </div>
-      <a href="{{ url_for('wallet.index') }}" class="block text-center text-sm text-indigo-400 hover:underline py-2">← Back to wallet</a>
-    </div>
-  </form>
+  </section>
   {% else %}
-  <div class="rounded-2xl border border-white/10 bg-zinc-900/40 p-5 text-sm text-zinc-400">
-    Withdraw form unlocks after your payout method is set and confirmed by admin.
-  </div>
+  <section class="dm-shell p-5">
+    <div class="relative z-[1] text-sm text-zinc-400">
+      Withdraw unlocks after your payout method is set and confirmed by admin.
+    </div>
+  </section>
   {% endif %}
+
+  <section class="dm-shell p-5">
+    <div class="relative z-[1]">
+      <p class="text-[11px] uppercase tracking-[0.18em] text-rose-200/70 font-semibold mb-3">Rules</p>
+      <ul class="space-y-2.5 text-sm text-zinc-400">
+        <li class="flex gap-2.5"><i class="fa-solid fa-gem text-sky-200/80 mt-0.5 text-xs"></i> Leave at least {{ money(current_user, reserve) }} for the next day</li>
+        <li class="flex gap-2.5"><i class="fa-solid fa-gem text-sky-200/80 mt-0.5 text-xs"></i> Complete required task sets first</li>
+        <li class="flex gap-2.5"><i class="fa-solid fa-gem text-sky-200/80 mt-0.5 text-xs"></i> Clear any combo / escrow hold</li>
+        <li class="flex gap-2.5"><i class="fa-solid fa-gem text-sky-200/80 mt-0.5 text-xs"></i> Paid only to your confirmed payout method</li>
+      </ul>
+      <a href="{{ url_for('wallet.index') }}" class="inline-flex mt-4 text-sm font-semibold text-sky-300 hover:text-white">← Back to wallet</a>
+    </div>
+  </section>
+
 </div>
 {% endblock %}
