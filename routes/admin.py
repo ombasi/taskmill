@@ -462,8 +462,8 @@ def payment_settings():
 def seed_crypto_methods():
     """Create TRC20/ERC20/BTC/ETH rows inactive if missing."""
     try:
-        from utils.payment_methods import ensure_crypto_rows
-        ensure_crypto_rows()
+        from utils.payment_methods import ensure_crypto_payment_methods
+        ensure_crypto_payment_methods()
         flash("Crypto methods ready (inactive). Toggle Active to show on deposit.", "success")
     except Exception as e:
         flash(f"Could not seed crypto: {e}", "danger")
@@ -486,9 +486,9 @@ def add_payment_setting():
         instructions=(request.form.get("instructions") or "").strip(),
         active=True,
     )
-
+    if hasattr(setting, "countries"):
+        setting.countries = (request.form.get("countries") or "ALL").strip() or "ALL"
     db.session.add(setting)
-
     db.session.commit()
 
     flash(
@@ -512,6 +512,8 @@ def edit_payment_setting(id):
     setting.account_name = (request.form.get("account_name") or "").strip()
     setting.account_number = (request.form.get("account_number") or "").strip()
     setting.instructions = (request.form.get("instructions") or "").strip()
+    if hasattr(setting, "countries"):
+        setting.countries = (request.form.get("countries") or "ALL").strip() or "ALL"
 
     db.session.commit()
 

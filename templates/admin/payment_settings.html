@@ -1,161 +1,166 @@
 {% extends "admin/base.html" %}
 {% block title %}Payment Settings{% endblock %}
+{% block page_title %}Payment Settings{% endblock %}
 {% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
 
-  <div class="flex flex-wrap gap-2 mb-4">
-    <a href="{{ url_for('admin.seed_local_payments') }}"
-       class="rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-100 text-xs font-bold px-4 py-2.5 hover:bg-sky-500/30"
-       onclick="return confirm('Add all country local methods as INACTIVE? You can toggle each on and edit account details.');">
-      + Seed all local methods (inactive)
-    </a>
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="text-[11px] uppercase tracking-[0.2em] text-sky-300/80 font-semibold">Finance</p>
+      <h1 class="text-2xl md:text-3xl font-black mt-1">Payment methods</h1>
+      <p class="text-sm text-zinc-400 mt-1">Seed country catalogs, toggle active, set account details. Users only see active methods for their country (or ALL).</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.seed_local_payments') }}"
+         class="rounded-xl bg-sky-500/20 border border-sky-400/30 text-sky-100 text-xs font-bold px-4 py-2.5 hover:bg-sky-500/30"
+         onclick="return confirm('Add all country local methods as INACTIVE? Then toggle on and edit each.');">
+        + Seed all local methods
+      </a>
+      <form method="POST" action="{{ url_for('admin.seed_crypto_methods') }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button type="submit" class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2.5 text-xs font-bold">
+          + Crypto (USDT / BTC / ETH)
+        </button>
+      </form>
+    </div>
   </div>
 
-<form method="POST" action="{{ url_for('admin.seed_crypto_methods') }}" class="mb-4">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-  <button type="submit" class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-semibold">
-    Add crypto methods (USDT / BTC / ETH) — start inactive
-  </button>
-
-            <div>
-              <label class="text-xs text-zinc-400">Countries (comma-separated or ALL)</label>
-              <input name="countries" value="{{ setting.countries or 'ALL' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="ALL or Uganda,Kenya">
-            </div>
-
-            </form>
-
-<div class="max-w-7xl mx-auto space-y-8">
-
-  <div class="glass rounded-3xl p-8">
-    <h1 class="text-3xl md:text-4xl font-bold">Payment Settings</h1>
-    <p class="text-zinc-400 mt-2">Manage deposit methods and wallet addresses (including crypto).</p>
-  </div>
-
-  <!-- EXISTING METHODS -->
-  <div class="glass rounded-3xl p-6 md:p-8 overflow-x-auto">
-    <h2 class="text-xl font-bold mb-6">Active methods</h2>
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="text-left text-zinc-400 border-b border-white/10">
-          <th class="p-3">Method</th>
-          <th class="p-3">Provider</th>
-          <th class="p-3">Account / Wallet</th>
-          <th class="p-3">Status</th>
-          <th class="p-3 text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for setting in settings %}
-        <tr class="border-b border-white/5 align-top">
-          <td class="p-3 font-semibold">{{ setting.method }}</td>
-          <td class="p-3 text-zinc-300">{{ setting.provider or "—" }}</td>
-          <td class="p-3">
-            <div class="text-zinc-200">{{ setting.account_name or "—" }}</div>
-            <div class="text-xs text-zinc-500 break-all mt-1">{{ setting.account_number or "—" }}</div>
-          </td>
-          <td class="p-3">
-            {% if setting.active %}
-            <span class="bg-green-600/90 px-3 py-1 rounded-full text-xs">Active</span>
-            {% else %}
-            <span class="bg-red-600/90 px-3 py-1 rounded-full text-xs">Disabled</span>
-            {% endif %}
-          </td>
-          <td class="p-3">
-            <div class="flex flex-wrap justify-center gap-2">
-              <button type="button"
-                onclick="document.getElementById('edit-{{ setting.id }}').classList.toggle('hidden')"
-                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-xs font-semibold">
-                Edit
-              </button>
-              <a href="{{ url_for('admin.toggle_payment_setting', id=setting.id) }}"
-                 class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg text-xs font-semibold">
-                Toggle
-              </a>
-              <form action="{{ url_for('admin.delete_payment_setting', id=setting.id) }}" method="POST" class="inline">
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-zinc-500 border-b border-white/10">
+            <th class="p-3">Method</th>
+            <th class="p-3">Provider</th>
+            <th class="p-3">Account / Wallet</th>
+            <th class="p-3">Countries</th>
+            <th class="p-3">Status</th>
+            <th class="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for setting in settings %}
+          <tr class="border-b border-white/5 align-top hover:bg-white/5">
+            <td class="p-3 font-semibold">{{ setting.method }}</td>
+            <td class="p-3 text-zinc-300">{{ setting.provider or "—" }}</td>
+            <td class="p-3">
+              <div class="text-zinc-200">{{ setting.account_name or "—" }}</div>
+              <div class="text-xs text-zinc-500 break-all mt-1">{{ setting.account_number or "—" }}</div>
+            </td>
+            <td class="p-3 text-xs text-zinc-400 max-w-[10rem] truncate" title="{{ setting.countries or 'ALL' }}">
+              {{ setting.countries or 'ALL' }}
+            </td>
+            <td class="p-3">
+              {% if setting.active %}
+              <span class="text-[10px] font-bold uppercase tracking-wide rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-1">Active</span>
+              {% else %}
+              <span class="text-[10px] font-bold uppercase tracking-wide rounded-full bg-zinc-500/20 text-zinc-400 px-2 py-1">Off</span>
+              {% endif %}
+            </td>
+            <td class="p-3">
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <a href="{{ url_for('admin.toggle_payment_setting', id=setting.id) }}"
+                   class="text-xs font-semibold text-sky-300 hover:underline">
+                  {{ 'Disable' if setting.active else 'Enable' }}
+                </a>
+                <button type="button"
+                        onclick="document.getElementById('edit-{{ setting.id }}').classList.toggle('hidden')"
+                        class="text-xs font-semibold text-zinc-300 hover:underline">
+                  Edit
+                </button>
+                <form action="{{ url_for('admin.delete_payment_setting', id=setting.id) }}" method="POST" class="inline"
+                      onsubmit="return confirm('Delete this payment method?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+                  <button type="submit" class="text-xs font-semibold text-rose-400 hover:underline">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <tr id="edit-{{ setting.id }}" class="hidden bg-black/30">
+            <td colspan="6" class="p-4">
+              <form action="{{ url_for('admin.edit_payment_setting', id=setting.id) }}" method="POST" enctype="multipart/form-data" class="grid md:grid-cols-2 gap-3">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-                <button type="submit" onclick="return confirm('Delete this payment method?')"
-                        class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-xs font-semibold">
-                  Delete
-                </button>
+                <div>
+                  <label class="text-xs text-zinc-500">Method</label>
+                  <input name="method" value="{{ setting.method }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-500">Provider</label>
+                  <input name="provider" value="{{ setting.provider or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-500">Account name</label>
+                  <input name="account_name" value="{{ setting.account_name or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-500">Account / wallet number</label>
+                  <input name="account_number" value="{{ setting.account_number or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-xs text-zinc-500">Countries (comma-separated or ALL)</label>
+                  <input name="countries" value="{{ setting.countries or 'ALL' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="ALL or Uganda,Kenya">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="text-xs text-zinc-500">Instructions</label>
+                  <textarea name="instructions" rows="2" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">{{ setting.instructions or '' }}</textarea>
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-500">Logo</label>
+                  <input type="file" name="logo" accept="image/*" class="w-full mt-1 text-xs">
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-500">QR code</label>
+                  <input type="file" name="qr_code" accept="image/*" class="w-full mt-1 text-xs">
+                </div>
+                <div class="md:col-span-2">
+                  <button type="submit" class="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 text-sm font-bold">Save changes</button>
+                </div>
               </form>
-            </div>
-          </td>
-        </tr>
-        <tr id="edit-{{ setting.id }}" class="hidden bg-zinc-900/50">
-          <td colspan="5" class="p-4">
-            <form action="{{ url_for('admin.edit_payment_setting', id=setting.id) }}" method="POST" class="space-y-4">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-              <div class="grid md:grid-cols-2 gap-4">
-                <input name="method" value="{{ setting.method }}" required
-                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Method">
-                <input name="provider" value="{{ setting.provider or '' }}"
-                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Provider">
-                <input name="account_name" value="{{ setting.account_name or '' }}"
-                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Account name">
-                <input name="account_number" value="{{ setting.account_number or '' }}"
-                       class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3" placeholder="Wallet / phone / account">
-              </div>
-              <textarea name="instructions" rows="3"
-                        class="w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"
-                        placeholder="Instructions">{{ setting.instructions or '' }}</textarea>
-              <div class="flex gap-3">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2.5 rounded-xl font-semibold text-sm">
-                  Save changes
-                </button>
-                <button type="button" onclick="document.getElementById('edit-{{ setting.id }}').classList.add('hidden')"
-                        class="bg-zinc-700 hover:bg-zinc-600 px-6 py-2.5 rounded-xl text-sm">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr>
-          <td colspan="5" class="p-6 text-center text-zinc-500">No payment methods yet. Add one below.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="p-8 text-center text-zinc-500">
+              No payment methods yet. Use <strong>Seed all local methods</strong> or add one below.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- ADD PAYMENT -->
-  <div class="glass rounded-3xl p-8">
-    <h2 class="text-2xl font-bold mb-6">Add payment method</h2>
-    <form action="{{ url_for('admin.add_payment_setting') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+  <div class="glass rounded-3xl p-6 md:p-8">
+    <h2 class="text-xl font-bold mb-4">Add payment method</h2>
+    <form action="{{ url_for('admin.add_payment_setting') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div class="grid md:grid-cols-2 gap-5">
-        <input name="method" list="method-presets" placeholder="Method e.g. USDT (TRC20)" required
-               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-        <input name="provider" placeholder="Provider" class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+      <div class="grid md:grid-cols-2 gap-4">
+        <input name="method" list="method-presets" placeholder="Method e.g. MTN Mobile Money" required
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm">
+        <input name="provider" placeholder="Provider"
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm">
         <input name="account_name" placeholder="Account name"
-               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
-        <input name="account_number" placeholder="Wallet address / phone / account number"
-               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3">
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm">
+        <input name="account_number" placeholder="Wallet / phone / account number"
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm">
+        <input name="countries" value="ALL" placeholder="Countries: ALL or Uganda,Kenya"
+               class="rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm md:col-span-2">
       </div>
-      <textarea name="instructions" rows="4" placeholder="Instructions for the user..."
-                class="w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3"></textarea>
-
-      <div>
-        <label class="block mb-2 text-sm text-zinc-400">Payment logo</label>
-        <input type="file" name="logo" accept="image/*"
-               class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
+      <textarea name="instructions" rows="3" placeholder="Instructions for the user..."
+                class="w-full rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-3 text-sm"></textarea>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block mb-1 text-xs text-zinc-400">Payment logo</label>
+          <input type="file" name="logo" accept="image/*" class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3 text-xs">
+        </div>
+        <div>
+          <label class="block mb-1 text-xs text-zinc-400">QR code</label>
+          <input type="file" name="qr_code" accept="image/*" class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3 text-xs">
+        </div>
       </div>
-      <div>
-        <label class="block mb-2 text-sm text-zinc-400">QR code</label>
-        <input type="file" name="qr_code" accept="image/*"
-               class="w-full rounded-xl bg-zinc-900 border border-zinc-700 p-3">
-      </div>
-
-      <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold">
-        
-      <div>
-        <label class="block text-xs text-zinc-400 mb-1">Countries</label>
-        <input type="text" name="countries" value="ALL" class="w-full rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="ALL or Uganda,Kenya">
-        <p class="text-[11px] text-zinc-500 mt-1">Who can see this method when active. Use ALL for crypto / global.</p>
-      </div>
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 px-8 py-3 rounded-xl font-bold text-sm">
         Add payment method
       </button>
-
       <datalist id="method-presets">
         <option value="USDT (TRC20)">
         <option value="USDT (ERC20)">
@@ -166,9 +171,9 @@
         <option value="M-Pesa">
         <option value="Bank Transfer">
         <option value="SEPA Bank Transfer">
+        <option value="PayPal">
       </datalist>
     </form>
   </div>
-
 </div>
 {% endblock %}
