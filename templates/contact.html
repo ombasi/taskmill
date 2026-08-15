@@ -1,145 +1,129 @@
 {% extends "base.html" %}
-{% block title %}Support{% endblock %}
+{% block title %}{{ t('support') if t is defined else 'Support' }} · Taskmill{% endblock %}
 {% block content %}
 <style>
-  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
-  .dm-hero { text-align: center; margin-bottom: 1.75rem; }
-  .dm-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(186,230,253,.85); }
-  .dm-title {
-    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+
+  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1.25rem 1.5rem 3rem; } }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
+  }
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
-  .dm-card {
-    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
-    border: 1px solid rgba(255,255,255,.12); border-radius: 1.5rem;
-    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.88);
   }
-  .dm-link-card {
-    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
-    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
-    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
   }
-  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
-  .dm-icon {
-    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  .dx-btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 800; color: #f1f5f9;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
   }
+  .dx-link {
+    display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem;
+    border-radius: 1.2rem; border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .dx-link:hover {
+    border-color: rgba(186,230,253,.35); transform: translateY(-1px);
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
+  }
+  .dx-ico {
+    width: 2.6rem; height: 2.6rem; border-radius: .9rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(186,230,253,.1));
+    border: 1px solid rgba(255,255,255,.14); color: #e0f2fe;
+  }
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.5));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+
 </style>
-
-<div class="dm-page" style="max-width:42rem">
-  <header class="dm-hero">
-    <p class="dm-kicker">Support</p>
-    <h1 class="dm-title">Contact us</h1>
-    <p class="dm-sub">WhatsApp, Telegram, live chat, or in-app messaging — pick what works for you.</p>
+<div class="dx-page" style="max-width:42rem">
+  <header class="text-center mb-6">
+    <p class="dx-kicker">Support</p>
+    <h1 class="dx-title text-3xl font-black mt-2">{{ t('contact_title') if t is defined else 'Contact us' }}</h1>
+    <p class="text-sm text-zinc-400 mt-3 max-w-md mx-auto">WhatsApp, Telegram, live chat, or in-app messaging.</p>
   </header>
-
   <div class="space-y-3">
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('chat.inbox') }}" class="dm-link-card">
-      <span class="dm-icon"><i class="fa-solid fa-comments"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">Live chat (in-app)</p>
-        <p class="text-xs text-zinc-500">Message support on Taskmill</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    {% else %}
-    <a href="{{ url_for('auth.login') }}" class="dm-link-card">
-      <span class="dm-icon"><i class="fa-solid fa-comments"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">Live chat (in-app)</p>
-        <p class="text-xs text-zinc-500">Log in to message support</p>
-      </div>
+    <a href="{{ url_for('chat.inbox') }}" class="dx-link">
+      <span class="dx-ico"><i class="fa-solid fa-comments"></i></span>
+      <span class="flex-1 min-w-0">
+        <span class="block text-sm font-bold">Live chat</span>
+        <span class="block text-[11px] text-zinc-500">Message support on Taskmill</span>
+      </span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     {% endif %}
-
-    {% set s = support %}
-    {% if s and s.whatsapp1_enabled and s.whatsapp1 %}
-    <a href="https://wa.me/{{ s.whatsapp1|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon" style="color:#6ee7b7"><i class="fa-brands fa-whatsapp"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">WhatsApp</p>
-        <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp1 }}</p>
-      </div>
+    {% set wa = none %}
+    {% set tg = none %}
+    {% if supports is defined and supports %}
+      {% for s in supports %}
+        {% set n = (s.name or s.channel or '')|lower %}
+        {% if 'whatsapp' in n or 'wa' == n %}{% set wa = s %}{% endif %}
+        {% if 'telegram' in n or 'tg' == n %}{% set tg = s %}{% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if wa and (wa.link or wa.value or wa.contact) %}
+    <a href="{{ wa.link or wa.value or wa.contact }}" target="_blank" rel="noopener" class="dx-link">
+      <span class="dx-ico text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+      <span class="flex-1"><span class="block text-sm font-bold">WhatsApp</span>
+      <span class="block text-[11px] text-zinc-500">{{ wa.value or wa.contact or 'Chat on WhatsApp' }}</span></span>
+      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+    {% if tg and (tg.link or tg.value or tg.contact) %}
+    <a href="{{ tg.link or tg.value or tg.contact }}" target="_blank" rel="noopener" class="dx-link">
+      <span class="dx-ico text-sky-300"><i class="fa-brands fa-telegram"></i></span>
+      <span class="flex-1"><span class="block text-sm font-bold">Telegram</span>
+      <span class="block text-[11px] text-zinc-500">{{ tg.value or tg.contact or 'Open Telegram' }}</span></span>
+      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
+    </a>
+    {% endif %}
+    {% if supports is defined and supports %}
+      {% for s in supports %}
+        {% set n = (s.name or s.channel or '')|lower %}
+        {% if 'whatsapp' not in n and 'telegram' not in n and 'wa' != n and 'tg' != n %}
+        <a href="{{ s.link or s.value or s.contact or '#' }}" class="dx-link" {% if s.link %}target="_blank" rel="noopener"{% endif %}>
+          <span class="dx-ico"><i class="fa-solid fa-headset"></i></span>
+          <span class="flex-1"><span class="block text-sm font-bold">{{ s.name or s.channel or 'Support' }}</span>
+          <span class="block text-[11px] text-zinc-500">{{ s.value or s.contact or s.link or '' }}</span></span>
+        </a>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    <a href="{{ url_for('dashboard.faq') }}" class="dx-link">
+      <span class="dx-ico"><i class="fa-solid fa-circle-question"></i></span>
+      <span class="flex-1"><span class="block text-sm font-bold">FAQs</span>
+      <span class="block text-[11px] text-zinc-500">Common questions</span></span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
-    {% endif %}
-
-    {% if s and s.whatsapp2_enabled and s.whatsapp2 %}
-    <a href="https://wa.me/{{ s.whatsapp2|replace('+','')|replace(' ','')|replace('-','') }}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon" style="color:#6ee7b7"><i class="fa-brands fa-whatsapp"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">WhatsApp (alt)</p>
-        <p class="text-xs text-zinc-500 truncate">{{ s.whatsapp2 }}</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if s and s.telegram1_enabled and s.telegram1 %}
-    <a href="{% if s.telegram1.startswith('http') %}{{ s.telegram1 }}{% else %}https://t.me/{{ s.telegram1|replace('@','') }}{% endif %}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon" style="color:#7dd3fc"><i class="fa-brands fa-telegram"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">Telegram</p>
-        <p class="text-xs text-zinc-500 truncate">{{ s.telegram1 }}</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if s and s.telegram2_enabled and s.telegram2 %}
-    <a href="{% if s.telegram2.startswith('http') %}{{ s.telegram2 }}{% else %}https://t.me/{{ s.telegram2|replace('@','') }}{% endif %}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon" style="color:#7dd3fc"><i class="fa-brands fa-telegram"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">Telegram (alt)</p>
-        <p class="text-xs text-zinc-500 truncate">{{ s.telegram2 }}</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if s and s.livechat_enabled and s.livechat %}
-    <a href="{{ s.livechat }}" target="_blank" rel="noopener" class="dm-link-card">
-      <span class="dm-icon"><i class="fa-solid fa-message"></i></span>
-      <div class="min-w-0 flex-1">
-        <p class="font-semibold text-sm">External live chat</p>
-        <p class="text-xs text-zinc-500">Open chat widget</p>
-      </div>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-  </div>
-
-  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-6">
-    <a href="{{ url_for('dashboard.about') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-circle-info text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">About</p>
-    </a>
-    <a href="{{ url_for('dashboard.faq') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-circle-question text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">FAQs</p>
-    </a>
-    <a href="{{ url_for('dashboard.terms') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-file-contract text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Terms</p>
-    </a>
-    <a href="{{ url_for('dashboard.public_status') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-heart-pulse text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">System status</p>
-    </a>
-    <a href="{{ url_for('dashboard.stories') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-star text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Success stories</p>
-    </a>
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('dashboard.daily_digest') }}" class="dm-card px-3 py-3 text-center hover:border-sky-300/30 transition border border-transparent">
-      <i class="fa-solid fa-calendar-day text-sky-200/90 text-sm"></i>
-      <p class="text-[11px] font-semibold mt-1.5 text-zinc-300">Todays digest</p>
-    </a>
-    {% endif %}
   </div>
 </div>
 {% endblock %}

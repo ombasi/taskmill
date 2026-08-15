@@ -1,110 +1,105 @@
 {% extends "base.html" %}
-{% block title %}FAQ{% endblock %}
+{% block title %}FAQ · Taskmill{% endblock %}
 {% block content %}
-
 <style>
-  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
-  .dm-hero {
-    text-align: center; margin-bottom: 1.75rem;
+
+  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1.25rem 1.5rem 3rem; } }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
   }
-  .dm-kicker {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(186,230,253,.85);
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .dm-title {
-    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
-  .dm-card {
-    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.5rem;
-    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.88);
   }
-  .dm-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
   }
-  .dm-link-card {
-    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+  .dx-btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 800; color: #f1f5f9;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+  }
+  .dx-link {
+    display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem;
+    border-radius: 1.2rem; border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .dx-link:hover {
+    border-color: rgba(186,230,253,.35); transform: translateY(-1px);
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
+  }
+  .dx-ico {
+    width: 2.6rem; height: 2.6rem; border-radius: .9rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(186,230,253,.1));
+    border: 1px solid rgba(255,255,255,.14); color: #e0f2fe;
+  }
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.5));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+
+  details.dx-acc {
     border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
-    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
+    padding: 0.15rem 0;
   }
-  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
-  .dm-icon {
-    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  details.dx-acc summary {
+    cursor: pointer; list-style: none; padding: 1rem 1.15rem;
+    font-weight: 700; font-size: 0.9rem; display: flex; justify-content: space-between; gap: 0.75rem;
   }
+  details.dx-acc summary::-webkit-details-marker { display: none; }
+  details.dx-acc[open] summary { color: #e0f2fe; }
+  details.dx-acc .body { padding: 0 1.15rem 1rem; font-size: 0.85rem; color: #a1a1aa; line-height: 1.55; }
 </style>
-
-<div class="dm-page max-w-2xl">
-  <header class="dm-hero">
-    <p class="dm-kicker">Help center</p>
-    <h1 class="dm-title">Frequently asked questions</h1>
-    <p class="dm-sub">Everything you need to know about tasks, wallet, and memberships.</p>
+<div class="dx-page" style="max-width:42rem">
+  <header class="text-center mb-6">
+    <p class="dx-kicker">Help centre</p>
+    <h1 class="dx-title text-3xl font-black mt-2">FAQs</h1>
+    <p class="text-sm text-zinc-400 mt-3">Quick answers about tasks, wallet, and membership.</p>
   </header>
-
-  <div class="space-y-2" id="faqList">
-    {% set items = [
-      ("What are the operating hours?", "Optimization services run daily from 10:00 AM to 10:00 PM (platform time). Support follows the same window."),
-      ("How do deposits work?", "Open Wallet → Deposit, choose an active method, upload proof. Admin reviews and credits your balance."),
-      ("How do withdrawals work?", "Complete required tasks, keep the reserve balance, set a confirmed payout method, then request withdraw with your PIN."),
-      ("What is a combo / hold?", "A high-value product may place a temporary hold. Deposit to clear it, then submit the product to release principal + commission."),
-      ("How do memberships work?", "Higher tiers improve commissions and daily task capacity. You can upgrade from Membership; only admin can downgrade."),
-      ("Do I need a referral code?", "Yes. Registration requires a valid referral code from an existing member."),
-      ("How do I contact support?", "Use Support / Contact for WhatsApp and live chat, or open in-app Chat."),
+  <div class="space-y-2.5">
+    {% set faqs = [
+      ("What are operating hours?", "Optimization and support typically run daily. Check System status for any delays."),
+      ("How do deposits work?", "Pay with an active method, upload proof, and wait for admin approval. Your balance updates automatically."),
+      ("How do withdrawals work?", "Complete required task sets, keep the reserve balance, use a confirmed payout method and your withdraw PIN."),
+      ("What is a combo hold?", "A high-value product can place a temporary hold. Deposit until balance is ≥ 0, then submit the product to earn combo commission."),
+      ("How do referrals work?", "Share your code. Bonus applies after the referred user activates membership (per platform rules)."),
+      ("How do I reset my password?", "Contact support with your username. Admin resets it; you will change it after login."),
     ] %}
-    {% for q,a in items %}
-    <details class="dm-card group open:shadow-lg">
-      <summary class="cursor-pointer list-none px-5 py-4 flex items-center justify-between gap-3 font-semibold text-sm">
-        <span>{{ q }}</span>
-        <i class="fa-solid fa-chevron-down text-zinc-500 text-xs group-open:rotate-180 transition"></i>
-      </summary>
-      <div class="px-5 pb-4 text-sm text-zinc-400 leading-relaxed border-t border-white/5 pt-3">{{ a }}</div>
+    {% for q, a in faqs %}
+    <details class="dx-acc">
+      <summary>{{ q }} <i class="fa-solid fa-chevron-down text-xs text-zinc-500 mt-1"></i></summary>
+      <div class="body">{{ a }}</div>
     </details>
     {% endfor %}
   </div>
-
-  {# FAQ bot #}
-  <div id="faqBot" class="fixed bottom-20 md:bottom-6 right-4 z-40 w-[min(100%,20rem)]">
-    <button type="button" onclick="document.getElementById('faqPanel').classList.toggle('hidden')"
-            class="ml-auto flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-lg
-                   bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900">
-      Ask Taskmill
-    </button>
-    <div id="faqPanel" class="hidden mt-2 dm-card overflow-hidden">
-      <div class="px-4 py-3 border-b border-white/10 font-semibold text-sm">Help assistant</div>
-      <div id="faqChat" class="h-56 overflow-y-auto p-3 space-y-2 text-sm"></div>
-      <form onsubmit="return faqAsk(event)" class="flex border-t border-white/10">
-        <input id="faqInput" class="flex-1 bg-transparent px-3 py-3 text-sm outline-none" placeholder="e.g. How do I withdraw?">
-        <button class="px-4 text-sky-200 font-semibold text-sm">Send</button>
-      </form>
-    </div>
+  <div class="text-center mt-6">
+    <a href="{{ url_for('dashboard.contact') }}" class="dx-btn">Still need help?</a>
   </div>
 </div>
-<script>
-var FAQ_KB = [
-  {q:/withdraw|payout/i, a:"Complete tasks, keep reserve balance, set payout method, then withdraw from Wallet with your PIN."},
-  {q:/deposit|pay/i, a:"Wallet → Deposit → choose method → upload proof. Admin approves and credits balance."},
-  {q:/combo|hold|negative|escrow/i, a:"High-value product can hold balance. Deposit to clear, then submit the product to release funds + commission."},
-  {q:/membership|upgrade/i, a:"Open Membership to upgrade. Self-downgrade is not allowed — contact admin."},
-  {q:/referral|invite|code/i, a:"Registration requires a valid referral code. Share yours from the referral page after you join."},
-  {q:/task|review/i, a:"Open Tasks, review the product, submit. One pending task at a time."}
-];
-function faqAsk(e){
-  e.preventDefault();
-  var input = document.getElementById('faqInput');
-  var box = document.getElementById('faqChat');
-  var text = (input.value||'').trim();
-  if(!text) return false;
-  box.innerHTML += '<div class="text-right"><span class="inline-block bg-sky-500/25 rounded-xl px-3 py-1.5">'+text.replace(/</g,'&lt;')+'</span></div>';
-  var ans = "Try asking about deposit, withdraw, tasks, combo hold, membership, or referral. Or open Contact support.";
-  for (var i=0;i<FAQ_KB.length;i++){ if(FAQ_KB[i].q.test(text)){ ans = FAQ_KB[i].a; break; } }
-  box.innerHTML += '<div><span class="inline-block bg-white/5 rounded-xl px-3 py-1.5 text-zinc-300">'+ans+'</span></div>';
-  input.value=''; box.scrollTop = box.scrollHeight; return false;
-}
-</script>
 {% endblock %}

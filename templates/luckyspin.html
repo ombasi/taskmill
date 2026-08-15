@@ -1,110 +1,120 @@
 {% extends "base.html" %}
-{% block title %}Lucky Spin{% endblock %}
+{% block title %}Lucky Spin · Taskmill{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto pb-16 space-y-8">
-  <header class="text-center space-y-2">
-    <p class="text-[11px] uppercase tracking-[0.3em] text-amber-300/80 font-semibold">Rewards</p>
-    <h1 class="text-3xl md:text-5xl font-black tracking-tight">Lucky Spin</h1>
-    <p class="text-zinc-400 text-sm max-w-md mx-auto">Spin when admin grants you a chance. Cash, upgrades, and surprises await.</p>
+<style>
+
+  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1.25rem 1.5rem 3rem; } }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
+  }
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.88);
+  }
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
+  }
+  .dx-btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1rem; padding: .75rem 1.15rem;
+    font-size: .85rem; font-weight: 800; color: #f1f5f9;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+  }
+  .dx-link {
+    display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem;
+    border-radius: 1.2rem; border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .dx-link:hover {
+    border-color: rgba(186,230,253,.35); transform: translateY(-1px);
+    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
+  }
+  .dx-ico {
+    width: 2.6rem; height: 2.6rem; border-radius: .9rem; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(186,230,253,.1));
+    border: 1px solid rgba(255,255,255,.14); color: #e0f2fe;
+  }
+  .dx-tile {
+    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.5));
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 1.15rem;
+  }
+
+  .spin-wheel {
+    width: min(280px, 70vw); height: min(280px, 70vw);
+    border-radius: 999px; margin: 0 auto;
+    background: conic-gradient(
+      from 0deg,
+      #bae6fd 0deg 45deg, #1e293b 45deg 90deg,
+      #e2e8f0 90deg 135deg, #0f172a 135deg 180deg,
+      #bae6fd 180deg 225deg, #1e293b 225deg 270deg,
+      #e2e8f0 270deg 315deg, #0f172a 315deg 360deg
+    );
+    border: 4px solid rgba(255,255,255,.35);
+    box-shadow: 0 0 60px -10px rgba(186,230,253,.45), inset 0 0 30px rgba(0,0,0,.4);
+    transition: transform 4s cubic-bezier(.15,.85,.25,1);
+  }
+</style>
+<div class="dx-page text-center">
+  <header class="mb-6">
+    <p class="dx-kicker">Rewards</p>
+    <h1 class="dx-title text-3xl font-black mt-2">Lucky Spin</h1>
+    <p class="text-sm text-zinc-400 mt-2">Spins are granted by admin. Good luck.</p>
   </header>
 
-  <div class="grid lg:grid-cols-5 gap-6 items-start">
-    {# Wheel column #}
-    <div class="lg:col-span-3 relative">
-      <div class="absolute -inset-4 bg-gradient-to-br from-amber-500/20 via-indigo-500/10 to-fuchsia-500/20 blur-3xl rounded-full pointer-events-none"></div>
-      <div class="relative rounded-[2rem] border border-white/10 bg-zinc-950/80 backdrop-blur p-6 md:p-10 shadow-2xl shadow-indigo-950/40">
-        <div class="flex justify-center mb-6">
-          <div class="relative">
-            <div class="absolute left-1/2 -top-3 -translate-x-1/2 z-20 text-amber-300 text-2xl drop-shadow">▼</div>
-            <div id="wheel" class="w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-white/20 shadow-inner transition-transform duration-[4s] ease-out"
-                 style="background: conic-gradient({% for p in prizes %}{{ p.color or '#6366f1' }} {{ (loop.index0 * 100 / (n or 1)) }}% {{ (loop.index * 100 / (n or 1)) }}%{% if not loop.last %},{% endif %}{% else %}#312e81 0% 100%{% endfor %});">
-              <div class="absolute inset-8 rounded-full bg-zinc-950/90 border border-white/10 flex flex-col items-center justify-center text-center px-4">
-                <p class="text-xs text-zinc-500 uppercase tracking-wider">Spins left</p>
-                <p class="text-4xl font-black text-white mt-1">{{ spins_left|default(0) }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <form method="POST" action="{{ url_for('spin.play') }}" id="spinForm" class="text-center">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-          <button type="submit" id="spinBtn"
-                  class="rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:brightness-110 disabled:opacity-40 px-12 py-4 font-black text-lg shadow-lg shadow-amber-900/40 transition"
-                  {% if (spins_left|default(0))|int < 1 %}disabled{% endif %}>
-            {% if (spins_left|default(0))|int < 1 %}No spins available{% else %}Spin now{% endif %}
-          </button>
-        </form>
-        {% if last_result %}
-        <p class="mt-4 text-center text-amber-200 font-semibold">Last result: {{ last_result }}</p>
-        {% endif %}
-      </div>
+  <section class="dx-card p-6 sm:p-8 max-w-lg mx-auto">
+    <div class="relative inline-block">
+      <div class="absolute left-1/2 -top-3 -translate-x-1/2 z-10 text-rose-300 text-xl">▼</div>
+      <div id="wheel" class="spin-wheel"></div>
     </div>
+    <p class="text-sm text-zinc-400 mt-6">
+      Spins left:
+      <span class="font-black text-white text-lg" id="spins-left">{{ spins_left|default(current_user.spins_left if current_user.spins_left is defined else 0) }}</span>
+    </p>
+    <form method="POST" action="{{ url_for('spin.play') if 'spin.play' else url_for('spin.index') }}" class="mt-4" id="spin-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <button type="submit" class="dx-btn w-full" id="spin-btn">Spin now</button>
+    </form>
+    {% if last_result is defined and last_result %}
+    <p class="mt-4 text-sm font-bold text-emerald-300">{{ last_result }}</p>
+    {% endif %}
+  </section>
 
-    {# Side panels #}
-    <div class="lg:col-span-2 space-y-4">
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
-        <h2 class="font-bold mb-3 flex items-center gap-2"><span class="text-amber-400">★</span> Prize pool</h2>
-        <div class="space-y-2 max-h-72 overflow-y-auto">
-          {% for p in prizes %}
-          <div class="flex items-center gap-3 rounded-2xl bg-black/30 border border-white/5 px-3 py-2.5">
-            <span class="w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-white/10" style="background:{{ p.color or '#6366f1' }}"></span>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold truncate">{{ p.label }}</p>
-              <p class="text-[11px] text-zinc-500">
-                {% if p.prize_type == 'cash' %}Cash · {{ money(current_user, p.amount or 0) }}
-                {% elif p.prize_type == 'membership' %}Membership{% if p.membership %} · {{ p.membership.name }}{% endif %}
-                {% elif p.prize_type == 'zero' %}Try again
-                {% else %}{{ p.prize_type }}{% endif %}
-              </p>
-            </div>
-          </div>
-          {% else %}
-          <p class="text-sm text-zinc-500">No prizes configured yet.</p>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="rounded-3xl border border-white/10 bg-zinc-900/60 p-5">
-        <h2 class="font-bold mb-3">Your results</h2>
-        <div class="space-y-2 max-h-56 overflow-y-auto">
-          {% for h in history %}
-          <div class="flex justify-between gap-3 text-sm border-b border-white/5 pb-2">
-            <div class="min-w-0">
-              <p class="font-medium truncate">{{ h.label }}</p>
-              <p class="text-[11px] text-zinc-500 truncate">{{ h.detail }}</p>
-            </div>
-            <span class="text-[11px] text-zinc-500 shrink-0">{% if h.created_at %}{{ h.created_at.strftime('%d %b') }}{% endif %}</span>
-          </div>
-          {% else %}
-          <p class="text-sm text-zinc-500">No spins yet. Ask support if you were awarded spins.</p>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
+  {% if history is defined and history %}
+  <section class="dx-card p-5 max-w-lg mx-auto mt-4 text-left">
+    <p class="dx-kicker mb-3">Recent spins</p>
+    <ul class="space-y-2 text-sm">
+      {% for h in history[:8] %}
+      <li class="dx-tile px-3 py-2.5 flex justify-between gap-2">
+        <span class="text-zinc-300">{{ h.label or h.prize or 'Reward' }}</span>
+        <span class="text-zinc-500 text-xs">{% if h.created_at %}{{ h.created_at.strftime('%d %b') }}{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 </div>
-{% endblock %}
-{% block scripts %}
-<script>
-(function(){
-  var params = new URLSearchParams(window.location.search);
-  var idx = parseInt(params.get('idx') || '-1', 10);
-  var n = {{ n|default(0) }};
-  var wheel = document.getElementById('wheel');
-  if (wheel && idx >= 0 && n > 0) {
-    var seg = 360 / n;
-    var target = 360 * 6 + (360 - (idx * seg + seg / 2));
-    requestAnimationFrame(function(){ wheel.style.transform = 'rotate(' + target + 'deg)'; });
-  }
-  var form = document.getElementById('spinForm');
-  var btn = document.getElementById('spinBtn');
-  if (form && btn) {
-    form.addEventListener('submit', function(){
-      btn.disabled = true;
-      btn.textContent = 'Spinning…';
-      if (wheel) wheel.style.transform = 'rotate(' + (360 * 10 + Math.random()*40) + 'deg)';
-    });
-  }
-})();
-</script>
 {% endblock %}
