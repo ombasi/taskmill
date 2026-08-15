@@ -1,81 +1,174 @@
 {% extends "base.html" %}
-{% block title %}History{% endblock %}
+{% block title %}{{ t('nav_history') if t is defined else 'History' }} · Taskmill{% endblock %}
 {% block content %}
 {% set bal = current_user.available_balance or 0 %}
+{% set items = history|default([]) %}
 <style>
-  .pt-card {
-    background: linear-gradient(160deg, rgba(39,39,42,.9), rgba(15,23,42,.85));
-    border: 1px solid rgba(255,255,255,.1);
+  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) {
+    .dx-page { max-width: 64rem; padding: 1rem 1.5rem 3rem; }
+  }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
+  }
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-metal {
+    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #bae6fd 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-metal.neg {
+    background: linear-gradient(120deg, #fecaca, #fda4af 40%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.88);
+  }
+  .dx-chip {
+    display: inline-flex; align-items: center;
+    border-radius: 999px; padding: .3rem .7rem;
+    font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  }
+  .dx-row {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .9rem 1rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.22));
+    border: 1px solid rgba(255,255,255,.08);
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  a.dx-row:hover {
+    border-color: rgba(253,224,71,.35);
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px -12px rgba(253,224,71,.35);
+  }
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 1rem; padding: .65rem 1rem;
+    font-size: .8rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 10px 24px -12px rgba(186,230,253,.45);
+  }
+  .dx-grid-head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-list { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
   }
 </style>
-<div class="max-w-3xl mx-auto px-3 sm:px-4 pb-28 space-y-4">
 
-  <div class="flex flex-wrap items-end justify-between gap-3">
-    <div>
-      <p class="text-[11px] uppercase tracking-[0.22em] text-slate-300/80 font-semibold">Activity</p>
-      <h1 class="text-3xl font-black mt-1">Task history</h1>
-    </div>
-    <div class="text-right">
-      <p class="text-[10px] uppercase tracking-wider text-zinc-500">Balance</p>
-      <p class="text-lg font-black {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">{{ money(current_user, bal) }}</p>
-    </div>
-  </div>
+<div class="dx-page space-y-4">
 
-  <div class="flex flex-wrap gap-2 text-xs">
-    <span class="rounded-full bg-amber-500/15 border border-amber-400/20 text-amber-200 px-3 py-1 font-semibold">Pending {{ pending|default(0) }}</span>
-    <span class="rounded-full bg-emerald-500/15 border border-emerald-400/20 text-emerald-200 px-3 py-1 font-semibold">Done {{ completed|default(0) }}</span>
-  </div>
+  <section class="dx-card p-5 sm:p-6">
+    <div class="dx-grid-head">
+      <div>
+        <p class="dx-kicker">Activity</p>
+        <h1 class="dx-title text-2xl sm:text-3xl font-black mt-1">{{ t('nav_history') if t is defined else 'Task history' }}</h1>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="dx-chip text-amber-200 border-amber-400/25">{{ t('pending') if t is defined else 'Pending' }} {{ pending|default(0) }}</span>
+          <span class="dx-chip text-emerald-200 border-emerald-400/25">{{ t('completed') if t is defined else 'Done' }} {{ completed|default(0) }}</span>
+        </div>
+      </div>
+      <div class="text-left sm:text-right">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">{{ t('balance') if t is defined else 'Balance' }}</p>
+        <p class="text-2xl font-black {% if bal|float < 0 %}dx-metal neg{% else %}dx-metal{% endif %}">{{ money(current_user, bal) }}</p>
+        <a href="{{ url_for('task.index') }}" class="dx-btn mt-2">Open tasks</a>
+      </div>
+    </div>
+  </section>
 
   {% if bal|float < 0 %}
-  <div class="rounded-2xl border border-rose-400/30 bg-rose-600/15 p-4 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <p class="font-bold text-rose-100">Hold on account</p>
-      <p class="text-sm text-rose-100/75">{{ money(current_user, bal) }} — deposit, then finish pending combo items.</p>
+  <section class="dx-card p-4 border border-rose-400/25">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.16em] text-rose-200/80 font-bold">Hold on account</p>
+        <p class="text-sm text-zinc-300 mt-1">{{ money(current_user, bal) }} — deposit, then finish pending combo items.</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{{ url_for('wallet.deposit') }}" class="dx-btn">Deposit</a>
+        <a href="{{ url_for('task.index') }}" class="dx-btn !bg-none !text-white !shadow-none border border-white/15 bg-white/5">Tasks</a>
+      </div>
     </div>
-    <a href="{{ url_for('task.index') }}" class="rounded-xl bg-rose-500 hover:bg-rose-400 px-4 py-2 text-sm font-bold">Open tasks</a>
-  </div>
+  </section>
   {% endif %}
 
-  <div class="space-y-2.5">
-    {% for task in history|default([]) %}
-      {% set st = (task.status or '')|lower %}
-      {% set is_pending = st in ('assigned', 'frozen', 'pending') %}
-      {% if is_pending %}
-      <a href="{{ url_for('task.review', id=task.id) }}" class="block pt-card rounded-2xl p-3.5 hover:border-amber-400/40 transition">
-      {% else %}
-      <div class="pt-card rounded-2xl p-3.5 opacity-95">
-      {% endif %}
-        <div class="flex items-center gap-3">
-          <img src="{{ media(task.product_image) }}" class="w-14 h-14 rounded-xl object-cover bg-zinc-800 ring-1 ring-white/10"
-               onerror="this.src='https://ui-avatars.com/api/?name=P&background=334155&color=fff'">
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold truncate">{{ task.product_name }}</p>
-            <p class="text-xs text-zinc-500 mt-0.5">
-              {{ money(current_user, task.product_price) }}
-              · +{{ money(current_user, task.commission) }}
-              {% if task.task_set == 99 %}<span class="text-violet-300">· Combo</span>{% endif %}
+  <section class="dx-card p-3 sm:p-4">
+    {% if items %}
+    <div class="dx-list space-y-2.5 lg:space-y-0">
+      {% for task in items %}
+        {% set st = (task.status or '')|lower %}
+        {% set is_pending = st in ('assigned', 'frozen', 'pending') %}
+        {% set is_combo = (task.task_set == 99) if task.task_set is defined else false %}
+        {% if is_pending %}
+        <a href="{{ url_for('task.review', id=task.id) }}" class="dx-row">
+        {% else %}
+        <div class="dx-row opacity-90">
+        {% endif %}
+          {% if task.product_image %}
+          <img src="{{ media(task.product_image) if media is defined else task.product_image }}" alt=""
+               class="w-14 h-14 rounded-xl object-cover border border-white/10 shrink-0 bg-zinc-900"
+               onerror="this.style.display='none'">
+          {% else %}
+          <span class="w-14 h-14 rounded-xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-zinc-500">
+            <i class="fa-solid fa-box"></i>
+          </span>
+          {% endif %}
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-bold truncate">{{ task.product_name or 'Product' }}</p>
+            <p class="text-[11px] text-zinc-500 mt-0.5">
+              {% if is_combo %}<span class="text-rose-300 font-semibold">Combo</span> · {% endif %}
+              {% if task.completed_at %}
+                {{ task.completed_at.strftime('%d %b %Y') }}
+              {% elif task.created_at %}
+                {{ task.created_at.strftime('%d %b %Y') }}
+              {% else %}
+                —
+              {% endif %}
             </p>
-            <p class="text-[11px] text-zinc-600 mt-0.5">
-              {% if task.completed_at %}{{ task.completed_at.strftime('%d %b %Y · %H:%M') }}
-              {% elif task.created_at %}{{ task.created_at.strftime('%d %b %Y · %H:%M') }}
-              {% else %}—{% endif %}
-            </p>
+            <div class="flex flex-wrap gap-2 mt-1 text-[11px]">
+              <span class="text-zinc-400">{{ money(current_user, task.product_price or 0) }}</span>
+              {% if task.commission %}
+              <span class="text-emerald-300/90">+{{ money(current_user, task.commission) }}</span>
+              {% endif %}
+            </div>
           </div>
           <div class="text-right shrink-0">
             {% if is_pending %}
-            <span class="text-[11px] font-bold rounded-full px-2.5 py-1 bg-amber-500/15 text-amber-200 border border-amber-400/20">
-              {{ 'Frozen' if st == 'frozen' else 'Pending' }}
+            <span class="dx-chip text-amber-200 border-amber-400/30 text-[10px]">
+              {% if st == 'frozen' %}Frozen{% else %}Pending{% endif %}
             </span>
-            <p class="text-[10px] text-amber-200/70 mt-1">Tap to open</p>
+            <p class="text-[10px] text-sky-200/80 mt-1 font-semibold">Tap to submit →</p>
             {% else %}
-            <span class="text-[11px] font-bold rounded-full px-2.5 py-1 bg-emerald-500/15 text-emerald-200 border border-emerald-400/20">Done</span>
+            <span class="dx-chip text-emerald-200 border-emerald-400/25 text-[10px]">Done</span>
             {% endif %}
           </div>
-        </div>
-      {% if is_pending %}</a>{% else %}</div>{% endif %}
+        {% if is_pending %}</a>{% else %}</div>{% endif %}
+      {% endfor %}
+    </div>
     {% else %}
-    <div class="pt-card rounded-2xl p-10 text-center text-zinc-500 text-sm">No tasks yet. Open Tasks to start.</div>
-    {% endfor %}
-  </div>
+    <div class="py-12 text-center">
+      <p class="text-sm text-zinc-500">No tasks yet.</p>
+      <a href="{{ url_for('task.index') }}" class="dx-btn mt-4 inline-flex">Start reviewing</a>
+    </div>
+    {% endif %}
+  </section>
+
 </div>
 {% endblock %}
