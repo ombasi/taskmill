@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block title %}{{ t('support') if t is defined else 'Support' }} · Taskmill{% endblock %}
 {% block content %}
-<style>
+{% set s = support %}
+{% set has_wa1 = s and s.whatsapp1_enabled and s.whatsapp1 %}
+{% set has_wa2 = s and s.whatsapp2_enabled and s.whatsapp2 %}
+{% set has_tg1 = s and s.telegram1_enabled and s.telegram1 %}
+{% set has_tg2 = s and s.telegram2_enabled and s.telegram2 %}
+{% set has_lc  = s and s.livechat_enabled and s.livechat %}
+{% set has_ext = has_wa1 or has_wa2 or has_tg1 or has_tg2 or has_lc %}
 
-  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
-  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1.25rem 1.5rem 3rem; } }
+<style>
+  .dx-page { max-width: 56rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) { .dx-page { max-width: 68rem; padding: 1.25rem 1.5rem 3rem; } }
+
   .dx-card {
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);
@@ -20,6 +28,7 @@
     -webkit-mask-composite: xor; mask-composite: exclude;
   }
   .dx-card > * { position: relative; z-index: 1; }
+
   .dx-title {
     background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -28,102 +37,220 @@
     font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
     color: rgba(186,230,253,.88);
   }
-  .dx-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
-    border-radius: 1rem; padding: .75rem 1.15rem;
-    font-size: .85rem; font-weight: 900; color: #0f172a;
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
-    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
+
+  .sc-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr;
   }
-  .dx-btn-ghost {
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 1rem; padding: .75rem 1.15rem;
-    font-size: .85rem; font-weight: 800; color: #f1f5f9;
-    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
+  @media (min-width: 640px) {
+    .sc-grid { grid-template-columns: 1fr 1fr; }
   }
-  .dx-link {
-    display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem;
-    border-radius: 1.2rem; border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
-    transition: border-color .15s, transform .15s, box-shadow .15s;
-  }
-  .dx-link:hover {
-    border-color: rgba(186,230,253,.35); transform: translateY(-1px);
-    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
-  }
-  .dx-ico {
-    width: 2.6rem; height: 2.6rem; border-radius: .9rem; flex-shrink: 0;
-    display: grid; place-items: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(186,230,253,.1));
-    border: 1px solid rgba(255,255,255,.14); color: #e0f2fe;
-  }
-  .dx-tile {
-    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.5));
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 1.15rem;
+  @media (min-width: 1024px) {
+    .sc-grid { grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
   }
 
+  .sc-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 1.4rem;
+    padding: 1.2rem 1.15rem 1.15rem;
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 20px 48px -28px rgba(0,0,0,.85);
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .sc-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(140deg, rgba(255,255,255,.4) 0%, rgba(186,230,253,.2) 45%, rgba(255,255,255,.06) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .sc-card > * { position: relative; z-index: 1; }
+  .sc-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,.28);
+    box-shadow: 0 24px 50px -22px rgba(186,230,253,.3);
+  }
+
+  .sc-card.wa { --sc: #34d399; --sc-soft: rgba(52,211,153,.15); }
+  .sc-card.tg { --sc: #38bdf8; --sc-soft: rgba(56,189,248,.15); }
+  .sc-card.chat { --sc: #a78bfa; --sc-soft: rgba(167,139,250,.15); }
+  .sc-card.app { --sc: #e2e8f0; --sc-soft: rgba(226,232,240,.12); }
+
+  .sc-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    padding: 0.28rem 0.55rem; border-radius: 999px;
+    background: var(--sc-soft);
+    color: var(--sc);
+    border: 1px solid color-mix(in srgb, var(--sc) 35%, transparent);
+  }
+  .sc-badge .dot {
+    width: 0.45rem; height: 0.45rem; border-radius: 999px;
+    background: var(--sc);
+    box-shadow: 0 0 0 0 var(--sc);
+    animation: sc-pulse 1.8s ease-out infinite;
+  }
+  @keyframes sc-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sc) 55%, transparent); }
+    70% { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  .sc-ico {
+    width: 3rem; height: 3rem; border-radius: 1rem;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(255,255,255,.18), var(--sc-soft));
+    border: 1px solid rgba(255,255,255,.16);
+    color: var(--sc);
+    font-size: 1.25rem;
+    margin-top: 0.85rem;
+  }
+
+  .sc-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    margin-top: auto;
+    width: 100%;
+    border-radius: 0.95rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem; font-weight: 900;
+    color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 30%, #e2e8f0 55%, #bae6fd 100%);
+    box-shadow: 0 10px 24px -12px rgba(186,230,253,.45);
+    transition: filter .15s, transform .15s;
+  }
+  .sc-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+
+  .sc-btn-soft {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    margin-top: auto; width: 100%;
+    border-radius: 0.95rem; padding: 0.7rem 1rem;
+    font-size: 0.82rem; font-weight: 800; color: #f1f5f9;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+  }
 </style>
-<div class="dx-page" style="max-width:42rem">
-  <header class="text-center mb-6">
-    <p class="dx-kicker">Support</p>
-    <h1 class="dx-title text-3xl font-black mt-2">{{ t('contact_title') if t is defined else 'Contact us' }}</h1>
-    <p class="text-sm text-zinc-400 mt-3 max-w-md mx-auto">WhatsApp, Telegram, live chat, or in-app messaging.</p>
+
+<div class="dx-page">
+
+  <header class="text-center mb-7">
+    <p class="dx-kicker">Support centre</p>
+    <h1 class="dx-title text-3xl sm:text-4xl font-black mt-2">{{ t('contact_title') if t is defined else 'How can we help?' }}</h1>
+    <p class="text-sm text-zinc-400 mt-3 max-w-lg mx-auto leading-relaxed">
+      Reach a live channel below. Green pulse means the channel is active right now.
+    </p>
   </header>
-  <div class="space-y-3">
+
+  {# Primary grid #}
+  <div class="sc-grid">
+
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('chat.inbox') }}" class="dx-link">
-      <span class="dx-ico"><i class="fa-solid fa-comments"></i></span>
-      <span class="flex-1 min-w-0">
-        <span class="block text-sm font-bold">Live chat</span>
-        <span class="block text-[11px] text-zinc-500">Message support on Taskmill</span>
-      </span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+    <a href="{{ url_for('chat.inbox') }}" class="sc-card app">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-solid fa-comments"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">In-app chat</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed flex-1">Message Taskmill support without leaving the platform. Best for account &amp; wallet questions.</p>
+      <span class="sc-btn mt-5">Open chat <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
     </a>
     {% endif %}
-    {% set wa = none %}
-    {% set tg = none %}
-    {% if supports is defined and supports %}
-      {% for s in supports %}
-        {% set n = (s.name or s.channel or '')|lower %}
-        {% if 'whatsapp' in n or 'wa' == n %}{% set wa = s %}{% endif %}
-        {% if 'telegram' in n or 'tg' == n %}{% set tg = s %}{% endif %}
-      {% endfor %}
-    {% endif %}
-    {% if wa and (wa.link or wa.value or wa.contact) %}
-    <a href="{{ wa.link or wa.value or wa.contact }}" target="_blank" rel="noopener" class="dx-link">
-      <span class="dx-ico text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">WhatsApp</span>
-      <span class="block text-[11px] text-zinc-500">{{ wa.value or wa.contact or 'Chat on WhatsApp' }}</span></span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
+
+    {% if has_wa1 %}
+    {% set wa1 = s.whatsapp1 %}
+    {% set wa1_href = wa1 if wa1.startswith('http') else ('https://wa.me/' ~ wa1|replace('+','')|replace(' ','')|replace('-','')) %}
+    <a href="{{ wa1_href }}" target="_blank" rel="noopener" class="sc-card wa">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-brands fa-whatsapp"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">WhatsApp</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Chat with support on WhatsApp.</p>
+      <p class="text-sm font-bold text-emerald-200/90 mt-2 truncate">{{ wa1 }}</p>
+      <span class="sc-btn mt-5">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
-    {% if tg and (tg.link or tg.value or tg.contact) %}
-    <a href="{{ tg.link or tg.value or tg.contact }}" target="_blank" rel="noopener" class="dx-link">
-      <span class="dx-ico text-sky-300"><i class="fa-brands fa-telegram"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">Telegram</span>
-      <span class="block text-[11px] text-zinc-500">{{ tg.value or tg.contact or 'Open Telegram' }}</span></span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
+
+    {% if has_wa2 %}
+    {% set wa2 = s.whatsapp2 %}
+    {% set wa2_href = wa2 if wa2.startswith('http') else ('https://wa.me/' ~ wa2|replace('+','')|replace(' ','')|replace('-','')) %}
+    <a href="{{ wa2_href }}" target="_blank" rel="noopener" class="sc-card wa">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-brands fa-whatsapp"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">WhatsApp 2</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Secondary WhatsApp line.</p>
+      <p class="text-sm font-bold text-emerald-200/90 mt-2 truncate">{{ wa2 }}</p>
+      <span class="sc-btn mt-5">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
-    {% if supports is defined and supports %}
-      {% for s in supports %}
-        {% set n = (s.name or s.channel or '')|lower %}
-        {% if 'whatsapp' not in n and 'telegram' not in n and 'wa' != n and 'tg' != n %}
-        <a href="{{ s.link or s.value or s.contact or '#' }}" class="dx-link" {% if s.link %}target="_blank" rel="noopener"{% endif %}>
-          <span class="dx-ico"><i class="fa-solid fa-headset"></i></span>
-          <span class="flex-1"><span class="block text-sm font-bold">{{ s.name or s.channel or 'Support' }}</span>
-          <span class="block text-[11px] text-zinc-500">{{ s.value or s.contact or s.link or '' }}</span></span>
-        </a>
-        {% endif %}
-      {% endfor %}
+
+    {% if has_tg1 %}
+    {% set tg1 = s.telegram1 %}
+    {% set tg1_href = tg1 if (tg1.startswith('http') or tg1.startswith('tg:')) else ('https://t.me/' ~ tg1|replace('@','')) %}
+    <a href="{{ tg1_href }}" target="_blank" rel="noopener" class="sc-card tg">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-brands fa-telegram"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">Telegram</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Open a Telegram conversation with support.</p>
+      <p class="text-sm font-bold text-sky-200/90 mt-2 truncate">{{ tg1 }}</p>
+      <span class="sc-btn mt-5">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+    </a>
     {% endif %}
-    <a href="{{ url_for('dashboard.faq') }}" class="dx-link">
-      <span class="dx-ico"><i class="fa-solid fa-circle-question"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">FAQs</span>
-      <span class="block text-[11px] text-zinc-500">Common questions</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+
+    {% if has_tg2 %}
+    {% set tg2 = s.telegram2 %}
+    {% set tg2_href = tg2 if (tg2.startswith('http') or tg2.startswith('tg:')) else ('https://t.me/' ~ tg2|replace('@','')) %}
+    <a href="{{ tg2_href }}" target="_blank" rel="noopener" class="sc-card tg">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-brands fa-telegram"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">Telegram 2</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Secondary Telegram channel.</p>
+      <p class="text-sm font-bold text-sky-200/90 mt-2 truncate">{{ tg2 }}</p>
+      <span class="sc-btn mt-5">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+    </a>
+    {% endif %}
+
+    {% if has_lc %}
+    {% set lc = s.livechat %}
+    <a href="{{ lc if lc.startswith('http') else lc }}" target="_blank" rel="noopener" class="sc-card chat">
+      <span class="sc-badge"><span class="dot"></span> Live</span>
+      <div class="sc-ico"><i class="fa-solid fa-headset"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">External live chat</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Opens the linked live-chat page configured by admin.</p>
+      <p class="text-sm font-bold text-violet-200/90 mt-2 truncate">{{ lc }}</p>
+      <span class="sc-btn mt-5">Open link <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+    </a>
+    {% endif %}
+
+    {# Always-visible FAQ card #}
+    <a href="{{ url_for('dashboard.faq') }}" class="sc-card app">
+      <span class="sc-badge" style="--sc:#94a3b8;--sc-soft:rgba(148,163,184,.12)"><span class="dot"></span> Guide</span>
+      <div class="sc-ico" style="--sc:#e2e8f0;--sc-soft:rgba(226,232,240,.1)"><i class="fa-solid fa-circle-question"></i></div>
+      <h2 class="text-lg font-black mt-3 text-white">FAQs</h2>
+      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed flex-1">Deposits, withdrawals, combo holds, referrals, and account help.</p>
+      <span class="sc-btn-soft mt-5">Browse FAQs <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
     </a>
   </div>
+
+  {% if not has_ext and not current_user.is_authenticated %}
+  <div class="dx-card p-5 mt-4 text-center">
+    <p class="text-sm text-zinc-400">External channels are not configured yet. Log in for in-app chat, or check back later.</p>
+  </div>
+  {% elif not has_ext %}
+  <div class="dx-card p-4 mt-4 text-center">
+    <p class="text-xs text-zinc-500">WhatsApp / Telegram will appear here when admin enables them under Support settings.</p>
+  </div>
+  {% endif %}
+
+  <section class="dx-card p-5 mt-5">
+    <p class="dx-kicker mb-3">Tips</p>
+    <ul class="grid sm:grid-cols-3 gap-3 text-xs text-zinc-400">
+      <li class="rounded-xl border border-white/8 bg-black/20 p-3">Include your <strong class="text-zinc-200">username</strong> when messaging support.</li>
+      <li class="rounded-xl border border-white/8 bg-black/20 p-3">For deposits, send the <strong class="text-zinc-200">transaction ID</strong> and amount.</li>
+      <li class="rounded-xl border border-white/8 bg-black/20 p-3">Password resets are done by <strong class="text-zinc-200">admin</strong> for security.</li>
+    </ul>
+  </section>
+
 </div>
 {% endblock %}
