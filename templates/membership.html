@@ -1,91 +1,144 @@
 {% extends "base.html" %}
-{% block title %}Membership{% endblock %}
+{% block title %}{{ t('nav_membership') if t is defined else 'Membership' }} · Taskmill{% endblock %}
 {% block content %}
-
+{% set cur_id = current_user.membership_id if current_user.is_authenticated else none %}
+{% set cur_price = (current_user.membership.price if current_user.is_authenticated and current_user.membership else 0)|float %}
 <style>
-  .dm-page { max-width: 64rem; margin: 0 auto; padding: 0.5rem 0.75rem 6rem; }
-  .dm-hero {
-    text-align: center; margin-bottom: 1.75rem;
+  .dx-page { max-width: 72rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  @media (min-width: 1024px) { .dx-page { padding: 1.25rem 1.5rem 3rem; } }
+  .dx-card {
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 1.7rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
+    position: relative; overflow: hidden;
   }
-  .dm-kicker {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(186,230,253,.85);
+  .dx-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .dm-title {
-    margin-top: 0.5rem; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -0.02em;
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
+  .dx-card > * { position: relative; z-index: 1; }
+  .dx-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .dm-sub { margin-top: 0.75rem; color: #a1a1aa; font-size: 0.9rem; max-width: 36rem; margin-left: auto; margin-right: auto; line-height: 1.55; }
-  .dm-card {
-    background: linear-gradient(160deg, rgba(30,41,59,.92), rgba(12,18,32,.96));
+  .dx-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(186,230,253,.88);
+  }
+  .dx-plan {
+    height: 100%;
+    display: flex; flex-direction: column;
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);
     border-radius: 1.5rem;
-    box-shadow: 0 24px 60px -36px rgba(0,0,0,.85), 0 0 40px -18px rgba(186,230,253,.12);
+    padding: 1.35rem;
+    position: relative; overflow: hidden;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
   }
-  .dm-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 11px; font-weight: 700;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #e2e8f0;
+  .dx-plan::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.4) 0%, rgba(186,230,253,.2) 50%, rgba(255,255,255,.08) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .dm-link-card {
-    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
-    border-radius: 1.15rem; border: 1px solid rgba(255,255,255,.1);
-    background: rgba(0,0,0,.25); transition: border-color .15s, background .15s, transform .15s;
+  .dx-plan > * { position: relative; z-index: 1; }
+  .dx-plan:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.28); box-shadow: 0 20px 40px -20px rgba(186,230,253,.25); }
+  .dx-plan.current {
+    border-color: rgba(186,230,253,.45);
+    box-shadow: 0 0 40px -16px rgba(186,230,253,.45);
   }
-  .dm-link-card:hover { border-color: rgba(186,230,253,.35); background: rgba(186,230,253,.06); transform: translateY(-1px); }
-  .dm-icon {
-    width: 2.6rem; height: 2.6rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(186,230,253,.12)); color: #e0f2fe; flex-shrink: 0;
+  .dx-plan.current::after {
+    content: "ACTIVE";
+    position: absolute; top: 1rem; right: 1rem;
+    font-size: 9px; font-weight: 900; letter-spacing: .12em;
+    padding: .25rem .5rem; border-radius: 999px;
+    background: linear-gradient(135deg, #fff, #bae6fd);
+    color: #0f172a;
   }
+  .dx-btn {
+    display: inline-flex; align-items: center; justify-content: center; width: 100%;
+    border-radius: 1rem; padding: .8rem 1rem; margin-top: auto;
+    font-size: .85rem; font-weight: 900; color: #0f172a;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
+  }
+  .dx-btn:disabled, .dx-btn.disabled {
+    opacity: .45; cursor: not-allowed; transform: none;
+  }
+  .dx-btn-ghost {
+    width: 100%; border-radius: 1rem; padding: .8rem 1rem; margin-top: auto;
+    font-size: .85rem; font-weight: 800; color: #a1a1aa; text-align: center;
+    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03);
+  }
+  .dx-feat { display: flex; gap: .5rem; align-items: flex-start; font-size: 12.5px; color: #a1a1aa; }
+  .dx-feat i { color: rgba(186,230,253,.75); margin-top: 2px; font-size: 10px; }
 </style>
 
-<div class="dm-page">
-  <header class="dm-hero">
-    <p class="dm-kicker">Membership</p>
-    <h1 class="dm-title">Choose your tier</h1>
-    <p class="dm-sub">Higher plans unlock better commissions, more daily tasks, and stronger limits. Your active plan is highlighted.</p>
+<div class="dx-page">
+  <header class="text-center mb-8">
+    <p class="dx-kicker">Membership</p>
+    <h1 class="dx-title text-3xl sm:text-4xl font-black mt-2">{{ t('membership_title') if t is defined else 'Choose your tier' }}</h1>
+    <p class="text-sm text-zinc-400 mt-3 max-w-xl mx-auto leading-relaxed">
+      Higher plans unlock better commissions, more daily tasks, and stronger limits.
+      {% if current_user.is_authenticated and current_user.membership %}
+      You are on <span class="text-sky-200 font-semibold">{{ current_user.membership.name }}</span>.
+      {% endif %}
+    </p>
   </header>
 
-  <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
+  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch">
     {% for m in memberships|default([]) %}
-    {% set is_current = current and current.id == m.id %}
-    {% set featured = (m.name or '')|lower in ['gold', 'vip'] %}
-    <article class="dm-card relative flex flex-col p-5 md:p-6
-      {% if is_current %}ring-2 ring-sky-300/50{% elif featured %}ring-1 ring-violet-400/25{% endif %}">
-      <div class="flex items-start justify-between gap-2 mb-3">
-        <span class="text-[11px] font-bold tracking-[0.18em] uppercase {% if is_current %}text-sky-200{% elif featured %}text-violet-300{% else %}text-zinc-400{% endif %}">{{ m.name }}</span>
-        {% if is_current %}<span class="dm-chip !bg-sky-400 !text-zinc-900 !border-0">Active</span>
-        {% elif featured %}<span class="dm-chip text-violet-200">Popular</span>{% endif %}
-      </div>
-      <p class="text-3xl font-black tracking-tight">{{ money(current_user, m.price or 0) }}</p>
-      <p class="text-[11px] text-zinc-500 mt-1">one-time plan price</p>
-      <ul class="mt-5 space-y-2 text-sm text-zinc-300 flex-1">
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Daily tasks</span><span class="font-semibold">{{ m.daily_tasks or '—' }}</span></li>
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Tasks / set</span><span class="font-semibold">{{ m.tasks_per_set or '—' }}</span></li>
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Daily sets</span><span class="font-semibold">{{ m.daily_sets or '—' }}</span></li>
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Combo chance</span><span class="font-semibold">{{ m.combo_chance or 0 }}%</span></li>
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Withdraw limit</span><span class="font-semibold">{{ money(current_user, m.withdrawal_limit or 0) }}</span></li>
-        <li class="flex justify-between gap-2"><span class="text-zinc-500">Referral bonus</span><span class="font-semibold">{{ money(current_user, m.referral_bonus or 0) }}</span></li>
-      </ul>
-      <div class="mt-6">
-        {% if is_current %}
-        <div class="w-full text-center rounded-2xl bg-white/10 border border-white/10 py-3 text-sm font-bold text-zinc-300">Current plan</div>
-        {% else %}
-        <form method="POST" action="{{ url_for('dashboard.upgrade_membership', plan_id=m.id) }}"
-              onsubmit="return confirm('Upgrade to {{ m.name }}? The plan price may be deducted from your balance.');">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-          <button type="submit"
-                  class="w-full text-center rounded-2xl py-3 text-sm font-black bg-gradient-to-r from-white via-sky-100 to-slate-200 text-zinc-900 hover:brightness-105 transition">
-            Upgrade
-          </button>
-        </form>
+    {% set is_current = cur_id and m.id == cur_id %}
+    {% set can_upgrade = (not cur_id) or ((m.price|float) > cur_price) %}
+    <article class="dx-plan {% if is_current %}current{% endif %}">
+      <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{{ m.name }}</p>
+      <p class="text-2xl font-black mt-2 text-white">{{ money(current_user, m.price) if current_user.is_authenticated else m.price }}</p>
+      <p class="text-[11px] text-zinc-500 mt-1">one-time activation</p>
+
+      <ul class="space-y-2 mt-5 mb-6">
+        <li class="dx-feat"><i class="fa-solid fa-gem"></i><span>{{ m.daily_tasks or m.tasks_per_set or '—' }} daily tasks</span></li>
+        <li class="dx-feat"><i class="fa-solid fa-gem"></i><span>{{ m.tasks_per_set or '—' }} per set · {{ m.daily_sets or 2 }} sets</span></li>
+        <li class="dx-feat"><i class="fa-solid fa-gem"></i><span>Commission up to {{ m.commission_percent or m.combo_chance or '—' }}%</span></li>
+        {% if m.withdrawal_limit %}
+        <li class="dx-feat"><i class="fa-solid fa-gem"></i><span>Withdraw limit {{ money(current_user, m.withdrawal_limit) if current_user.is_authenticated else m.withdrawal_limit }}</span></li>
         {% endif %}
-      </div>
+        {% if m.referral_bonus %}
+        <li class="dx-feat"><i class="fa-solid fa-gem"></i><span>Referral bonus {{ money(current_user, m.referral_bonus) if current_user.is_authenticated else m.referral_bonus }}</span></li>
+        {% endif %}
+      </ul>
+
+      {% if is_current %}
+        <div class="dx-btn-ghost">Current plan</div>
+      {% elif can_upgrade and current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('dashboard.upgrade_membership', plan_id=m.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <button type="submit" class="dx-btn">Upgrade</button>
+        </form>
+      {% elif current_user.is_authenticated %}
+        <div class="dx-btn-ghost">Contact admin to change</div>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}" class="dx-btn">Join to select</a>
+      {% endif %}
     </article>
     {% else %}
-    <p class="text-zinc-500 col-span-full text-center py-10">No membership plans available.</p>
+    <div class="dx-card p-8 text-center sm:col-span-2 xl:col-span-4">
+      <p class="text-zinc-500">No membership plans available.</p>
+    </div>
     {% endfor %}
   </div>
+
+  <section class="dx-card p-5 mt-6 max-w-2xl mx-auto">
+    <p class="dx-kicker mb-2">Notes</p>
+    <ul class="space-y-2 text-sm text-zinc-400">
+      <li class="flex gap-2"><i class="fa-solid fa-gem text-sky-200/70 mt-1 text-[10px]"></i> You cannot downgrade yourself — only admin can move you down.</li>
+      <li class="flex gap-2"><i class="fa-solid fa-gem text-sky-200/70 mt-1 text-[10px]"></i> Upgrade deducts the plan price from your available balance when required.</li>
+      <li class="flex gap-2"><i class="fa-solid fa-gem text-sky-200/70 mt-1 text-[10px]"></i> Higher tiers improve normal and combo commission rates.</li>
+    </ul>
+  </section>
 </div>
 {% endblock %}

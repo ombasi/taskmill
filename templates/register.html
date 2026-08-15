@@ -56,7 +56,7 @@
                 bg-gradient-to-br from-white via-sky-100 to-slate-300 shadow-lg shadow-sky-200/30 ring-1 ring-white/40">
       <i class="fa-solid fa-gem text-zinc-900 text-xl"></i>
     </div>
-    <h1 class="mt-4 text-3xl font-black pt-text">Create account</h1>
+    <h1 class="mt-4 text-3xl font-black pt-text">{{ t('create_account') if t is defined else 'Create account' }}</h1>
     <p class="text-zinc-400 text-sm mt-2">Invitation only — a referral code is required</p>
   </div>
 
@@ -66,7 +66,7 @@
 
       {# REQUIRED REFERRAL — top of form #}
       <div class="rounded-2xl border border-sky-400/25 bg-sky-500/10 p-4">
-        <label class="pt-label text-sky-200/90">Referral code <span class="req">*</span></label>
+        <label class="pt-label text-sky-200/90">{{ t('referral_code') if t is defined else 'Referral code' }} <span class="req">*</span></label>
         <input type="text" name="referral_code" required
                value="{{ request.args.get('ref','') or request.form.get('referral_code','') }}"
                class="pt-input font-mono tracking-wide" placeholder="Enter inviter code"
