@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Country lounge{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto px-4 pb-28 space-y-4">
+  <h1 class="text-2xl font-black">Country lounge</h1>
+  <p class="text-sm text-zinc-400">Your country: <strong class="text-white">{{ mine }}</strong> · Members by country (public counts only).</p>
+  <ul class="space-y-2">
+    {% for country, n in rows %}
+    <li class="flex justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
+      <span>{{ country or 'Unknown' }}</span>
+      <span class="font-bold text-sky-200">{{ n }}</span>
+    </li>
+    {% else %}
+    <li class="text-zinc-500 text-sm">No data yet.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

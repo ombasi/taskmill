@@ -26,6 +26,12 @@ try:
 except Exception as _eng_err:
     engagement_bp = None
     print("engagement module skip:", _eng_err)
+try:
+    from routes.extras import extras_bp, _ensure_user_extra_cols
+except Exception as _ex_err:
+    extras_bp = None
+    _ensure_user_extra_cols = None
+    print("extras module skip:", _ex_err)
 from models.payment_setting import PaymentSetting
 
 
@@ -256,6 +262,8 @@ def create_app():
         app.register_blueprint(spin_bp)
     if engagement_bp:
         app.register_blueprint(engagement_bp)
+    if extras_bp:
+        app.register_blueprint(extras_bp)
 
     # Ensure folders exist (Windows-safe)
     import os

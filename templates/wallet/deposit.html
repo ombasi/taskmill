@@ -364,7 +364,15 @@
         <label class="dx-label">Amount · {{ cur }}</label>
         <div class="dx-amount-wrap">
           <span class="sym">{{ sym }}</span>
-          <input class="dx-input" type="number" name="amount" id="dx-amount" step="1" min="1" required placeholder="0">
+          
+  <div class="flex flex-wrap gap-2 mb-3" id="quick-amt">
+    {% for a in [15000, 50000, 100000, 200000] %}
+    <button type="button" class="rounded-full border border-white/15 px-3 py-1 text-xs font-bold text-zinc-300 hover:border-sky-300/40"
+      onclick="var i=document.querySelector('[name=amount]'); if(i){ i.value='{{ a }}'; }">{{ a }}</button>
+    {% endfor %}
+    <span class="text-[10px] text-zinc-500 self-center">Quick amounts (your currency)</span>
+  </div>
+<input class="dx-input" type="number" name="amount" id="dx-amount" step="1" min="1" required placeholder="0">
         </div>
         <div class="dx-chips">
           {% for q in [15000, 30000, 50000, 100000, 250000] %}
