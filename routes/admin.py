@@ -2749,18 +2749,24 @@ def wallets():
 @login_required
 @admin_required
 def bulk_approve_deposits():
+    """Approve many pending deposits; each gets in-app + Telegram alert."""
     ids = request.form.getlist("deposit_ids")
     ok = 0
+    failed = 0
     for did in ids:
         try:
             deposit = Deposit.query.get(int(did))
         except Exception:
+            failed += 1
             continue
-        if not deposit or deposit.status != "Pending":
+        if not deposit or (deposit.status or "").lower() != "pending":
             continue
         try:
-            # Inline approve core
-            user = deposit.user
+            user = User.query.get(deposit.user_id) or deposit.user
+            if not user:
+                failed += 1
+                continue
+
             before = float(user.available_balance or 0)
             amount = float(deposit.amount or 0)
             user.available_balance = before + amount
@@ -2768,7 +2774,10 @@ def bulk_approve_deposits():
                 user_id=user.id,
                 amount=amount,
                 transaction_type="deposit",
-                description=f"{deposit.payment_method or 'Deposit'} approved · Ref {deposit.transaction_id or deposit.id}",
+                description=(
+                    f"{deposit.payment_method or 'Deposit'} approved · "
+                    f"Ref {deposit.transaction_id or deposit.id}"
+                ),
                 balance_before=before,
                 balance_after=float(user.available_balance),
             ))
@@ -2779,16 +2788,25 @@ def bulk_approve_deposits():
                 deposit.approved_by = current_user.id
             except Exception:
                 pass
+
             try:
                 from helpers.currency import money as _money
                 amt_txt = _money(user, amount)
             except Exception:
                 amt_txt = f"{amount:,.0f}"
+
+            # In-app notification for depositor
             try:
                 from services.notification_service import NotificationService
-                NotificationService.send(user, "Deposit Approved", f"{amt_txt} credited.")
-            except Exception:
-                pass
+                NotificationService.send(
+                    user,
+                    "Deposit Approved",
+                    f"{amt_txt} credited. Receipt in Wallet history.",
+                )
+            except Exception as e:
+                print("bulk deposit notify:", e)
+
+            # Telegram / email for depositor
             try:
                 from services.engagement_service import send_outbound_alert
                 send_outbound_alert(
@@ -2797,9 +2815,10 @@ def bulk_approve_deposits():
                     f"Your deposit of {amt_txt} has been approved and credited to your wallet.",
                 )
             except Exception as e:
-                print("bulk deposit approve telegram:", e)
-            # Referral 25% on deposit
-            if user.referred_by_id:
+                print("bulk deposit telegram:", e)
+
+            # Referral 25% + notify referrer
+            if user.referred_by_id and amount > 0:
                 ref = User.query.get(user.referred_by_id)
                 if ref:
                     bonus = round(amount * 0.25, 0)
@@ -2814,15 +2833,47 @@ def bulk_approve_deposits():
                         balance_before=rb,
                         balance_after=float(ref.available_balance),
                     ))
+                    try:
+                        from helpers.currency import money as _money
+                        bonus_txt = _money(ref, bonus)
+                    except Exception:
+                        bonus_txt = f"{bonus:,.0f}"
+                    try:
+                        from services.notification_service import NotificationService
+                        NotificationService.send(
+                            ref,
+                            "Referral bonus",
+                            f"You earned {bonus_txt} from {user.username}'s deposit.",
+                        )
+                    except Exception:
+                        pass
+                    try:
+                        from services.engagement_service import send_outbound_alert
+                        send_outbound_alert(
+                            ref,
+                            "Referral bonus",
+                            f"You earned {bonus_txt} from {user.username}'s approved deposit.",
+                        )
+                    except Exception as e:
+                        print("bulk referral telegram:", e)
+
+            # Commit each deposit so one failure does not undo others
+            db.session.commit()
             ok += 1
         except Exception as e:
             print("bulk approve", did, e)
-            db.session.rollback()
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-    flash(f"Approved {ok} deposit(s).", "success")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            failed += 1
+
+    if ok and not failed:
+        flash(f"Approved {ok} deposit(s). Users notified (app + Telegram).", "success")
+    elif ok and failed:
+        flash(f"Approved {ok} deposit(s); {failed} failed. Notified successful ones.", "warning")
+    else:
+        flash("No deposits were approved.", "warning")
     return redirect(url_for("admin.deposits", status="Pending"))
 
 
