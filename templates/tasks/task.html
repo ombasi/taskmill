@@ -1,14 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Review Product
-  {% set mname = (current_user.membership.name if current_user.membership else '')|lower %}
-  {% if 'vip' in mname and (current_user.skip_tokens|default(0)|int) > 0 and task %}
-  <form method="POST" action="{{ url_for('extras.skip_task', task_id=task.id) }}" class="mt-2">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-    <button class="w-full rounded-xl border border-white/15 py-2 text-xs font-bold text-zinc-400">Skip product ({{ current_user.skip_tokens }} left)</button>
-  </form>
-  {% endif %}
-
-{% endblock %}
+{% block title %}Review Product · Taskmill{% endblock %}
 {% block content %}
 {% set bal = current_user.available_balance or 0 %}
 {% set price = task.product_price or 0 %}

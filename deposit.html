@@ -1,24 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Deposit · Taskmill
-  {% if recent_deposits is defined and recent_deposits %}
-  <section class="dx-card p-4 mt-3">
-    <p class="dx-kicker mb-2">Your deposit requests</p>
-    <ul class="space-y-2.5">
-      {% for d in recent_deposits %}
-      <li class="dx-tile p-3 flex justify-between gap-2 items-center">
-        <div class="min-w-0">
-          <p class="text-sm font-bold">{{ money(current_user, d.amount) }}</p>
-          <p class="text-[11px] text-zinc-500">{{ d.payment_method or 'Pay' }} · {% if d.created_at %}{{ d.created_at.strftime('%d %b %H:%M') }}{% endif %}</p>
-        </div>
-        {% set st = (d.status or 'Pending')|lower %}
-        <span class="text-[11px] font-bold {% if st=='approved' %}text-emerald-300{% elif st=='rejected' %}text-rose-300{% else %}text-amber-200{% endif %}">{{ d.status or 'Pending' }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
-
-{% endblock %}
+{% block title %}Deposit · Taskmill{% endblock %}
 {% block content %}
 {% set bal = current_user.available_balance or 0 %}
 {% set methods = payment_settings if payment_settings is defined and payment_settings else [] %}
