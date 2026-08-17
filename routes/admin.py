@@ -1732,14 +1732,28 @@ def approve_deposit(deposit_id):
             ))
 
     try:
+        from helpers.currency import money as _money
+        amt_txt = _money(user, amount)
+    except Exception:
+        amt_txt = f"{amount:,.0f}"
+    try:
         from services.notification_service import NotificationService
         NotificationService.send(
             user,
             "Deposit Approved",
-            f"UGX {amount:,.0f} credited. Receipt in Wallet history.",
+            f"{amt_txt} credited. Receipt in Wallet history.",
         )
     except Exception:
         pass
+    try:
+        from services.engagement_service import send_outbound_alert
+        send_outbound_alert(
+            user,
+            "Deposit approved",
+            f"Your deposit of {amt_txt} has been approved and credited to your wallet.",
+        )
+    except Exception as e:
+        print("deposit approve telegram:", e)
 
     # Keep deposit row for admin history / accountability
     deposit.status = "Approved"
@@ -2766,10 +2780,24 @@ def bulk_approve_deposits():
             except Exception:
                 pass
             try:
+                from helpers.currency import money as _money
+                amt_txt = _money(user, amount)
+            except Exception:
+                amt_txt = f"{amount:,.0f}"
+            try:
                 from services.notification_service import NotificationService
-                NotificationService.send(user, "Deposit Approved", f"UGX {amount:,.0f} credited.")
+                NotificationService.send(user, "Deposit Approved", f"{amt_txt} credited.")
             except Exception:
                 pass
+            try:
+                from services.engagement_service import send_outbound_alert
+                send_outbound_alert(
+                    user,
+                    "Deposit approved",
+                    f"Your deposit of {amt_txt} has been approved and credited to your wallet.",
+                )
+            except Exception as e:
+                print("bulk deposit approve telegram:", e)
             # Referral 25% on deposit
             if user.referred_by_id:
                 ref = User.query.get(user.referred_by_id)
