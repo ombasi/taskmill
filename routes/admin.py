@@ -3752,3 +3752,41 @@ def seasons():
         return redirect(url_for("admin.seasons"))
     items = LeaderboardSeason.query.order_by(LeaderboardSeason.id.desc()).limit(20).all()
     return render_template("admin/seasons.html", items=items)
+
+
+@admin_bp.route("/interest-logs")
+@login_required
+@admin_required
+def interest_logs():
+    from models.interest_log import InterestLog
+    from extensions import db
+    try:
+        InterestLog.__table__.create(db.engine, checkfirst=True)
+    except Exception:
+        pass
+    rows = InterestLog.query.order_by(InterestLog.created_at.desc()).limit(200).all()
+    users = {u.id: u for u in User.query.filter(User.id.in_([r.user_id for r in rows] or [0])).all()}
+    return render_template("admin/interest_logs.html", rows=rows, users=users)
+
+
+@admin_bp.route("/interest-settings", methods=["POST"])
+@login_required
+@admin_required
+def interest_settings():
+    from models.settings import Settings
+    s = Settings.query.first()
+    if not s:
+        flash("Settings missing.", "danger")
+        return redirect(url_for("admin.settings"))
+    s.interest_enabled = request.form.get("interest_enabled") == "1"
+    try:
+        s.interest_min_ugx = float(request.form.get("interest_min_ugx") or 30000)
+    except Exception:
+        s.interest_min_ugx = 30000
+    try:
+        s.interest_rate = float(request.form.get("interest_rate") or 10)
+    except Exception:
+        s.interest_rate = 10
+    db.session.commit()
+    flash("Interest settings saved.", "success")
+    return redirect(url_for("admin.settings"))

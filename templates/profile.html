@@ -199,4 +199,19 @@
     <a href="{{ url_for('auth.logout') }}" class="text-sm font-bold text-rose-300/90 hover:text-rose-200">Log out</a>
   </div>
 </div>
+
+<section class="dx-card p-4 mt-3">
+    <p class="dx-kicker mb-2">Task category preference</p>
+    <form method="POST" action="{{ url_for('extras.set_category') }}" class="flex flex-wrap gap-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <select name="preferred_category" class="dx-input">
+        <option value="">Any</option>
+        {% for c in ['Electronics','Beauty','Home','Fashion','Sports'] %}
+        <option value="{{ c }}" {% if current_user.preferred_category==c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <button class="dx-btn !text-xs !py-2">Save</button>
+    </form>
+  </section>
+
 {% endblock %}

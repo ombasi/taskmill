@@ -27,6 +27,8 @@ def _ensure_user_extra_cols():
             ("streak_insurance_month", "VARCHAR(7)"),
             ("streak_insurance_used", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
             ("last_balance_interest_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+            ("comeback_claimed_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+            ("preferred_category", "VARCHAR(80)"),
         ]
         for name, typ in specs:
             if name in cols:
@@ -55,6 +57,9 @@ def _ensure_user_extra_cols():
                     ("lucky_hour_start", "INTEGER"),
                     ("lucky_hour_boost", "FLOAT DEFAULT 0"),
                     ("ops_ticker_enabled", "BOOLEAN DEFAULT TRUE" if dialect == "postgresql" else "BOOLEAN DEFAULT 1"),
+                    ("interest_enabled", "BOOLEAN DEFAULT TRUE" if dialect == "postgresql" else "BOOLEAN DEFAULT 1"),
+                    ("interest_min_ugx", "FLOAT DEFAULT 30000"),
+                    ("interest_rate", "FLOAT DEFAULT 10"),
                 ]:
                     if name not in scols:
                         try:
@@ -245,4 +250,15 @@ def claim_balance_interest():
     from services.balance_interest import apply_interest
     ok, msg, amount = apply_interest(current_user)
     flash(msg if not ok else f"Interest credited.", "success" if ok else "warning")
+    return redirect(request.referrer or url_for("dashboard.index"))
+
+
+@extras_bp.route("/category", methods=["POST"])
+@login_required
+@csrf_protect
+def set_category():
+    cat = (request.form.get("preferred_category") or "").strip()[:80]
+    current_user.preferred_category = cat or None
+    db.session.commit()
+    flash("Category preference saved.", "success")
     return redirect(request.referrer or url_for("dashboard.index"))

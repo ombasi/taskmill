@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}Interest log{% endblock %}
+{% block page_title %}Interest log{% endblock %}
+{% block content %}
+<div class="space-y-4">
+  <p class="text-sm text-zinc-400">Daily balance interest credits (latest 200).</p>
+  <div class="glass rounded-2xl overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-zinc-400 text-left"><tr>
+        <th class="p-3">When</th><th class="p-3">User</th><th class="p-3">Amount</th><th class="p-3">Balance before</th><th class="p-3">Rate</th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+        {% set u = users.get(r.user_id) %}
+        <tr class="border-t border-white/5">
+          <td class="p-3 text-zinc-400">{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '—' }}</td>
+          <td class="p-3">{{ u.username if u else r.user_id }}</td>
+          <td class="p-3 font-bold text-emerald-300">{{ money(current_user, r.amount) }}</td>
+          <td class="p-3">{{ money(current_user, r.balance_before) }}</td>
+          <td class="p-3">{{ '%.0f'|format((r.rate or 0)*100) }}%</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="p-6 text-zinc-500">No interest credits yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

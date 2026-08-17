@@ -1,19 +1,48 @@
-"""
-Daily balance interest:
-- Qualifies when available balance >= 30,000 UGX (base).
-- Credits 10% of current available balance once every 24 hours.
-"""
+
+"""Daily balance interest — settings-driven threshold/rate."""
 from datetime import datetime, timedelta
 
-MIN_UGX = 30000.0
-RATE = 0.10  # 10%
+DEFAULT_MIN_UGX = 30000.0
+DEFAULT_RATE = 0.10
 INTERVAL_HOURS = 24
 
 
+def _settings():
+    try:
+        from models.settings import Settings
+        s = Settings.query.first()
+        if not s:
+            return None
+        return s
+    except Exception:
+        return None
+
+
+def _cfg():
+    s = _settings()
+    enabled = True
+    min_ugx = DEFAULT_MIN_UGX
+    rate = DEFAULT_RATE
+    if s:
+        if getattr(s, "interest_enabled", None) is False:
+            enabled = False
+        try:
+            if getattr(s, "interest_min_ugx", None) is not None:
+                min_ugx = float(s.interest_min_ugx)
+        except Exception:
+            pass
+        try:
+            if getattr(s, "interest_rate", None) is not None:
+                # store as percent e.g. 10 => 0.10
+                r = float(s.interest_rate)
+                rate = r / 100.0 if r > 1 else r
+        except Exception:
+            pass
+    return enabled, min_ugx, rate
+
+
 def _balance_as_ugx(user) -> float:
-    bal = float(getattr(user, "available_balance", 0) or 0)
-    # Balances are stored in UGX base across the app; display converts via helpers.currency
-    return bal
+    return float(getattr(user, "available_balance", 0) or 0)
 
 
 def _last_interest_at(user):
@@ -21,13 +50,16 @@ def _last_interest_at(user):
 
 
 def can_claim(user):
+    enabled, min_ugx, rate = _cfg()
+    if not enabled:
+        return False, "Interest paused by admin"
     if getattr(user, "is_admin", False) or getattr(user, "is_blocked", False):
         return False, "Not eligible"
     if getattr(user, "wallet_frozen", False):
         return False, "Wallet frozen"
     ugx = _balance_as_ugx(user)
-    if ugx < MIN_UGX:
-        return False, f"Balance must be at least base {MIN_UGX:,.0f} UGX"
+    if ugx < min_ugx:
+        return False, f"Balance must be at least base {min_ugx:,.0f} UGX"
     last = _last_interest_at(user)
     if last:
         try:
@@ -42,38 +74,40 @@ def can_claim(user):
 
 
 def preview(user):
+    enabled, min_ugx, rate = _cfg()
     ugx = _balance_as_ugx(user)
     ok, reason = can_claim(user)
-    interest = round(ugx * RATE, 0) if ugx >= MIN_UGX else 0
+    interest = round(ugx * rate, 0) if ugx >= min_ugx and enabled else 0
     return {
         "eligible_balance_ugx": ugx,
-        "min_ugx": MIN_UGX,
-        "rate": RATE,
+        "min_ugx": min_ugx,
+        "rate": rate,
         "interest_ugx": interest,
         "can_claim": ok,
         "reason": reason,
         "last_at": _last_interest_at(user),
+        "enabled": enabled,
     }
 
 
 def apply_interest(user, commit=True):
-    """Credit 10% if eligible. Returns (ok, message, amount)."""
     ok, reason = can_claim(user)
     if not ok:
         return False, reason, 0.0
-
+    enabled, min_ugx, rate = _cfg()
     ugx = _balance_as_ugx(user)
-    amount = round(ugx * RATE, 0)
+    amount = round(ugx * rate, 0)
     if amount <= 0:
         return False, "Interest amount is zero", 0.0
 
     from services.wallet_service import WalletService
     from extensions import db
 
+    before = float(user.available_balance or 0)
     WalletService.credit(
         user,
         amount,
-        description=f"Daily balance interest 10% (balance ≥ {MIN_UGX:,.0f} UGX)",
+        description=f"Daily balance interest {rate*100:.0f}% (min {min_ugx:,.0f} UGX)",
         transaction_type="balance_interest",
     )
     user.last_balance_interest_at = datetime.utcnow()
@@ -81,6 +115,19 @@ def apply_interest(user, commit=True):
         user.total_earned = float(user.total_earned or 0) + amount
     except Exception:
         pass
+
+    try:
+        from models.interest_log import InterestLog
+        InterestLog.__table__.create(db.engine, checkfirst=True)
+        db.session.add(InterestLog(
+            user_id=user.id,
+            amount=amount,
+            balance_before=before,
+            rate=rate,
+        ))
+    except Exception as e:
+        print("interest log:", e)
+
     if commit:
         db.session.commit()
 
@@ -88,21 +135,15 @@ def apply_interest(user, commit=True):
         from services.notification_service import NotificationService
         from helpers.currency import money
         NotificationService.send(
-            user,
-            "Daily balance interest",
-            f"{money(user, amount)} credited (10% of your held balance).",
+            user, "Daily balance interest",
+            f"{money(user, amount)} credited ({rate*100:.0f}% of held balance).",
         )
     except Exception:
         pass
     try:
         from services.engagement_service import send_outbound_alert
         from helpers.currency import money
-        send_outbound_alert(
-            user,
-            "Balance interest",
-            f"{money(user, amount)} daily interest credited to your wallet.",
-        )
+        send_outbound_alert(user, "Balance interest", f"{money(user, amount)} daily interest credited.")
     except Exception:
         pass
-
     return True, "Interest credited", amount

@@ -422,3 +422,20 @@ def set_language(code):
     session["lang"] = code
     ref = request.referrer or url_for("dashboard.index")
     return redirect(ref)
+
+
+@dashboard_bp.route("/status")
+def system_status():
+    from models.settings import Settings
+    s = Settings.query.first()
+    def g(attr, default="Normal"):
+        return getattr(s, attr, None) or default if s else default
+    items = [
+        ("Deposits", g("status_deposits", "Normal")),
+        ("Withdrawals", g("status_withdrawals", "Normal")),
+        ("Tasks", g("status_tasks", "Normal")),
+        ("Platform", g("status_message", "All systems normal") if False else "Normal"),
+    ]
+    # Platform line
+    items[-1] = ("Platform", (getattr(s, "status_message", None) or "All systems normal") if s else "All systems normal")
+    return render_template("status.html", items=items)

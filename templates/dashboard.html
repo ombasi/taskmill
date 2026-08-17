@@ -386,6 +386,23 @@
   </section>
   {% endif %}
 
+  <section class="dx-card p-4" 
+  {% if (current_user.available_balance or 0)|float < 0 %}
+  <section class="dx-card p-4 border border-amber-400/25" id="combo-helper">
+    <p class="dx-kicker text-amber-200/90">Combo deposit helper</p>
+    {% set need = (0 - (current_user.available_balance or 0)) %}
+    <p class="text-sm text-zinc-300 mt-1">Hold leaves you short by about <strong class="text-white">{{ money(current_user, need) }}</strong>. Deposit at least that much so balance reaches 0, then submit the product.</p>
+    <a href="{{ url_for('wallet.deposit') }}" class="dx-btn inline-flex mt-3 !text-xs !py-2">Deposit ~{{ money(current_user, need) }}</a>
+  </section>
+  {% endif %}
+
+  <section class="dx-card p-4" 
+  <section class="dx-card p-4" id="weekly-mission">
+    <p class="dx-kicker">Weekly mission</p>
+    <p class="text-sm font-bold mt-1">Finish 2 full task days this week</p>
+    <p class="text-xs text-zinc-500 mt-1">Sets completed today: {{ current_user.daily_sets_completed or 0 }} · Keep a streak for badges &amp; spins.</p>
+  </section>
+
   <section class="dx-card p-4" id="goal-jar">
     <p class="dx-kicker mb-2">Goal jar</p>
     {% set gt = current_user.goal_target|default(0)|float %}
