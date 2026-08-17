@@ -206,7 +206,7 @@ def deposit():
         }
         for s in payment_settings
     ]
-        recent_deposits = []
+    recent_deposits = []
     try:
         recent_deposits = (
             Deposit.query.filter_by(user_id=current_user.id)
