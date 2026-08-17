@@ -40,22 +40,19 @@
 
   .sc-grid {
     display: grid;
-    gap: 0.85rem;
-    grid-template-columns: 1fr;
-  }
-  @media (min-width: 640px) {
-    .sc-grid { grid-template-columns: 1fr 1fr; }
+    gap: 0.55rem;
+    grid-template-columns: 1fr 1fr;
   }
   @media (min-width: 1024px) {
-    .sc-grid { grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .sc-grid { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.65rem; }
   }
 
   .sc-card {
     display: flex;
     flex-direction: column;
     height: 100%;
-    border-radius: 1.4rem;
-    padding: 1.2rem 1.15rem 1.15rem;
+    border-radius: 1.1rem;
+    padding: 0.75rem 0.8rem 0.8rem;
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
     border: 1px solid rgba(255,255,255,.12);
     box-shadow: 0 20px 48px -28px rgba(0,0,0,.85);
@@ -103,13 +100,13 @@
   }
 
   .sc-ico {
-    width: 3rem; height: 3rem; border-radius: 1rem;
+    width: 2.15rem; height: 2.15rem; border-radius: 0.7rem;
     display: grid; place-items: center;
     background: linear-gradient(145deg, rgba(255,255,255,.18), var(--sc-soft));
     border: 1px solid rgba(255,255,255,.16);
     color: var(--sc);
-    font-size: 1.25rem;
-    margin-top: 0.85rem;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
   }
 
   .sc-btn {
@@ -117,8 +114,8 @@
     margin-top: auto;
     width: 100%;
     border-radius: 0.95rem;
-    padding: 0.7rem 1rem;
-    font-size: 0.82rem; font-weight: 900;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.72rem; font-weight: 900;
     color: #0f172a;
     background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 30%, #e2e8f0 55%, #bae6fd 100%);
     box-shadow: 0 10px 24px -12px rgba(186,230,253,.45);
@@ -129,8 +126,8 @@
   .sc-btn-soft {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
     margin-top: auto; width: 100%;
-    border-radius: 0.95rem; padding: 0.7rem 1rem;
-    font-size: 0.82rem; font-weight: 800; color: #f1f5f9;
+    border-radius: 0.95rem; padding: 0.5rem 0.75rem;
+    font-size: 0.72rem; font-weight: 800; color: #f1f5f9;
     background: rgba(255,255,255,.05);
     border: 1px solid rgba(255,255,255,.12);
   }
@@ -138,9 +135,9 @@
 
 <div class="dx-page">
 
-  <header class="text-center mb-7">
+  <header class="text-center mb-4">
     <p class="dx-kicker">Support centre</p>
-    <h1 class="dx-title text-3xl sm:text-4xl font-black mt-2">{{ t('contact_title') if t is defined else 'How can we help?' }}</h1>
+    <h1 class="dx-title text-2xl sm:text-3xl font-black mt-1.5">{{ t('contact_title') if t is defined else 'How can we help?' }}</h1>
     <p class="text-sm text-zinc-400 mt-3 max-w-lg mx-auto leading-relaxed">
       Reach a live channel below. Green pulse means the channel is active right now.
     </p>
@@ -153,9 +150,9 @@
     <a href="{{ url_for('chat.inbox') }}" class="sc-card app">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-solid fa-comments"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">In-app chat</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed flex-1">Message Taskmill support without leaving the platform. Best for account &amp; wallet questions.</p>
-      <span class="sc-btn mt-5">Open chat <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+      <h2 class="text-sm font-black mt-2 text-white">In-app chat</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2 flex-1">Message Taskmill support without leaving the platform. Best for account &amp; wallet questions.</p>
+      <span class="sc-btn mt-3">Open chat <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -165,10 +162,10 @@
     <a href="{{ wa1_href }}" target="_blank" rel="noopener" class="sc-card wa">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-brands fa-whatsapp"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">WhatsApp</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Chat with support on WhatsApp.</p>
+      <h2 class="text-sm font-black mt-2 text-white">WhatsApp</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2">Chat with support on WhatsApp.</p>
       <p class="text-sm font-bold text-emerald-200/90 mt-2 truncate">{{ wa1 }}</p>
-      <span class="sc-btn mt-5">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+      <span class="sc-btn mt-3">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -178,10 +175,10 @@
     <a href="{{ wa2_href }}" target="_blank" rel="noopener" class="sc-card wa">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-brands fa-whatsapp"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">WhatsApp 2</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Secondary WhatsApp line.</p>
+      <h2 class="text-sm font-black mt-2 text-white">WhatsApp 2</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2">Secondary WhatsApp line.</p>
       <p class="text-sm font-bold text-emerald-200/90 mt-2 truncate">{{ wa2 }}</p>
-      <span class="sc-btn mt-5">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+      <span class="sc-btn mt-3">Message <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -191,10 +188,10 @@
     <a href="{{ tg1_href }}" target="_blank" rel="noopener" class="sc-card tg">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-brands fa-telegram"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">Telegram</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Open a Telegram conversation with support.</p>
+      <h2 class="text-sm font-black mt-2 text-white">Telegram</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2">Open a Telegram conversation with support.</p>
       <p class="text-sm font-bold text-sky-200/90 mt-2 truncate">{{ tg1 }}</p>
-      <span class="sc-btn mt-5">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+      <span class="sc-btn mt-3">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -204,10 +201,10 @@
     <a href="{{ tg2_href }}" target="_blank" rel="noopener" class="sc-card tg">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-brands fa-telegram"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">Telegram 2</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Secondary Telegram channel.</p>
+      <h2 class="text-sm font-black mt-2 text-white">Telegram 2</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2">Secondary Telegram channel.</p>
       <p class="text-sm font-bold text-sky-200/90 mt-2 truncate">{{ tg2 }}</p>
-      <span class="sc-btn mt-5">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+      <span class="sc-btn mt-3">Open Telegram <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -216,10 +213,10 @@
     <a href="{{ lc if lc.startswith('http') else lc }}" target="_blank" rel="noopener" class="sc-card chat">
       <span class="sc-badge"><span class="dot"></span> Live</span>
       <div class="sc-ico"><i class="fa-solid fa-headset"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">External live chat</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Opens the linked live-chat page configured by admin.</p>
+      <h2 class="text-sm font-black mt-2 text-white">External live chat</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2">Opens the linked live-chat page configured by admin.</p>
       <p class="text-sm font-bold text-violet-200/90 mt-2 truncate">{{ lc }}</p>
-      <span class="sc-btn mt-5">Open link <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
+      <span class="sc-btn mt-3">Open link <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></span>
     </a>
     {% endif %}
 
@@ -227,9 +224,9 @@
     <a href="{{ url_for('dashboard.faq') }}" class="sc-card app">
       <span class="sc-badge" style="--sc:#94a3b8;--sc-soft:rgba(148,163,184,.12)"><span class="dot"></span> Guide</span>
       <div class="sc-ico" style="--sc:#e2e8f0;--sc-soft:rgba(226,232,240,.1)"><i class="fa-solid fa-circle-question"></i></div>
-      <h2 class="text-lg font-black mt-3 text-white">FAQs</h2>
-      <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed flex-1">Deposits, withdrawals, combo holds, referrals, and account help.</p>
-      <span class="sc-btn-soft mt-5">Browse FAQs <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+      <h2 class="text-sm font-black mt-2 text-white">FAQs</h2>
+      <p class="text-[11px] text-zinc-400 mt-1 leading-snug line-clamp-2 flex-1">Deposits, withdrawals, combo holds, referrals, and account help.</p>
+      <span class="sc-btn-soft mt-3">Browse FAQs <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
     </a>
   </div>
 
@@ -243,8 +240,8 @@
   </div>
   {% endif %}
 
-  <section class="dx-card p-5 mt-5">
-    <p class="dx-kicker mb-3">Tips</p>
+  <section class="dx-card p-3.5 mt-3">
+    <p class="dx-kicker mb-2">Tips</p>
     <ul class="grid sm:grid-cols-3 gap-3 text-xs text-zinc-400">
       <li class="rounded-xl border border-white/8 bg-black/20 p-3">Include your <strong class="text-zinc-200">username</strong> when messaging support.</li>
       <li class="rounded-xl border border-white/8 bg-black/20 p-3">For deposits, send the <strong class="text-zinc-200">transaction ID</strong> and amount.</li>
