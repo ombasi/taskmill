@@ -30,13 +30,13 @@ from models.payment_setting import PaymentSetting
 
 
 
-def _ensure_schema_columns()
-        try:
-            from utils.payment_methods import _ensure_countries_column
-            _ensure_countries_column()
-        except Exception as _pm_e:
-            print("payment countries col:", _pm_e):
+def _ensure_schema_columns():
     """Add missing columns used by newer features (safe on Postgres + SQLite)."""
+    try:
+        from utils.payment_methods import _ensure_countries_column
+        _ensure_countries_column()
+    except Exception as _pm_e:
+        print("payment countries col:", _pm_e)
     from sqlalchemy import text, inspect
 
     def _add(table, name, typ):
