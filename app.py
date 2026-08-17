@@ -30,7 +30,12 @@ from models.payment_setting import PaymentSetting
 
 
 
-def _ensure_schema_columns():
+def _ensure_schema_columns()
+        try:
+            from utils.payment_methods import _ensure_countries_column
+            _ensure_countries_column()
+        except Exception as _pm_e:
+            print("payment countries col:", _pm_e):
     """Add missing columns used by newer features (safe on Postgres + SQLite)."""
     from sqlalchemy import text, inspect
 
@@ -450,6 +455,14 @@ def create_app():
 
     # Notifications available in ALL templates
 
+
+    # Manual language override from session
+    try:
+        from flask import session, g
+        if session.get("lang"):
+            g.lang = session.get("lang")
+    except Exception:
+        pass
 
     # IP-based languages
     try:
