@@ -7,13 +7,10 @@
 {% set left_max = phone_changes_max|default(2) %}
 <style>
   .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
-  @media (min-width: 1024px) {
-    .dx-page { max-width: 64rem; padding: 1rem 1.5rem 3rem; }
-  }
+  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1rem 1.5rem 3rem; } }
   .dx-card {
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.7rem;
+    border: 1px solid rgba(255,255,255,.12); border-radius: 1.7rem;
     box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
     position: relative; overflow: hidden;
   }
@@ -35,47 +32,28 @@
   }
   .dx-kicker {
     font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
-    color: rgba(186,230,253,.88);
+    color: rgba(186,230,253,.85);
   }
   .dx-tile {
     background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(15,23,42,.55));
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 1.15rem;
+    border: 1px solid rgba(255,255,255,.1); border-radius: 1rem;
   }
   .dx-input {
     width: 100%; border-radius: 1rem; background: rgba(2,6,14,.85);
-    border: 1px solid rgba(255,255,255,.12); padding: .8rem 1rem;
-    color: #f8fafc; font-size: .9rem; font-weight: 600; outline: none;
+    border: 1px solid rgba(255,255,255,.12); padding: .85rem 1rem;
+    color: #f8fafc; font-size: .95rem; font-weight: 600; outline: none;
   }
-  .dx-input:focus { border-color: rgba(186,230,253,.45); box-shadow: 0 0 0 3px rgba(186,230,253,.1); }
+  .dx-input:focus { border-color: rgba(125,211,252,.45); box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
   .dx-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 1rem; padding: .7rem 1.1rem;
-    font-size: .85rem; font-weight: 900; color: #0f172a;
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
-    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
+    border-radius: 1rem; padding: .75rem 1.15rem; font-weight: 800; font-size: .85rem;
+    color: #0f172a; background: linear-gradient(145deg, #fff, #e2e8f0 40%, #bae6fd);
   }
-  .dx-btn-ghost {
-    border-radius: 1rem; padding: .7rem 1.1rem;
-    font-size: .85rem; font-weight: 800; color: #f1f5f9;
-    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
-  }
-  .dx-lock {
-    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    color: #71717a;
-  }
-  .dx-grid {
-    display: grid; gap: 1rem;
-  }
-  @media (min-width: 1024px) {
-    .dx-grid { grid-template-columns: 1fr 1fr; align-items: start; }
-  }
-  .dx-avatar {
-    width: 5.5rem; height: 5.5rem; border-radius: 1.35rem; object-fit: cover;
-    border: 2px solid rgba(255,255,255,.25);
-    box-shadow: 0 12px 32px -12px rgba(186,230,253,.4);
-    background: #0f172a;
-  }
+  .dx-label { display: block; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #71717a; margin-bottom: .4rem; }
+  .dx-avatar { width: 5rem; height: 5rem; border-radius: 1.35rem; object-fit: cover; border: 1px solid rgba(255,255,255,.2); }
+  .dx-grid { display: grid; gap: 1rem; }
+  @media (min-width: 768px) { .dx-grid { grid-template-columns: 1fr 1fr; } }
+  .dx-lock { font-size: 9px; letter-spacing: .08em; color: #a1a1aa; }
 </style>
 
 <div class="dx-page space-y-4">
@@ -101,8 +79,6 @@
   </section>
 
   <div class="dx-grid">
-
-    {# Locked identity #}
     <section class="dx-card p-5">
       <p class="dx-kicker mb-3">Identity <span class="dx-lock ml-2">Locked</span></p>
       <div class="space-y-2.5 text-sm">
@@ -130,7 +106,6 @@
       <p class="text-[11px] text-zinc-500 mt-3">Contact admin if identity details must change.</p>
     </section>
 
-    {# Editable #}
     <section class="dx-card p-5 space-y-5">
       <div>
         <p class="dx-kicker mb-3">Phone <span class="text-zinc-500 font-semibold tracking-normal normal-case">{{ left }}/{{ left_max }} left this month</span></p>
@@ -152,84 +127,94 @@
           <button type="submit" class="dx-btn">Upload photo</button>
         </form>
       </div>
-
-      {% if true %}
-      <div class="border-t border-white/5 pt-5">
-        <p class="dx-kicker mb-2">Telegram alerts</p>
-        <p class="text-xs text-zinc-400 mb-3 leading-relaxed">
-          Get deposit approvals, combo holds, and wallet alerts on Telegram.
-        </p>
-        <a href="https://t.me/taskimll_bot" target="_blank" rel="noopener"
-           class="inline-flex items-center gap-2 rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 px-4 py-2.5 text-sm font-bold text-sky-100 transition mb-4">
-          <i class="fa-brands fa-telegram text-lg"></i> Open @taskimll_bot &amp; press Start
-        </a>
-        <ol class="text-[11px] text-zinc-400 space-y-1.5 mb-4 list-decimal list-inside leading-relaxed">
-          <li>Tap the button above and press <strong class="text-zinc-200">Start</strong> in Telegram.</li>
-          <li>Get your numeric <strong class="text-zinc-200">Chat ID</strong> (message <a class="text-sky-300 underline" href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a> and copy the Id).</li>
-          <li>Paste the Chat ID below → <strong class="text-zinc-200">Save</strong>.</li>
-          <li>Press <strong class="text-zinc-200">Test Telegram</strong> — you should receive a message.</li>
-        </ol>
-        <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-3">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-          <input type="hidden" name="action" value="telegram_prefs">
-          <label class="dx-label">Telegram Chat ID</label>
-          <input class="dx-input" type="text" name="telegram_chat_id"
-                 value="{{ current_user.telegram_chat_id or '' }}"
-                 placeholder="e.g. 123456789" inputmode="numeric">
-          <button type="submit" class="dx-btn">Save Telegram</button>
-        </form>
-        <form method="POST" action="{{ url_for('profile.index') }}" class="mt-2">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-          <input type="hidden" name="action" value="telegram_test">
-          <button type="submit"
-                  class="w-full rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 py-2.5 text-sm font-bold text-sky-100 transition {% if not current_user.telegram_chat_id %}opacity-50 cursor-not-allowed{% endif %}"
-                  {% if not current_user.telegram_chat_id %}disabled{% endif %}>
-            Test Telegram
-          </button>
-        </form>
-        {% if current_user.telegram_chat_id %}
-        <p class="text-[11px] text-emerald-300 font-semibold mt-2">Linked · alerts enabled for this account</p>
-        {% else %}
-        <p class="text-[11px] text-amber-200/90 mt-2">Not linked yet — only users with a saved Chat ID receive Telegram alerts.</p>
-        {% endif %}
-      </div>
-      {% endif %}>
-            Test Telegram
-          </button>
-        </form>
-        <p class="text-[11px] text-zinc-500 mt-2">
-          1) Open your bot in Telegram and press <strong>Start</strong>.
-          2) Get your numeric chat ID (e.g. @userinfobot).
-          3) Paste it above, Save, then Test.
-        </p>
-        {% if current_user.telegram_chat_id %}
-        <p class="text-[11px] text-emerald-300/90 mt-1 font-semibold">Linked · {{ current_user.telegram_chat_id }}</p>
-        {% else %}
-        <p class="text-[11px] text-amber-200/90 mt-1 font-semibold">Not linked — alerts will not arrive on Telegram.</p>
-        {% endif %}
-      </div>
-      {% endif %}
     </section>
   </div>
 
+  {# Telegram #}
+  <section class="dx-card p-5">
+    <p class="dx-kicker mb-2">Telegram alerts</p>
+    <p class="text-xs text-zinc-400 mb-3 leading-relaxed">
+      Get deposit approvals, combo holds, and wallet alerts on Telegram.
+    </p>
+    <a href="https://t.me/taskimll_bot" target="_blank" rel="noopener"
+       class="inline-flex items-center gap-2 rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 px-4 py-2.5 text-sm font-bold text-sky-100 transition mb-4">
+      <i class="fa-brands fa-telegram text-lg"></i> Open @taskimll_bot &amp; press Start
+    </a>
+    <ol class="text-[11px] text-zinc-400 space-y-1.5 mb-4 list-decimal list-inside leading-relaxed">
+      <li>Tap the button above and press <strong class="text-zinc-200">Start</strong> in Telegram.</li>
+      <li>Get your numeric <strong class="text-zinc-200">Chat ID</strong> (message <a class="text-sky-300 underline" href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a> and copy the Id).</li>
+      <li>Paste the Chat ID below → <strong class="text-zinc-200">Save</strong>.</li>
+      <li>Press <strong class="text-zinc-200">Test Telegram</strong> — you should receive a message.</li>
+    </ol>
+    <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <input type="hidden" name="action" value="telegram_prefs">
+      <label class="dx-label">Telegram Chat ID</label>
+      <input class="dx-input" type="text" name="telegram_chat_id"
+             value="{{ current_user.telegram_chat_id or '' }}"
+             placeholder="e.g. 123456789" inputmode="numeric">
+      <button type="submit" class="dx-btn">Save Telegram</button>
+    </form>
+    <form method="POST" action="{{ url_for('profile.index') }}" class="mt-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <input type="hidden" name="action" value="telegram_test">
+      <button type="submit"
+              class="w-full rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 py-2.5 text-sm font-bold text-sky-100 transition {% if not current_user.telegram_chat_id %}opacity-50 cursor-not-allowed{% endif %}"
+              {% if not current_user.telegram_chat_id %}disabled{% endif %}>
+        Test Telegram
+      </button>
+    </form>
+    {% if current_user.telegram_chat_id %}
+    <p class="text-[11px] text-emerald-300 font-semibold mt-2">Linked · alerts enabled for this account</p>
+    {% else %}
+    <p class="text-[11px] text-amber-200/90 mt-2">Not linked yet — only users with a saved Chat ID receive Telegram alerts.</p>
+    {% endif %}
+  </section>
+
+  {# Payout #}
+  <section class="dx-card p-5">
+    <p class="dx-kicker mb-2">Payout method</p>
+    {% if current_user.payout_method and current_user.payout_account_number %}
+      <p class="text-sm font-bold">{{ current_user.payout_method }}</p>
+      <p class="text-xs text-zinc-400 mt-1">{{ current_user.payout_account_number }}</p>
+      <p class="text-[11px] mt-2 {% if current_user.payout_confirmed %}text-emerald-300{% else %}text-amber-200{% endif %} font-bold">
+        {% if current_user.payout_confirmed %}Confirmed{% else %}Pending admin confirmation{% endif %}
+      </p>
+    {% else %}
+      <p class="text-sm text-zinc-400">Not set</p>
+      <a href="{{ url_for('wallet.withdraw') }}" class="dx-btn inline-flex mt-3 !text-xs !py-2">Set on withdraw page</a>
+    {% endif %}
+  </section>
+
+  {# Category #}
+  <section class="dx-card p-4">
+    <p class="dx-kicker mb-2">Task category preference</p>
+    <form method="POST" action="{{ url_for('extras.set_category') }}" class="flex flex-wrap gap-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <select name="preferred_category" class="dx-input">
+        <option value="">Any</option>
+        {% for c in ['Electronics','Beauty','Home','Fashion','Sports'] %}
+        <option value="{{ c }}" {% if current_user.preferred_category == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <button class="dx-btn !text-xs !py-2">Save</button>
+    </form>
+  </section>
+
+  {# Quick links #}
   <section class="dx-card p-2">
     <a href="{{ url_for('profile.change_password') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
       <span class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-sky-200"><i class="fa-solid fa-key"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">Login password</span><span class="block text-[11px] text-zinc-500">Change account password</span></span>
+      <span class="flex-1"><span class="block text-sm font-bold">Change password</span><span class="block text-[11px] text-zinc-500">Login password</span></span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     <a href="{{ url_for('profile.set_withdraw_pin') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
-      <span class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-rose-200"><i class="fa-solid fa-lock"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">Withdraw PIN</span><span class="block text-[11px] text-zinc-500">Required for cash outs</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a href="{{ url_for('profile.notifications') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
-      <span class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-200"><i class="fa-solid fa-bell"></i></span>
-      <span class="flex-1"><span class="block text-sm font-bold">Notifications</span><span class="block text-[11px] text-zinc-500">Alerts & messages</span></span>
+      <span class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-200"><i class="fa-solid fa-lock"></i></span>
+      <span class="flex-1"><span class="block text-sm font-bold">Withdraw PIN</span><span class="block text-[11px] text-zinc-500">Required for withdrawals</span></span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     {% if current_user.is_admin or current_user.is_agent %}
-    <a href="{{ url_for('auth.setup_2fa') if 'auth.setup_2fa' else url_for('profile.index') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
+    <a href="{{ url_for('auth.setup_2fa') }}" class="flex items-center gap-3 px-3 py-3.5 rounded-2xl hover:bg-white/5 transition">
       <span class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-200"><i class="fa-solid fa-shield-halved"></i></span>
       <span class="flex-1"><span class="block text-sm font-bold">Two-factor auth</span><span class="block text-[11px] text-zinc-500">Authenticator app</span></span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
@@ -237,23 +222,8 @@
     {% endif %}
   </section>
 
-  <div class="text-center">
+  <div class="text-center pb-4">
     <a href="{{ url_for('auth.logout') }}" class="text-sm font-bold text-rose-300/90 hover:text-rose-200">Log out</a>
   </div>
 </div>
-
-<section class="dx-card p-4 mt-3">
-    <p class="dx-kicker mb-2">Task category preference</p>
-    <form method="POST" action="{{ url_for('extras.set_category') }}" class="flex flex-wrap gap-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <select name="preferred_category" class="dx-input">
-        <option value="">Any</option>
-        {% for c in ['Electronics','Beauty','Home','Fashion','Sports'] %}
-        <option value="{{ c }}" {% if current_user.preferred_category==c %}selected{% endif %}>{{ c }}</option>
-        {% endfor %}
-      </select>
-      <button class="dx-btn !text-xs !py-2">Save</button>
-    </form>
-  </section>
-
 {% endblock %}
