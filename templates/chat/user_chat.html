@@ -2,127 +2,117 @@
 {% block title %}Support chat{% endblock %}
 {% block content %}
 <style>
-
-  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
-  @media (min-width: 1024px) { .dx-page { max-width: 64rem; padding: 1.25rem 1.5rem 3rem; } }
-  .dx-card {
-    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.7rem;
-    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(186,230,253,.14);
-    position: relative; overflow: hidden;
+  .chat-page {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 0.5rem 0.75rem 0;
+    height: calc(100dvh - 7.5rem);
+    display: flex;
+    flex-direction: column;
   }
-  .dx-card::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.25) 40%, rgba(255,255,255,.08) 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
+  @media (min-width: 1024px) {
+    .chat-page { height: calc(100dvh - 5rem); padding: 1rem 1.25rem 1rem; }
   }
-  .dx-card > * { position: relative; z-index: 1; }
-  .dx-title {
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 28%, #f8fafc 55%, #bae6fd 78%, #fff 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .dx-kicker {
-    font-size: 10px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase;
-    color: rgba(186,230,253,.88);
-  }
-  .dx-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
-    border-radius: 1rem; padding: .75rem 1.15rem;
-    font-size: .85rem; font-weight: 900; color: #0f172a;
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
-    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
-  }
-  .dx-btn-ghost {
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 1rem; padding: .75rem 1.15rem;
-    font-size: .85rem; font-weight: 800; color: #f1f5f9;
-    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
-  }
-  .dx-link {
-    display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem;
-    border-radius: 1.2rem; border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(0,0,0,.25));
-    transition: border-color .15s, transform .15s, box-shadow .15s;
-  }
-  .dx-link:hover {
-    border-color: rgba(186,230,253,.35); transform: translateY(-1px);
-    box-shadow: 0 0 28px -12px rgba(186,230,253,.35);
-  }
-  .dx-ico {
-    width: 2.6rem; height: 2.6rem; border-radius: .9rem; flex-shrink: 0;
-    display: grid; place-items: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(186,230,253,.1));
-    border: 1px solid rgba(255,255,255,.14); color: #e0f2fe;
-  }
-  .dx-tile {
-    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(15,23,42,.5));
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 1.15rem;
-  }
-
-  .chat-shell { max-width: 42rem; margin: 0 auto; height: calc(100vh - 8rem); display: flex; flex-direction: column; padding: 0.5rem 0.75rem 5.5rem; }
-  @media (min-width: 1024px) { .chat-shell { max-width: 48rem; height: calc(100vh - 6rem); padding-bottom: 1.5rem; } }
-  .chat-bubble-me { background: linear-gradient(135deg, rgba(186,230,253,.25), rgba(255,255,255,.1)); border: 1px solid rgba(255,255,255,.15); }
-  .chat-bubble-them { background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); }
-
-</style>
-
-{% set bal = current_user.available_balance or 0 %}
-<style>
   .chat-shell {
-    background: linear-gradient(180deg, rgba(15,23,42,.95), rgba(7,11,20,.9));
-    border: 1px solid rgba(255,255,255,.1);
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
+    overflow: hidden;
   }
-  .bubble-me {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  .chat-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
   }
-  .bubble-them {
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.08);
+  .bubble-user {
+    background: linear-gradient(145deg, #0ea5e9, #0369a1);
+    color: #fff;
+    border-bottom-right-radius: 0.35rem;
+  }
+  .bubble-admin {
+    background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    border: 1px solid rgba(255,255,255,.14);
+    color: #f1f5f9;
+    border-bottom-left-radius: 0.35rem;
+  }
+  .tag-user {
+    background: rgba(14,165,233,.2);
+    color: #7dd3fc;
+    border: 1px solid rgba(125,211,252,.25);
+  }
+  .tag-admin {
+    background: rgba(167,139,250,.2);
+    color: #ddd6fe;
+    border: 1px solid rgba(196,181,253,.3);
+  }
+  .chat-composer {
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.35);
+    padding: 0.65rem 0.75rem;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
+  }
+  .chat-input {
+    width: 100%;
+    min-height: 2.75rem;
+    max-height: 6rem;
+    border-radius: 1rem;
+    background: rgba(2,6,14,.9);
+    border: 1px solid rgba(255,255,255,.14);
+    color: #f8fafc;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.95rem;
+    resize: none;
+  }
+  .chat-input:focus {
+    outline: none;
+    border-color: rgba(125,211,252,.45);
+    box-shadow: 0 0 0 3px rgba(14,165,233,.15);
   }
 </style>
 
-<div class="max-w-2xl mx-auto px-3 sm:px-4 pb-4 h-[calc(100dvh-7rem)] flex flex-col">
-
-  <div class="chat-shell rounded-[1.5rem] flex flex-col flex-1 min-h-0 overflow-hidden">
-    {# Header #}
-    <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3 shrink-0">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-headset"></i>
-        </span>
-        <div class="min-w-0">
-          <p class="font-bold text-sm">Support</p>
-          <p class="text-[11px] text-zinc-500 truncate">Usually replies within operating hours</p>
-        </div>
-      </div>
-      <div class="text-right shrink-0">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500">Balance</p>
-        <p class="text-xs font-bold {% if bal|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">{{ money(current_user, bal) }}</p>
-      </div>
+<div class="chat-page">
+  <div class="mb-2 flex items-center justify-between gap-2">
+    <div>
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-200/80">Support</p>
+      <h1 class="text-xl font-black text-white">Live chat</h1>
     </div>
+    <a href="{{ url_for('dashboard.contact') }}" class="text-xs font-bold text-zinc-400 hover:text-white">Other channels</a>
+  </div>
 
-    {# Messages #}
-    <div id="chatScroll" class="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-3">
-      {% for m in messages|default([]) %}
-        {% set mine = m.sender_id == current_user.id or m.is_from_user %}
-        <div class="flex {% if mine %}justify-end{% else %}justify-start{% endif %}">
-          <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm {% if mine %}bubble-me text-white{% else %}bubble-them{% endif %}">
-            {% if m.message %}
-            <p class="whitespace-pre-wrap break-words">{{ m.message }}</p>
-            {% endif %}
-            {% if m.attachment or m.file_path %}
-            <a href="{{ url_for('static', filename=m.attachment or m.file_path) }}" target="_blank"
-               class="inline-flex items-center gap-1 mt-1.5 text-xs underline opacity-90">
-              <i class="fa-solid fa-paperclip"></i> Attachment
-            </a>
-            {% endif %}
-            <p class="text-[10px] mt-1 {% if mine %}text-white/60{% else %}text-zinc-500{% endif %}">
-              {% if m.created_at %}{{ m.created_at.strftime('%d %b · %H:%M') }}{% endif %}
-            </p>
+  <div class="chat-shell">
+    <div id="chatScroll" class="chat-scroll space-y-3">
+      {% for m in messages %}
+        {% set is_admin = m.is_from_admin %}
+        <div class="flex {% if is_admin %}justify-start{% else %}justify-end{% endif %}">
+          <div class="max-w-[88%] sm:max-w-[75%]">
+            <div class="mb-1 flex {% if is_admin %}justify-start{% else %}justify-end{% endif %}">
+              {% if is_admin %}
+              <span class="tag-admin text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full">Admin · Support</span>
+              {% else %}
+              <span class="tag-user text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full">You</span>
+              {% endif %}
+            </div>
+            <div class="rounded-2xl px-3.5 py-2.5 text-sm {% if is_admin %}bubble-admin{% else %}bubble-user{% endif %}">
+              {% if m.message %}
+              <p class="whitespace-pre-wrap break-words">{{ m.message }}</p>
+              {% endif %}
+              {% if m.attachment or m.file_path %}
+              <a href="{{ url_for('static', filename=m.attachment or m.file_path) }}" target="_blank"
+                 class="inline-flex items-center gap-1 mt-1.5 text-xs underline opacity-90">
+                <i class="fa-solid fa-paperclip"></i> Attachment
+              </a>
+              {% endif %}
+              <p class="text-[10px] mt-1.5 {% if is_admin %}text-zinc-500{% else %}text-white/65{% endif %}">
+                {% if m.created_at %}{{ m.created_at.strftime('%d %b · %H:%M') }}{% endif %}
+              </p>
+            </div>
           </div>
         </div>
       {% else %}
@@ -133,18 +123,20 @@
       {% endfor %}
     </div>
 
-    {# Composer #}
-    <form method="POST" enctype="multipart/form-data" class="border-t border-white/10 p-3 shrink-0 bg-black/20">
+    <form method="POST" enctype="multipart/form-data" class="chat-composer">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div class="mb-2 overflow-x-auto">
+        {% include "partials/chat_reasons.html" %}
+      </div>
       <div class="flex items-end gap-2">
-        <label class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 shrink-0">
-          <i class="fa-solid fa-paperclip text-zinc-400 text-sm"></i>
+        <label class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center cursor-pointer shrink-0">
+          <i class="fa-solid fa-paperclip text-zinc-400"></i>
           <input type="file" name="attachment" class="hidden" accept="image/*,.pdf">
         </label>
-        {% include "partials/chat_reasons.html" %}
-<textarea name="message" rows="1" required placeholder="Type a message..."
-                  class="flex-1 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sky-400/30 max-h-28"></textarea>
-        <button type="submit" class="w-10 h-10 rounded-xl bg-gradient-to-r from-slate-100 to-sky-200 text-zinc-900 flex items-center justify-center shrink-0">
+        <textarea name="message" rows="2" required placeholder="Type your message…"
+                  class="chat-input flex-1"></textarea>
+        <button type="submit"
+                class="w-11 h-11 rounded-xl bg-gradient-to-r from-white to-sky-200 text-zinc-900 flex items-center justify-center shrink-0 font-bold">
           <i class="fa-solid fa-paper-plane text-sm"></i>
         </button>
       </div>
