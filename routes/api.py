@@ -155,8 +155,91 @@ def badges():
         print("badges:", e)
 
     data["total"] = int(data["notifications"]) + int(data["chat"])
-    if getattr(current_user, "is_admin", False):
+    if getattr(current_user, "is_admin", False) or getattr(current_user, "is_agent", False):
         data["total"] += int(data["pending_deposits"]) + int(data["pending_withdrawals"])
+
+    # Live ops feed for admin / agent top bar
+    data["ops_total"] = (
+        int(data.get("pending_deposits") or 0)
+        + int(data.get("pending_withdrawals") or 0)
+        + int(data.get("chat") or 0)
+    )
+    data["events"] = []
+    if getattr(current_user, "is_admin", False) or getattr(current_user, "is_agent", False):
+        events = []
+        try:
+            from models.deposit import Deposit
+            from models.user import User
+            deps = (
+                Deposit.query.filter(Deposit.status.in_(["Pending", "pending"]))
+                .order_by(Deposit.created_at.desc())
+                .limit(8)
+                .all()
+            )
+            for d in deps:
+                u = User.query.get(d.user_id)
+                events.append({
+                    "type": "deposit",
+                    "label": "Deposit",
+                    "text": f"{(u.username if u else 'User')} · {float(d.amount or 0):,.0f}",
+                    "href": "/admin/deposits?status=Pending",
+                    "at": d.created_at.isoformat() if d.created_at else None,
+                })
+        except Exception as e:
+            print("badges deposits events:", e)
+        try:
+            from models.withdraw import Withdrawal
+            from models.user import User
+            wds = (
+                Withdrawal.query.filter(Withdrawal.status.in_(["Pending", "pending", "Processing"]))
+                .order_by(Withdrawal.created_at.desc())
+                .limit(8)
+                .all()
+            )
+            for w in wds:
+                u = User.query.get(w.user_id)
+                events.append({
+                    "type": "withdraw",
+                    "label": "Withdraw",
+                    "text": f"{(u.username if u else 'User')} · {float(w.amount or 0):,.0f}",
+                    "href": "/admin/withdrawals?status=Pending",
+                    "at": w.created_at.isoformat() if w.created_at else None,
+                })
+        except Exception as e:
+            print("badges withdraw events:", e)
+        try:
+            from models.chat import ChatMessage
+            from models.user import User
+            msgs = (
+                ChatMessage.query.filter_by(is_from_admin=False, is_read=False)
+                .order_by(ChatMessage.created_at.desc())
+                .limit(8)
+                .all()
+            )
+            for m in msgs:
+                u = User.query.get(m.user_id)
+                preview = (m.message or m.body or "")[:60]
+                events.append({
+                    "type": "chat",
+                    "label": "Message",
+                    "text": f"{(u.username if u else 'User')}: {preview}",
+                    "href": "/chat/admin",
+                    "at": m.created_at.isoformat() if m.created_at else None,
+                })
+        except Exception as e:
+            print("badges chat events:", e)
+        # newest first
+        try:
+            events.sort(key=lambda x: x.get("at") or "", reverse=True)
+        except Exception:
+            pass
+        data["events"] = events[:15]
+        data["ops_total"] = (
+            int(data.get("pending_deposits") or 0)
+            + int(data.get("pending_withdrawals") or 0)
+            + int(data.get("chat") or 0)
+        )
+
     return jsonify(data)
 
 

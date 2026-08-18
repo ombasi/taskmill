@@ -219,6 +219,7 @@
         ('admin.dashboard', 'fa-chart-line', 'Dashboard'),
         ('admin.users', 'fa-users', 'Users'),
         ('admin.stuck_users', 'fa-triangle-exclamation', 'Stuck users'),
+        ('admin.interest_logs', 'fa-percent', 'Interest log'),
         ('admin.agents_hub', 'fa-sitemap', 'Agents'),
         ('admin.team_challenges', 'fa-flag-checkered', 'Challenges'),
         ('admin.products', 'fa-box', 'Products'),
@@ -290,11 +291,28 @@
         <h1 class="text-lg md:text-xl font-bold truncate">{% block page_title %}Dashboard{% endblock %}</h1>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href="{{ url_for('admin.deposits', status='Pending') }}"
-           class="inline-flex items-center gap-2 text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
-          <span class="pulse-dot" aria-hidden="true"></span>
-          <span class="hidden sm:inline">Pending ops</span>
-        </a>
+        <div class="relative" id="live-ops-wrap">
+          <button type="button" id="live-ops-btn"
+                  class="inline-flex items-center gap-2 text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span class="hidden sm:inline">Live ops</span>
+            <span data-badge="ops_total" class="min-w-[1.15rem] h-5 px-1.5 rounded-full bg-amber-400 text-black text-[10px] flex items-center justify-center font-bold hidden">0</span>
+          </button>
+          <div id="live-ops-panel" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl z-50 overflow-hidden">
+            <div class="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Live operations</span>
+              <span class="text-[10px] text-zinc-500" id="live-ops-summary">—</span>
+            </div>
+            <ul id="live-ops-list" class="max-h-72 overflow-y-auto divide-y divide-white/5 text-sm">
+              <li class="px-3 py-4 text-zinc-500 text-xs text-center">No pending items</li>
+            </ul>
+            <div class="p-2 border-t border-white/10 grid grid-cols-3 gap-1 text-[10px] font-bold">
+              <a href="{{ url_for('admin.deposits', status='Pending') }}" class="rounded-lg bg-white/5 hover:bg-white/10 py-2 text-center">Deposits</a>
+              <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="rounded-lg bg-white/5 hover:bg-white/10 py-2 text-center">Withdraw</a>
+              <a href="{{ url_for('chat.admin_inbox') }}" class="rounded-lg bg-white/5 hover:bg-white/10 py-2 text-center">Chat</a>
+            </div>
+          </div>
+        </div>
         {% if current_user.is_admin %}
         <a href="{{ url_for('admin.campaign_settings') }}"
            class="hidden md:inline-flex text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">Campaigns</a>
@@ -430,6 +448,33 @@
       }
     });
   }
+  function typeColor(t){
+    if (t === 'deposit') return 'text-emerald-300';
+    if (t === 'withdraw') return 'text-rose-300';
+    if (t === 'chat') return 'text-sky-300';
+    return 'text-zinc-300';
+  }
+  function renderEvents(d){
+    var list = document.getElementById('live-ops-list');
+    var sum = document.getElementById('live-ops-summary');
+    if (!list) return;
+    var events = d.events || [];
+    var total = parseInt(d.ops_total, 10) || 0;
+    if (sum) {
+      sum.textContent = total ? (total + ' pending') : 'All clear';
+    }
+    if (!events.length) {
+      list.innerHTML = '<li class="px-3 py-4 text-zinc-500 text-xs text-center">No pending deposits, withdrawals, or messages</li>';
+      return;
+    }
+    list.innerHTML = events.map(function(ev){
+      var href = ev.href || '#';
+      return '<li><a href="'+href+'" class="flex gap-2 px-3 py-2.5 hover:bg-white/5 transition">'
+        + '<span class="text-[10px] font-bold uppercase tracking-wide '+typeColor(ev.type)+' w-14 shrink-0 pt-0.5">'+(ev.label||ev.type)+'</span>'
+        + '<span class="text-zinc-200 text-xs leading-snug line-clamp-2">'+(ev.text||'')+'</span>'
+        + '</a></li>';
+    }).join('');
+  }
   function tick(){
     fetch('/api/v1/badges', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -440,10 +485,25 @@
         setBadge('pending_deposits', d.pending_deposits);
         setBadge('pending_withdrawals', d.pending_withdrawals);
         setBadge('total', d.total);
+        setBadge('ops_total', d.ops_total != null ? d.ops_total : d.total);
+        renderEvents(d);
       }).catch(function(){});
   }
+  var btn = document.getElementById('live-ops-btn');
+  var panel = document.getElementById('live-ops-panel');
+  if (btn && panel) {
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      panel.classList.toggle('hidden');
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('live-ops-wrap');
+      if (wrap && !wrap.contains(e.target)) panel.classList.add('hidden');
+    });
+  }
   tick();
-  setInterval(tick, 8000);
+  setInterval(tick, 6000);
 })();
 </script>
 </body>
