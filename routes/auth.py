@@ -105,7 +105,6 @@ def login():
             from services.retention import maybe_comeback
             gift = maybe_comeback(user)
             if gift:
-                from flask import flash
                 flash("Welcome back! A small gift was added to your wallet.", "success")
         except Exception:
             pass

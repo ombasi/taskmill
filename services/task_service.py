@@ -696,6 +696,35 @@ class TaskService:
         return {"items": items, "all_ok": all_ok, "sets_done": sets_done, "required_sets": required_sets}
 
     @staticmethod
+
+    @staticmethod
+    def withdrawals_today(user):
+        """Count withdrawal requests created today (any non-rejected)."""
+        from datetime import datetime
+        try:
+            from models.withdraw import Withdrawal
+        except Exception:
+            try:
+                from models.withdrawal import Withdrawal
+            except Exception:
+                return int(bool(getattr(user, "withdrawal_completed_today", False)))
+        start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        try:
+            q = Withdrawal.query.filter(
+                Withdrawal.user_id == user.id,
+                Withdrawal.created_at >= start,
+            )
+            # count pending/processing/approved/paid — not rejected
+            rows = q.all()
+            n = 0
+            for w in rows:
+                st = (getattr(w, "status", "") or "").lower()
+                if st != "rejected":
+                    n += 1
+            return n
+        except Exception:
+            return int(bool(getattr(user, "withdrawal_completed_today", False)))
+
     def can_withdraw(user):
 
         """
@@ -712,15 +741,21 @@ class TaskService:
             return False, "Payout method is waiting for admin confirmation."
         TaskService.ensure_daily_reset(user)
 
-        # Once per day — Gold & VIP unlimited
+        # Daily withdraw caps: default 1 · Gold 2 · VIP 3
         mname = ""
         try:
             mname = (user.membership.name or "").lower() if user.membership else ""
         except Exception:
             mname = ""
-        is_unlimited = ("gold" in mname) or ("vip" in mname)
-        if not is_unlimited and bool(getattr(user, "withdrawal_completed_today", False)):
-            return False, "You can only withdraw once per day. Gold and VIP may withdraw more than once."
+        if "vip" in mname:
+            max_wd = 3
+        elif "gold" in mname:
+            max_wd = 2
+        else:
+            max_wd = 1
+        used = TaskService.withdrawals_today(user)
+        if used >= max_wd:
+            return False, f"Daily withdrawal limit reached ({used}/{max_wd}). Try again tomorrow."
         tasks_per_set, daily_sets, total = TaskService._limits(user)
         required_sets = min(2, daily_sets)
         sets_done = int(user.daily_sets_completed or 0)
