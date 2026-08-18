@@ -191,7 +191,8 @@
     </div>
 
     <div class="border-t border-white/10 bg-black/25 p-5 sm:p-6">
-      <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4">
+      <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4" id="task-submit-form"
+            onsubmit="var b=this.querySelector('[type=submit]'); if(b.dataset.busy) return false; b.dataset.busy='1'; b.textContent='Submitting…'; b.disabled=true; return true;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
 
         <div>
@@ -236,12 +237,12 @@
                            focus:outline-none focus:ring-2 focus:ring-sky-300/25 focus:border-sky-300/30 resize-none"></textarea>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
-          <div class="tk-sticky"><button type="submit" class="tk-btn flex-1 rounded-2xl py-3.5 text-sm">
+        <div class="tk-actions sticky bottom-20 lg:bottom-4 z-20 flex flex-col sm:flex-row gap-2 pt-2 pb-1 bg-gradient-to-t from-[#070a12] via-[#070a12]/95 to-transparent">
+          <button type="submit" class="tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
             {{ t('submit_review') if t is defined else 'Submit review' }}
           </button>
           <a href="{{ url_for('task.history') }}"
-             class="sm:w-32 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition">
+             class="sm:w-36 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition flex items-center justify-center">
             {{ t('cancel') if t is defined else 'Cancel' }}
           </a>
         </div>
@@ -251,7 +252,7 @@
       </form>
 
       {% if current_user.membership and 'vip' in (current_user.membership.name or '')|lower %}
-      <form method="POST" action="{{ url_for('task.skip_task') }}" class="mt-3 text-center"
+      <form method="POST" action="{{ url_for('extras.skip_task', task_id=task.id) }}" class="mt-3 text-center"
             onsubmit="return confirm('Skip this product?');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
         <button class="text-xs text-amber-400/90 hover:underline">VIP: skip this product</button>
