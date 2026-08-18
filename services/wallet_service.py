@@ -176,6 +176,11 @@ class WalletService:
 
         db.session.add(deposit)
         db.session.commit()
+        try:
+            from services.admin_alerts import alert_deposit
+            alert_deposit(user, deposit)
+        except Exception as _ad:
+            print("admin alert deposit:", _ad)
 
         return deposit
 
@@ -438,6 +443,11 @@ class WalletService:
             user.must_withdraw_today = False
 
         db.session.commit()
+        try:
+            from services.admin_alerts import alert_withdraw
+            alert_withdraw(user, withdrawal)
+        except Exception as _aw:
+            print("admin alert withdraw:", _aw)
         return withdrawal
 
     # ============================================================

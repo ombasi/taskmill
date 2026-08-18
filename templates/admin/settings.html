@@ -11,6 +11,18 @@
   </form>
   <p class="text-xs text-zinc-500 mt-2"><a class="text-sky-300" href="{{ url_for('admin.interest_logs') }}">View interest log →</a></p>
 </section>
+
+<section class="glass rounded-2xl p-5 mt-4">
+  <h2 class="font-bold mb-2">Admin Telegram alerts</h2>
+  <p class="text-xs text-zinc-400 mb-3">Chat IDs that receive deposit, withdraw, and chat notifications. Comma-separated. Same bot token as user alerts.</p>
+  <label class="block text-xs text-zinc-400">Admin chat ID(s)
+    <input name="admin_telegram_chat_ids" value="{{ settings.admin_telegram_chat_ids or '' }}"
+           class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm"
+           placeholder="123456789,987654321">
+  </label>
+  <p class="text-[11px] text-zinc-500 mt-2">Or set env <code class="text-zinc-400">ADMIN_TELEGRAM_CHAT_IDS</code> on Render.</p>
+</section>
+
 {% endblock %}
 {% block page_title %}System Settings{% endblock %}
 {% block content %}

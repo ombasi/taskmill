@@ -2177,6 +2177,11 @@ def settings():
         settings.maintenance = request.form.get("maintenance") in ("on", "1", "true", "yes")
         if hasattr(settings, "telegram_bot_token"):
             settings.telegram_bot_token = (request.form.get("telegram_bot_token") or "").strip() or None
+        if hasattr(settings, "admin_telegram_chat_ids") or True:
+            try:
+                settings.admin_telegram_chat_ids = (request.form.get("admin_telegram_chat_ids") or "").strip() or None
+            except Exception:
+                pass
         if hasattr(settings, "kyc_withdraw_threshold"):
             try:
                 settings.kyc_withdraw_threshold = float(request.form.get("kyc_withdraw_threshold") or 500000)

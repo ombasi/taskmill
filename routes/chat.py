@@ -112,6 +112,12 @@ def inbox():
         )
         db.session.add(msg)
         db.session.commit()
+        try:
+            from services.admin_alerts import alert_chat
+            _preview = getattr(msg, "message", None) or getattr(msg, "body", None) or getattr(message, "message", None) or ""
+            alert_chat(current_user, str(_preview))
+        except Exception as _ac:
+            print("admin alert chat:", _ac)
         flash("Message sent.", "success")
         return redirect(url_for("chat.inbox"))
 
