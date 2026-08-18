@@ -38,7 +38,11 @@ def _admin_chat_ids():
 def notify_admin(title: str, body: str):
     token = _bot_token()
     chats = _admin_chat_ids()
-    if not token or not chats:
+    if not token:
+        print("admin telegram: no bot token")
+        return False
+    if not chats:
+        print("admin telegram: no admin_telegram_chat_ids configured")
         return False
     text = f"🛡 Taskmill Admin\n\n{title}\n\n{body}".strip()[:4000]
     import urllib.request

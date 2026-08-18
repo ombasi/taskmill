@@ -76,6 +76,7 @@ class Settings(db.Model):
     mystery_cash_min = db.Column(db.Float, default=500.0)
     mystery_cash_max = db.Column(db.Float, default=3000.0)
     telegram_bot_token = db.Column(db.String(120), nullable=True)
+    admin_telegram_chat_ids = db.Column(db.Text, nullable=True)  # comma-separated admin chat ids
     kyc_withdraw_threshold = db.Column(db.Float, default=500000.0)
 
 

@@ -3852,3 +3852,19 @@ def set_user_telegram(user_id):
     else:
         flash(f"Telegram unlinked for {user.username}.", "success")
     return redirect(url_for("admin.view_user", user_id=user.id))
+
+
+@admin_bp.route("/test-admin-telegram", methods=["POST"])
+@login_required
+@admin_required
+def test_admin_telegram():
+    from services.admin_alerts import notify_admin, _admin_chat_ids, _bot_token
+    if not _bot_token():
+        flash("Bot token missing in Settings.", "danger")
+        return redirect(url_for("admin.settings"))
+    if not _admin_chat_ids():
+        flash("Set Admin chat ID(s) in Settings and Save.", "warning")
+        return redirect(url_for("admin.settings"))
+    ok = notify_admin("Admin test", "If you see this, admin Telegram alerts work.")
+    flash("Test sent." if ok else "Send failed — check Chat ID and that you pressed Start on the bot.", "success" if ok else "danger")
+    return redirect(url_for("admin.settings"))
