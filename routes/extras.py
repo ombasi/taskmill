@@ -27,6 +27,8 @@ def _ensure_user_extra_cols():
             ("streak_insurance_month", "VARCHAR(7)"),
             ("streak_insurance_used", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
             ("last_balance_interest_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+            ("interest_pending_base", "FLOAT DEFAULT 0"),
+            ("interest_due_date", "DATE"),
             ("comeback_claimed_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
             ("preferred_category", "VARCHAR(80)"),
         ]

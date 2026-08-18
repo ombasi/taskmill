@@ -176,6 +176,20 @@ class TaskService:
                     pass
         except Exception:
             pass
+
+        # Lucky hour boost (admin settings)
+        try:
+            from models.settings import Settings
+            from datetime import datetime
+            s = Settings.query.first()
+            start = getattr(s, "lucky_hour_start", None)
+            boost_pct = float(getattr(s, "lucky_hour_boost", 0) or 0)
+            if start is not None and boost_pct > 0:
+                if datetime.utcnow().hour == int(start):
+                    commission = float(commission) * (1.0 + boost_pct / 100.0)
+        except Exception:
+            pass
+
         return round(max(commission, 0.0), 0)
 
     @staticmethod
@@ -689,6 +703,7 @@ class TaskService:
         - at least 2 sets completed today (or membership daily_sets if lower)
         - no negative_today
         - available_balance >= 0
+        - once per day unless Gold or VIP
         """
 
         if not (getattr(user, "payout_method", None) and getattr(user, "payout_account_number", None)):
@@ -696,6 +711,16 @@ class TaskService:
         if not getattr(user, "payout_confirmed", False):
             return False, "Payout method is waiting for admin confirmation."
         TaskService.ensure_daily_reset(user)
+
+        # Once per day — Gold & VIP unlimited
+        mname = ""
+        try:
+            mname = (user.membership.name or "").lower() if user.membership else ""
+        except Exception:
+            mname = ""
+        is_unlimited = ("gold" in mname) or ("vip" in mname)
+        if not is_unlimited and bool(getattr(user, "withdrawal_completed_today", False)):
+            return False, "You can only withdraw once per day. Gold and VIP may withdraw more than once."
         tasks_per_set, daily_sets, total = TaskService._limits(user)
         required_sets = min(2, daily_sets)
         sets_done = int(user.daily_sets_completed or 0)
@@ -745,6 +770,11 @@ class TaskService:
         user.withdrawal_completed_today = True
         user.must_withdraw_today = False
         db.session.commit()
+        try:
+            from services.balance_interest import schedule_after_withdraw
+            schedule_after_withdraw(user)
+        except Exception as e:
+            print("schedule interest:", e)
 
     @staticmethod
     def activity_streak(user):

@@ -163,12 +163,12 @@ def index():
     # Daily balance interest (lazy claim on visit)
     interest_info = None
     try:
-        from services.balance_interest import preview, apply_interest
+        from services.balance_interest import preview, process_due_interest
+        # Only pays NEXT day after a withdrawal (not on task activity)
+        ok, amt = process_due_interest(current_user)
         interest_info = preview(current_user)
-        if interest_info.get("can_claim"):
-            ok, msg, amt = apply_interest(current_user)
-            interest_info = preview(current_user)
-            interest_info["just_credited"] = ok
+        if ok:
+            interest_info["just_credited"] = True
             interest_info["credited_amount"] = amt
     except Exception as _bi:
         print("balance interest:", _bi)
