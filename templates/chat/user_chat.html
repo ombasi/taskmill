@@ -111,8 +111,8 @@
         {% set mine = m.sender_id == current_user.id or m.is_from_user %}
         <div class="flex {% if mine %}justify-end{% else %}justify-start{% endif %}">
           <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm {% if mine %}bubble-me text-white{% else %}bubble-them{% endif %}">
-            {% if m.body or m.message %}
-            <p class="whitespace-pre-wrap break-words">{{ m.body or m.message }}</p>
+            {% if m.message %}
+            <p class="whitespace-pre-wrap break-words">{{ m.message }}</p>
             {% endif %}
             {% if m.attachment or m.file_path %}
             <a href="{{ url_for('static', filename=m.attachment or m.file_path) }}" target="_blank"
@@ -141,7 +141,8 @@
           <i class="fa-solid fa-paperclip text-zinc-400 text-sm"></i>
           <input type="file" name="attachment" class="hidden" accept="image/*,.pdf">
         </label>
-        <textarea name="message" rows="1" required placeholder="Type a message..."
+        {% include "partials/chat_reasons.html" %}
+<textarea name="message" rows="1" required placeholder="Type a message..."
                   class="flex-1 rounded-2xl bg-zinc-950 border border-white/10 px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sky-400/30 max-h-28"></textarea>
         <button type="submit" class="w-10 h-10 rounded-xl bg-gradient-to-r from-slate-100 to-sky-200 text-zinc-900 flex items-center justify-center shrink-0">
           <i class="fa-solid fa-paper-plane text-sm"></i>

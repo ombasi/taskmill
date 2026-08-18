@@ -106,6 +106,10 @@ def _ensure_schema_columns():
             for n, typ in [
                 ("telegram_bot_token", "VARCHAR(120)"),
                 ("kyc_withdraw_threshold", float_t),
+                ("admin_telegram_chat_ids", "TEXT"),
+                ("interest_enabled", bool_t),
+                ("interest_min_ugx", float_t),
+                ("interest_rate", float_t),
             ]:
                 _add("settings", n, typ)
 
@@ -128,8 +132,31 @@ def _ensure_schema_columns():
 
 
 def _ensure_notification_broadcast_column():
-    """Backward-compatible alias used by API routes."""
-    _ensure_schema_columns()
+    """Light ensure for notifications.is_broadcast only (avoid heavy migrate on every poll)."""
+    try:
+        from sqlalchemy import text, inspect
+        dialect = db.engine.dialect.name
+        insp = inspect(db.engine)
+        if "notifications" not in insp.get_table_names():
+            return
+        cols = {c["name"] for c in insp.get_columns("notifications")}
+        if "is_broadcast" in cols:
+            return
+        if dialect == "postgresql":
+            db.session.execute(text(
+                "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_broadcast BOOLEAN DEFAULT FALSE"
+            ))
+        else:
+            db.session.execute(text(
+                "ALTER TABLE notifications ADD COLUMN is_broadcast BOOLEAN DEFAULT 0"
+            ))
+        db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print("ensure broadcast col:", e)
 
 
 
@@ -232,19 +259,19 @@ def create_app():
         try:
             return db.session.get(User, int(user_id))
         except Exception as e:
+            print("load_user:", e)
             try:
                 db.session.rollback()
             except Exception:
                 pass
-            print("load_user:", e)
             try:
                 return db.session.get(User, int(user_id))
             except Exception as e2:
+                print("load_user retry:", e2)
                 try:
                     db.session.rollback()
                 except Exception:
                     pass
-                print("load_user retry:", e2)
                 return None
 
     # Register Blueprints
@@ -503,7 +530,6 @@ def create_app():
         unread_notifications = 0
         try:
             if current_user.is_authenticated:
-                _ensure_schema_columns()
                 unread_notifications = Notification.query.filter_by(
                     user_id=current_user.id,
                     is_read=False
