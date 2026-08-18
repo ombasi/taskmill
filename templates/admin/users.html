@@ -39,6 +39,7 @@
         <tr>
           <th class="p-5">User</th>
           <th class="p-5">Membership</th>
+          <th class="p-5">Telegram</th>
           <th class="p-5">Balance</th>
           <th class="p-5">Status</th>
           <th class="p-5 text-right">Action</th>
@@ -67,7 +68,14 @@
               {{ user.membership.name if user.membership else '—' }}
             </span>
           </td>
-          <td class="p-5">
+                      <td class="p-4">
+              {% if user.telegram_chat_id %}
+              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-2.5 py-1 text-[10px] font-bold text-emerald-300" title="{{ user.telegram_chat_id }}">Linked</span>
+              {% else %}
+              <span class="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-500">Not linked</span>
+              {% endif %}
+            </td>
+<td class="p-5">
             <p class="text-lg font-black {% if (user.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
               {{ money(current_user, user.available_balance) }}
             </p>
