@@ -129,49 +129,25 @@
       </div>
     </section>
   </div>
-
-  {# Telegram #}
+  {# Telegram — admin assigns chat ID #}
   <section class="dx-card p-5">
     <p class="dx-kicker mb-2">Telegram alerts</p>
-    <p class="text-xs text-zinc-400 mb-3 leading-relaxed">
-      Get deposit approvals, combo holds, and wallet alerts on Telegram.
-    </p>
-    <a href="https://t.me/taskmill_bot" target="_blank" rel="noopener"
-       class="inline-flex items-center gap-2 rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 px-4 py-2.5 text-sm font-bold text-sky-100 transition mb-4">
-      <i class="fa-brands fa-telegram text-lg"></i> Open @taskmill_bot &amp; press Start
-    </a>
-    <ol class="text-[11px] text-zinc-400 space-y-1.5 mb-4 list-decimal list-inside leading-relaxed">
-      <li>Tap the button above and press <strong class="text-zinc-200">Start</strong> in Telegram.</li>
-      <li>Get your numeric <strong class="text-zinc-200">Chat ID</strong> (message <a class="text-sky-300 underline" href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a> and copy the Id).</li>
-      <li>Paste the Chat ID below → <strong class="text-zinc-200">Save</strong>.</li>
-      <li>Press <strong class="text-zinc-200">Test Telegram</strong> — you should receive a message.</li>
-    </ol>
-    <form method="POST" action="{{ url_for('profile.index') }}" class="space-y-3">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input type="hidden" name="action" value="telegram_prefs">
-      <label class="dx-label">Telegram Chat ID</label>
-      <input class="dx-input" type="text" name="telegram_chat_id"
-             value="{{ current_user.telegram_chat_id or '' }}"
-             placeholder="e.g. 123456789" inputmode="numeric">
-      <button type="submit" class="dx-btn">Save Telegram</button>
-    </form>
-    <form method="POST" action="{{ url_for('profile.index') }}" class="mt-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input type="hidden" name="action" value="telegram_test">
-      <button type="submit"
-              class="w-full rounded-xl border border-sky-400/30 bg-sky-500/10 hover:bg-sky-500/20 py-2.5 text-sm font-bold text-sky-100 transition {% if not current_user.telegram_chat_id %}opacity-50 cursor-not-allowed{% endif %}"
-              {% if not current_user.telegram_chat_id %}disabled{% endif %}>
-        Test Telegram
-      </button>
-    </form>
     {% if current_user.telegram_chat_id %}
-    <p class="text-[11px] text-emerald-300 font-semibold mt-2">Linked · alerts enabled for this account</p>
+    <p class="text-sm text-emerald-300 font-semibold">Linked · you will receive deposit, combo, and wallet alerts.</p>
+    <p class="text-[11px] text-zinc-500 mt-2">Need to change your Telegram? Contact support / admin with your new Chat ID.</p>
     {% else %}
-    <p class="text-[11px] text-amber-200/90 mt-2">Not linked yet — only users with a saved Chat ID receive Telegram alerts.</p>
+    <p class="text-sm text-zinc-300 leading-relaxed">
+      Telegram alerts are linked by admin. Open
+      <a href="https://t.me/taskmill_bot" target="_blank" rel="noopener" class="text-sky-300 font-bold underline">@taskmill_bot</a>,
+      press <strong class="text-white">Start</strong>, get your numeric Chat ID from
+      <a href="https://t.me/userinfobot" target="_blank" rel="noopener" class="text-sky-300 underline">@userinfobot</a>,
+      then send that ID to support so admin can activate alerts for your account.
+    </p>
+    <a href="{{ url_for('dashboard.contact') }}" class="dx-btn inline-flex mt-4 !text-xs !py-2">Contact support</a>
     {% endif %}
   </section>
 
-  {# Payout #}
+{# Payout #}
   <section class="dx-card p-5">
     <p class="dx-kicker mb-2">Payout method</p>
     {% if current_user.payout_method and current_user.payout_account_number %}

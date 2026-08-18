@@ -3790,3 +3790,60 @@ def interest_settings():
     db.session.commit()
     flash("Interest settings saved.", "success")
     return redirect(url_for("admin.settings"))
+
+
+@admin_bp.route("/users/<int:user_id>/telegram", methods=["POST"])
+@login_required
+def set_user_telegram(user_id):
+    """Admin/agent sets Telegram chat ID for a user."""
+    if not (getattr(current_user, "is_admin", False) or getattr(current_user, "is_agent", False)):
+        flash("Not allowed.", "danger")
+        return redirect(url_for("admin.users"))
+    user = User.query.get_or_404(user_id)
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        # tree-only if helper exists
+        try:
+            from routes.admin import _agent_can_manage
+            if not _agent_can_manage(current_user, user):
+                flash("User not in your team.", "danger")
+                return redirect(url_for("admin.users"))
+        except Exception:
+            pass
+    chat = (request.form.get("telegram_chat_id") or "").strip() or None
+    if chat and not str(chat).lstrip("-").isdigit():
+        flash("Chat ID should be numbers only.", "warning")
+        return redirect(url_for("admin.view_user", user_id=user.id))
+    try:
+        from sqlalchemy import text, inspect
+        insp = inspect(db.engine)
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "telegram_chat_id" not in cols:
+            dialect = db.engine.dialect.name
+            if dialect == "postgresql":
+                db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS telegram_chat_id VARCHAR(64)"))
+            else:
+                db.session.execute(text("ALTER TABLE users ADD COLUMN telegram_chat_id VARCHAR(64)"))
+            db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print("tg col:", e)
+    user.telegram_chat_id = chat
+    db.session.commit()
+    try:
+        from utils.audit import log_action
+        log_action(current_user.id, "set_telegram", "user", str(user.id), f"chat_id={chat}")
+    except Exception:
+        pass
+    if chat:
+        flash(f"Telegram linked for {user.username}.", "success")
+        try:
+            from services.engagement_service import send_outbound_alert
+            send_outbound_alert(user, "Telegram linked", "Your Taskmill Telegram alerts are now active.")
+        except Exception:
+            pass
+    else:
+        flash(f"Telegram unlinked for {user.username}.", "success")
+    return redirect(url_for("admin.view_user", user_id=user.id))

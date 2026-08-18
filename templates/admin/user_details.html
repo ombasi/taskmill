@@ -3,6 +3,32 @@
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
 
+  <section class="glass rounded-2xl p-4 mt-4">
+    <h3 class="font-bold text-sm mb-2">Telegram Chat ID</h3>
+    <p class="text-xs text-zinc-400 mb-3">User sends Chat ID via support. Paste it here to enable alerts. Bot: @taskmill_bot</p>
+    <form method="POST" action="{{ url_for('admin.set_user_telegram', user_id=user.id) }}" class="flex flex-wrap gap-2 items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <div class="flex-1 min-w-[12rem]">
+        <label class="text-[10px] text-zinc-500 uppercase font-bold">Chat ID</label>
+        <input name="telegram_chat_id" value="{{ user.telegram_chat_id or '' }}"
+               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="123456789">
+      </div>
+      <button class="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm font-bold">Save Telegram</button>
+      {% if user.telegram_chat_id %}
+      <button name="telegram_chat_id" value="" class="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-zinc-400">Clear</button>
+      {% endif %}
+    </form>
+  </section>
+
+<div class="mb-3 text-xs">
+  {% if user.telegram_chat_id %}
+  <span class="rounded-full bg-emerald-500/15 border border-emerald-400/30 px-2.5 py-1 font-bold text-emerald-300">Telegram linked · {{ user.telegram_chat_id }}</span>
+  {% else %}
+  <span class="rounded-full bg-amber-500/10 border border-amber-400/25 px-2.5 py-1 font-bold text-amber-200">Telegram not linked</span>
+  {% endif %}
+</div>
+
+
 
     {% if current_user.is_admin %}
     <div class="flex flex-wrap gap-2 mb-4">
