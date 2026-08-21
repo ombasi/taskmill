@@ -275,6 +275,42 @@ def create_app():
                 return None
 
     # Register Blueprints
+    
+    # Timezone display: users local, admin EAT
+    try:
+        from utils.timeutil import format_user, format_eat, format_smart, to_user_tz, to_eat
+
+        @app.template_filter("localtime")
+        def _filter_localtime(dt, fmt="%d %b %Y · %H:%M"):
+            """Format for current viewer: EAT if admin page/user is admin, else user TZ."""
+            try:
+                from flask_login import current_user
+                from flask import request
+                is_admin_view = bool(
+                    (request.path or "").startswith("/admin")
+                    or (request.endpoint or "").startswith("admin.")
+                    or (request.endpoint or "").startswith("chat.admin")
+                )
+                if is_admin_view:
+                    return format_eat(dt, fmt)
+                u = current_user if getattr(current_user, "is_authenticated", False) else None
+                return format_user(dt, u, fmt)
+            except Exception:
+                return format_eat(dt, fmt) if dt else "—"
+
+        @app.template_filter("eattime")
+        def _filter_eattime(dt, fmt="%d %b %Y · %H:%M"):
+            return format_eat(dt, fmt)
+
+        @app.template_filter("usertime")
+        def _filter_usertime(dt, user=None, fmt="%d %b %Y · %H:%M"):
+            return format_user(dt, user, fmt)
+
+        app.jinja_env.globals["format_eat"] = format_eat
+        app.jinja_env.globals["format_user"] = format_user
+    except Exception as _tz_e:
+        print("timezone filters:", _tz_e)
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(profile_bp)
