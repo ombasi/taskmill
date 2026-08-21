@@ -67,46 +67,39 @@ def admin_required(f):
         # Agents: only certain endpoints
         if is_agent and not is_full:
             ep = (request.endpoint or "")
+            # Support-only role: read + chat + notes + flag. No money / security / combo / membership.
             allowed = {
                 "admin.users",
                 "admin.view_user",
-                "admin.credit_wallet",
-                "admin.deduct_wallet",
-                "admin.reset_password",
-                "admin.reset_tasks",
-                "admin.reset_combo",
-                "admin.unlock_set2",
-                "admin.reset_withdraw_pin",
-                "admin.change_membership",
-                "admin.assign_combo",
-                "admin.trigger_combo",
-                "admin.remove_combo",
-                "admin.grant_spin",
-                "admin.reset_spin",
-                "admin.assign_combo_from_manager",
-                "admin.combos",
-                "admin.deposits",
-                "admin.withdrawals",
-                "admin.toggle_block",
-                "admin.toggle_active",
                 "admin.add_user_note",
                 "admin.team_report",
-                "chat.admin_inbox",
-                "chat.admin_thread",
+                "admin.deposits",          # view pending only (approve routes are full_admin)
+                "admin.withdrawals",      # view pending only
                 "admin.flag_deposit",
-                "admin.freeze_wallet",
                 "admin.export_team_users_csv",
                 "admin.referral_leaderboard",
                 "admin.stuck_users",
                 "admin.team_challenges",
-                "admin.claim_challenge_prize",
+                "chat.admin_inbox",
+                "chat.admin_thread",
+                "auth.setup_2fa",
+                "auth.verify_2fa",
+                "auth.logout",
             }
             if ep not in allowed:
-                flash("Team leaders can only manage users in their referral tree.", "warning")
+                flash("Support agents can only view their team, chat, add notes, and flag items. Money and security actions are main admin only.", "warning")
                 return redirect(url_for("admin.users"))
         return f(*args, **kwargs)
     return decorated_function
 
+
+
+def _deny_agent_write():
+    """Block agents from any money/security write (support role only)."""
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        flash("Support agents cannot perform this action. Main admin only.", "danger")
+        return True
+    return False
 
 def full_admin_required(f):
     """Strict full administrator only (not agents)."""
@@ -712,6 +705,9 @@ def view_user(user_id):
 @login_required
 @admin_required
 def toggle_block(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
     user = User.query.get_or_404(user_id)
@@ -743,6 +739,9 @@ def toggle_block(user_id):
 @login_required
 @admin_required
 def toggle_active(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
         flash(
@@ -765,6 +764,9 @@ from werkzeug.security import generate_password_hash
 @login_required
 @admin_required
 def reset_password(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -937,6 +939,9 @@ def delete_user(user_id):
 @login_required
 @admin_required
 def credit_wallet(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -983,6 +988,9 @@ def credit_wallet(user_id):
 @login_required
 @admin_required
 def deduct_wallet(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -1145,6 +1153,9 @@ def assign_combo_from_manager():
 @login_required
 @admin_required
 def assign_combo(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -1332,6 +1343,9 @@ def edit_combo(id):
 @login_required
 @admin_required
 def trigger_combo(combo_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     _c = Combo.query.get_or_404(combo_id)
     if assert_can_manage(_c.user_id) is None:
         return redirect(url_for("admin.users"))
@@ -1374,6 +1388,9 @@ def delete_combo(id):
 @login_required
 @admin_required
 def remove_combo(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     user = User.query.get_or_404(user_id)
 
     user.combo_active = False
@@ -1393,6 +1410,9 @@ def remove_combo(user_id):
 @login_required
 @admin_required
 def reset_tasks(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -1417,6 +1437,9 @@ def reset_tasks(user_id):
 @login_required
 @admin_required
 def reset_combo(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -1454,6 +1477,9 @@ def reset_spin(user_id):
 @login_required
 @admin_required
 def unlock_set2(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -1492,6 +1518,9 @@ def send_notification(user_id):
 @login_required
 @admin_required
 def reset_withdraw_pin(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -2077,6 +2106,9 @@ def edit_membership(id):
 @login_required
 @admin_required
 def change_membership(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -3036,6 +3068,9 @@ def spin_prize_delete(prize_id):
 @login_required
 @admin_required
 def grant_spin(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None:
         return redirect(url_for("admin.users"))
 
@@ -3317,6 +3352,9 @@ def flag_deposit(deposit_id):
 @login_required
 @admin_required
 def freeze_wallet(user_id):
+    if _deny_agent_write():
+        return redirect(url_for("admin.users"))
+
     if assert_can_manage(user_id) is None and not current_user.is_admin:
         return redirect(url_for("admin.users"))
     user = User.query.get_or_404(user_id)

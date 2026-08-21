@@ -2,6 +2,14 @@
 {% block title %}User · {{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
+{% set is_full_admin = current_user.is_admin %}
+{% set is_support_agent = current_user.is_agent and not current_user.is_admin %}
+{% if is_support_agent %}
+<div class="mb-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+  <strong>Support role:</strong> you can view this member, chat, add notes, and flag deposits. Wallet, combo, membership, passwords, and blocks are main admin only.
+</div>
+{% endif %}
+
 
   <section class="glass rounded-2xl p-4 mt-4">
     <h3 class="font-bold text-sm mb-2">Telegram Chat ID</h3>
@@ -454,3 +462,20 @@ function closePayoutModal(){
 }
 </script>
 {% endblock %}
+
+{% if is_support_agent %}
+<style>
+  [data-admin-only],
+  #creditModal, #deductModal, #membershipModal, #spinModal,
+  button[onclick*="openCredit"], button[onclick*="openDeduct"],
+  button[onclick*="openMembership"], button[onclick*="openSpin"],
+  a[href*="reset_password"], a[href*="reset_tasks"], a[href*="unlock_set2"],
+  form[action*="credit_wallet"], form[action*="deduct_wallet"],
+  form[action*="reset_password"], form[action*="reset_tasks"],
+  form[action*="reset_combo"], form[action*="unlock_set2"],
+  form[action*="change_membership"], form[action*="assign_combo"],
+  form[action*="trigger_combo"], form[action*="grant_spin"],
+  form[action*="toggle_block"], form[action*="freeze_wallet"],
+  form[action*="reset_withdraw_pin"] { display: none !important; }
+</style>
+{% endif %}
