@@ -4,6 +4,36 @@
 {# First-set unlock CTA — platinum #}
 {% set _sets = current_user.daily_sets_completed or 0 %}
 {% set _unlocked = current_user.set2_unlocked if current_user.set2_unlocked is defined else False %}
+
+{# Combo platinum notice #}
+{% if current_user.combo_active or (current_user.available_balance is defined and (current_user.available_balance or 0) < 0) %}
+<div class="combo-dx-banner mb-4 relative overflow-hidden rounded-2xl border border-amber-400/20 px-4 py-4
+            bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black
+            shadow-[0_0_40px_-12px_rgba(251,191,36,0.22)]">
+  <div class="absolute inset-0 pointer-events-none opacity-40"
+       style="background: radial-gradient(ellipse at 10% 0%, rgba(251,191,36,.18), transparent 50%), radial-gradient(ellipse at 90% 100%, rgba(167,139,250,.12), transparent 45%);"></div>
+  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
+    <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
+                bg-gradient-to-br from-amber-100/20 to-violet-200/15 border border-white/20 text-amber-100">
+      <i class="fa-solid fa-bolt"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-200/80">Diamond notice</p>
+      <p class="text-sm font-black text-white mt-0.5">Combo active — deposit, then submit</p>
+      <p class="text-xs text-zinc-400 mt-0.5">Higher commission after you clear the hold. Read the short guide, then deposit or open Tasks.</p>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+      <a href="{{ url_for('task.combo_guide') }}"
+         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900
+                bg-gradient-to-r from-white via-amber-50 to-amber-100">Guide</a>
+      <a href="{{ url_for('wallet.deposit') }}"
+         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white
+                border border-white/20 bg-white/5">Deposit</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if _sets >= 1 and not _unlocked and _sets < 2 %}
 <div class="mb-4 relative overflow-hidden rounded-2xl border border-white/15 px-4 py-4
             bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black

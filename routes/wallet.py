@@ -173,6 +173,11 @@ def deposit():
         db.session.add(deposit)
 
         db.session.commit()
+        try:
+            from services.admin_alerts import alert_deposit
+            alert_deposit(current_user, deposit)
+        except Exception as _ad:
+            print("admin alert deposit (route):", _ad)
 
         flash(
             "Deposit submitted. Next: wait for admin approval — your balance updates automatically when approved.",
@@ -394,6 +399,13 @@ def withdraw():
             except Exception:
                 pass
             flash("Withdrawal request submitted. Funds held pending admin approval.", "success")
+            try:
+                from services.admin_alerts import alert_withdraw
+                # withdrawal object from create_withdrawal if available
+                if withdrawal:
+                    alert_withdraw(current_user, withdrawal)
+            except Exception as _aw:
+                print("admin alert withdraw (route):", _aw)
         else:
             flash("Cannot withdraw: insufficient balance after the required reserve, or invalid amount.", "danger")
 

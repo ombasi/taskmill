@@ -186,6 +186,28 @@ def submit(id):
 
 
 
+
+
+@task_bp.route("/combo-guide")
+@login_required
+def combo_guide():
+    """Platinum explainer when a combo is active or user is negative from combo."""
+    _sync_combo_status(current_user)
+    combo_tasks = [
+        t for t in _combo_tasks(current_user)
+        if t.status in ("assigned", "frozen", "pending")
+    ]
+    bal = float(current_user.available_balance or 0)
+    combo_total = sum(float(getattr(t, "product_price", 0) or 0) for t in combo_tasks)
+    return render_template(
+        "tasks/combo_guide.html",
+        combo_tasks=combo_tasks,
+        combo_total=combo_total,
+        bal=bal,
+        user=current_user,
+    )
+
+
 @task_bp.route("/set1-complete")
 @login_required
 def set1_complete():
