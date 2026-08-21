@@ -167,12 +167,44 @@ def submit(id):
 
     progress = TaskService.progress(current_user)
     if progress.get("needs_admin_unlock"):
-        flash("Set 1 complete. Contact admin to unlock Set 2.", "info")
-        return redirect(url_for("dashboard.index"))
+        try:
+            from services.notification_service import NotificationService
+            NotificationService.send(
+                current_user.id,
+                "Set 1 complete — unlock Set 2",
+                "Great work! Message Support to unlock Set 2 so you can continue today's tasks.",
+                "info",
+            )
+        except Exception:
+            pass
+        return redirect(url_for("task.set1_complete"))
     if progress.get("can_withdraw"):
         flash("You may now request a withdrawal (keep UGX 15,000 reserve).", "info")
 
     return redirect(url_for("task.index"))
+
+
+
+
+@task_bp.route("/set1-complete")
+@login_required
+def set1_complete():
+    """First-time friendly screen after Set 1 — clear path to Support."""
+    progress = TaskService.progress(current_user)
+    if not progress.get("needs_admin_unlock") and int(getattr(current_user, "daily_sets_completed", 0) or 0) >= 2:
+        return redirect(url_for("task.index"))
+    support = None
+    try:
+        from models.support import Support
+        support = Support.query.first()
+    except Exception:
+        pass
+    return render_template(
+        "tasks/set1_complete.html",
+        progress=progress,
+        support=support,
+        user=current_user,
+    )
 
 
 @task_bp.route("/history")
