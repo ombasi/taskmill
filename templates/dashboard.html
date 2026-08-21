@@ -1,6 +1,37 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }} · Taskmill{% endblock %}
 {% block content %}
+{# First-set unlock CTA — platinum #}
+{% set _sets = current_user.daily_sets_completed or 0 %}
+{% set _unlocked = current_user.set2_unlocked if current_user.set2_unlocked is defined else False %}
+{% if _sets >= 1 and not _unlocked and _sets < 2 %}
+<div class="mb-4 relative overflow-hidden rounded-2xl border border-white/15 px-4 py-4
+            bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black
+            shadow-[0_0_40px_-12px_rgba(186,230,253,0.25)]">
+  <div class="absolute inset-0 pointer-events-none opacity-40"
+       style="background: radial-gradient(ellipse at 10% 0%, rgba(186,230,253,.2), transparent 50%), radial-gradient(ellipse at 90% 100%, rgba(167,139,250,.15), transparent 45%);"></div>
+  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
+    <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
+                bg-gradient-to-br from-white/15 to-sky-200/20 border border-white/20 text-sky-100">
+      <i class="fa-solid fa-gem"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-sky-200/80">Diamond notice</p>
+      <p class="text-sm font-black text-white mt-0.5">Set 1 complete — unlock Set 2 with Support</p>
+      <p class="text-xs text-zinc-400 mt-0.5">Message Support once. Then finish Set 2 and stay on your daily path.</p>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+      <a href="{{ url_for('task.set1_complete') }}"
+         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900
+                bg-gradient-to-r from-white via-slate-100 to-sky-100 shadow-lg shadow-sky-500/10">Guide</a>
+      <a href="{{ url_for('chat.inbox') }}"
+         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white
+                border border-white/20 bg-white/5">Live chat</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% set mname = current_user.membership.name if current_user.membership else "Member" %}
 {% set name = current_user.full_name or current_user.username or "Member" %}
 {% set bal = current_user.available_balance or 0 %}
