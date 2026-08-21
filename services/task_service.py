@@ -56,9 +56,9 @@ class TaskService:
     # Daily non-combo profit targets (UGX). Hard cap = target + 500.
     DAILY_PROFIT_TARGETS = {
         "Starter": 5000.0,
-        "Silver": 10000.0,
-        "Gold": 30000.0,
-        "VIP": 100000.0,
+        "Silver": 7000.0,
+        "Gold": 10000.0,
+        "VIP": 12000.0,
     }
     DAILY_PROFIT_SLACK = 500.0  # allowed excess above target
 

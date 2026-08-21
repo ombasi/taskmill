@@ -185,57 +185,57 @@ def seed_memberships():
             daily_tasks=32,
             tasks_per_set=16,
             daily_sets=2,
-            commission_percent=5.0,
-            combo_commission_percent=8.0,
+            commission_percent=3.5,
+            combo_commission_percent=6.0,
             combo_probability=3,
             max_product_price=10000,
             withdrawal_limit=20000,
-            minimum_deposit=0,
+            minimum_deposit=15000,
             referral_bonus=2000,
             active=True
         ),
         Membership(
             name="Silver",
-            price=60000,
+            price=120000,
             daily_tasks=36,
             tasks_per_set=18,
             daily_sets=2,
-            commission_percent=7.0,
-            combo_commission_percent=10.0,
+            commission_percent=4.0,
+            combo_commission_percent=7.0,
             combo_probability=4,
             max_product_price=50000,
             withdrawal_limit=70000,
-            minimum_deposit=60000,
+            minimum_deposit=30000,
             referral_bonus=5000,
             active=True
         ),
         Membership(
             name="Gold",
-            price=150000,
+            price=300000,
             daily_tasks=42,
             tasks_per_set=21,
             daily_sets=2,
-            commission_percent=9.0,
-            combo_commission_percent=12.0,
+            commission_percent=4.5,
+            combo_commission_percent=8.0,
             combo_probability=6,
             max_product_price=150000,
             withdrawal_limit=200000,
-            minimum_deposit=150000,
+            minimum_deposit=60000,
             referral_bonus=10000,
             active=True
         ),
         Membership(
             name="VIP",
-            price=350000,
+            price=700000,
             daily_tasks=50,
             tasks_per_set=25,
             daily_sets=2,
-            commission_percent=12.0,
-            combo_commission_percent=15.0,
+            commission_percent=5.0,
+            combo_commission_percent=10.0,
             combo_probability=10,
             max_product_price=500000,
             withdrawal_limit=2000000,
-            minimum_deposit=350000,
+            minimum_deposit=200000,
             referral_bonus=25000,
             active=True
         ),
@@ -246,10 +246,10 @@ def seed_memberships():
     db.session.commit()
     # Ensure commission rates even if columns were added late
     rates = {
-        "Starter": (5.0, 8.0),
-        "Silver": (7.0, 10.0),
-        "Gold": (9.0, 12.0),
-        "VIP": (12.0, 15.0),
+        "Starter": (3.5, 6.0),
+        "Silver": (4.0, 7.0),
+        "Gold": (4.5, 8.0),
+        "VIP": (5.0, 10.0),
     }
     for name, (c, cc) in rates.items():
         m = Membership.query.filter_by(name=name).first()
@@ -621,7 +621,14 @@ def seed_products():
 # ==========================================================
 
 
-def seed_payments():
+def seed_payments()
+    try:
+        from utils.payment_methods import ensure_crypto_payment_methods
+        ensure_crypto_payment_methods()
+    except Exception as e:
+        print("crypto payments:", e):
+    # crypto ensured below after mobile money
+
     from models.payment_setting import PaymentSetting
     if PaymentSetting.query.first():
         print("Payment methods already exist.")
