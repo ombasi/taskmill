@@ -9,7 +9,7 @@ Rules:
 from datetime import datetime, timedelta, date
 
 DEFAULT_MIN_UGX = 30000.0
-DEFAULT_RATE = 0.10
+DEFAULT_RATE = 0.05
 
 
 def _settings():

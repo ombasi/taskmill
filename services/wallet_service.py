@@ -265,14 +265,14 @@ class WalletService:
         )
         db.session.add(tx)
 
-        # Referral bonus: 25% of deposit to referrer when referred user deposits
+        # Referral bonus: 10% of deposit to referrer when referred user deposits
         try:
             referrer_id = getattr(user, "referred_by_id", None)
             if referrer_id:
                 from models.user import User
                 referrer = User.query.get(referrer_id)
                 if referrer:
-                    bonus = round(amount * 0.25, 0)
+                    bonus = round(amount * 0.10, 0)
                     if bonus > 0:
                         rb = float(referrer.available_balance or 0)
                         referrer.available_balance = rb + bonus
@@ -283,7 +283,7 @@ class WalletService:
                             user_id=referrer.id,
                             amount=bonus,
                             transaction_type="referral_bonus",
-                            description=f"25% referral bonus from {user.username} deposit",
+                            description=f"10% referral bonus from {user.username} deposit",
                             balance_before=rb,
                             balance_after=float(referrer.available_balance),
                             reference=getattr(deposit, "transaction_id", None),
@@ -293,7 +293,7 @@ class WalletService:
                             NotificationService.send(
                                 referrer,
                                 "Referral Deposit Bonus",
-                                f"You earned {__import__('helpers.currency', fromlist=['money']).money(referrer, bonus)} (25%) because {user.username} deposited.",
+                                f"You earned {__import__('helpers.currency', fromlist=['money']).money(referrer, bonus)} (10%) because {user.username} deposited.",
                             )
                             try:
                                 from services.badge_service import award

@@ -1743,11 +1743,11 @@ def approve_deposit(deposit_id):
     )
     db.session.add(tx)
 
-    # Referral 25%
+    # Referral 10%
     if user.referred_by_id:
         ref = User.query.get(user.referred_by_id)
         if ref and amount > 0:
-            bonus = round(amount * 0.25, 0)
+            bonus = round(amount * 0.10, 0)
             rb = float(ref.available_balance or 0)
             ref.available_balance = rb + bonus
             ref.referral_income = (ref.referral_income or 0) + bonus
@@ -1755,7 +1755,7 @@ def approve_deposit(deposit_id):
                 user_id=ref.id,
                 amount=bonus,
                 transaction_type="referral_bonus",
-                description=f"25% of deposit by {user.username}",
+                description=f"10% of deposit by {user.username}",
                 balance_before=rb,
                 balance_after=float(ref.available_balance),
             ))
@@ -2854,11 +2854,11 @@ def bulk_approve_deposits():
             except Exception as e:
                 print("bulk deposit telegram:", e)
 
-            # Referral 25% + notify referrer
+            # Referral 10% + notify referrer
             if user.referred_by_id and amount > 0:
                 ref = User.query.get(user.referred_by_id)
                 if ref:
-                    bonus = round(amount * 0.25, 0)
+                    bonus = round(amount * 0.10, 0)
                     rb = float(ref.available_balance or 0)
                     ref.available_balance = rb + bonus
                     ref.referral_income = (ref.referral_income or 0) + bonus
@@ -2866,7 +2866,7 @@ def bulk_approve_deposits():
                         user_id=ref.id,
                         amount=bonus,
                         transaction_type="referral_bonus",
-                        description=f"25% of deposit by {user.username}",
+                        description=f"10% of deposit by {user.username}",
                         balance_before=rb,
                         balance_after=float(ref.available_balance),
                     ))
@@ -3827,9 +3827,9 @@ def interest_settings():
     except Exception:
         s.interest_min_ugx = 30000
     try:
-        s.interest_rate = float(request.form.get("interest_rate") or 10)
+        s.interest_rate = float(request.form.get("interest_rate") or 5)
     except Exception:
-        s.interest_rate = 10
+        s.interest_rate = 5
     db.session.commit()
     flash("Interest settings saved.", "success")
     return redirect(url_for("admin.settings"))
