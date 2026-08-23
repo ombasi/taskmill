@@ -2,14 +2,11 @@
 {% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }} · Taskmill{% endblock %}
 {% block content %}
 
-
-
 {# First-set unlock CTA — platinum #}
 {% set _sets = current_user.daily_sets_completed or 0 %}
 {% set _unlocked = current_user.set2_unlocked if current_user.set2_unlocked is defined else False %}
 
 {# Combo platinum notice #}
-
 
 {% set mname = current_user.membership.name if current_user.membership else "Member" %}
 {% set name = current_user.full_name or current_user.username or "Member" %}
@@ -35,6 +32,33 @@
 {% set ref_n = referral_count|default(0)|int %}
 
 <style>
+
+  .dx-page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0.5rem 0.85rem 6.75rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-page { padding: 1.25rem 1.5rem 3rem; }
+  }
+  .dx-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    .dx-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
   .dx-page {
     max-width: 72rem;
     margin: 0 auto;
@@ -214,8 +238,6 @@
             <h1 class="dx-title text-2xl sm:text-4xl font-black mt-1.5 tracking-tight">{{ name }}</h1>
             <div class="flex flex-wrap gap-1.5 mt-3">
               <span class="dx-chip">{{ mname }}</span>
-              <span class="dx-chip">Level {{ _lvl }}</span>
-              <span class="dx-chip">🔥 {{ st }} day streak</span>
             </div>
           </div>
           <div class="dx-gem shrink-0 lg:hidden"><i class="fa-solid fa-gem"></i></div>
@@ -268,29 +290,18 @@
 
   
   
-  <div class="grid sm:grid-cols-2 gap-3">
-    <a href="{{ url_for('engagement.check_in') }}" class="dx-card p-4 flex items-center gap-3 hover:border-amber-300/30 transition">
-      <span class="dx-gem !w-10 !h-10 !rounded-xl text-amber-200"><i class="fa-solid fa-calendar-check"></i></span>
-      <span class="min-w-0">
-        <span class="block text-sm font-bold">{% if checkin_done %}Checked in today{% else %}Daily check-in{% endif %}</span>
-        <span class="block text-[11px] text-zinc-500">Streak rewards &amp; XP</span>
-      </span>
-    </a>
-    <div class="dx-card p-4">
-      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Invite friends</p>
-      {% set ref = current_user.referral_code or '' %}
-      {% set share = url_for('dashboard.join_invite', code=ref, _external=True) if ref else url_for('auth.register', _external=True) %}
-      <p class="text-sm font-mono text-sky-200 mt-1">{{ ref or '—' }}</p>
-      <div class="flex flex-wrap gap-2 mt-2">
-        <button type="button" class="dx-btn !py-1.5 !px-3 !text-xs" onclick="navigator.clipboard.writeText('{{ share }}');this.textContent='Copied!'">Copy link</button>
-        <a class="dx-btn-ghost !py-1.5 !px-3 !text-xs" target="_blank" rel="noopener"
-           href="https://wa.me/?text={{ ('Join me on Taskmill: '|urlencode) ~ (share|urlencode) }}">WhatsApp</a>
-      </div>
-    </div>
-  </div>
+  {% if not checkin_done %}
+  <a href="{{ url_for('engagement.check_in') }}" class="dx-card p-4 flex items-center gap-3 hover:border-amber-300/30 transition" aria-label="Daily check-in">
+    <span class="dx-gem !w-10 !h-10 !rounded-xl text-amber-200"><i class="fa-solid fa-calendar-check"></i></span>
+    <span class="min-w-0 flex-1">
+      <span class="block text-sm font-bold">Daily check-in</span>
+      <span class="block text-[11px] text-zinc-500">Tap to claim today’s reward</span>
+    </span>
+    <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+  </a>
+  {% endif %}
 
   
-
 
   {% if combo %}
   <section class="dx-card p-4 border border-rose-400/20">
@@ -322,12 +333,6 @@
   </a>
   {% endif %}
 
-  <div class="dx-grid-main">
-  
-  
-  
-  
-  <section class="dx-card p-4" 
   {% if (current_user.available_balance or 0)|float < 0 %}
   <section class="dx-card p-4 border border-amber-400/25" id="combo-helper">
     <p class="dx-kicker text-amber-200/90">Combo deposit helper</p>
@@ -337,42 +342,11 @@
   </section>
   {% endif %}
 
-  <section class="dx-card p-4" 
-  <section class="dx-card p-4" id="weekly-mission">
-    <p class="dx-kicker">Weekly mission</p>
-    <p class="text-sm font-bold mt-1">Finish 2 full task days this week</p>
-    <p class="text-xs text-zinc-500 mt-1">Sets completed today: {{ current_user.daily_sets_completed or 0 }} · Keep a streak for badges &amp; spins.</p>
-  </section>
-
-  {% if current_user.referred_by_id and (current_user.completed_tasks|default(0)|int) < 20 %}
-  <section class="dx-card p-4" id="buddy-tip">
-    <p class="dx-kicker">Buddy tips</p>
-    <p class="text-sm text-zinc-400 mt-1">You joined with a referral. Finish your first sets, keep a reserve balance, and contact Support if a combo hold appears.</p>
-  </section>
-  {% endif %}
-
-  {% if (current_user.available_balance or 0)|float < 0 or combo %}
-  <section class="dx-card p-4 border border-rose-400/20">
-    <p class="dx-kicker text-rose-200/80">Hold protection</p>
-    <p class="text-sm text-zinc-300 mt-1 leading-relaxed">
-      A high-value product placed a temporary hold. You are <strong class="text-white">not losing</strong> your capital —
-      deposit until balance is ≥ 0, submit the product, and the hold clears with combo commission.
-    </p>
-  </section>
-  {% endif %}
-
-  <p id="ops-ticker" class="text-[11px] text-center text-zinc-500"></p>
-  <script>
-  (function(){
-    fetch('/api/ops-ticker').then(function(r){return r.json()}).then(function(d){
-      var el = document.getElementById('ops-ticker');
-      if (el && d && d.message) el.textContent = d.message;
-    }).catch(function(){});
-  })();
-  </script>
-
   {# TODAY PROGRESS #}
-  <section class="dx-card p-5">
+  
+  <div class="dx-layout">
+    <div class="dx-col">
+<section class="dx-card p-5">
     <div class="flex items-center justify-between mb-4">
       <div>
         <p class="dx-kicker" style="letter-spacing:.18em">Today</p>
@@ -481,10 +455,9 @@
       {% endfor %}
     </div>
   </section>
-
-  <div class="dx-grid-main">
-  {# REFERRALS #}
-  <section class="dx-card p-5" id="referral-progress">
+    </div>
+    <div class="dx-col">
+<section class="dx-card p-5" id="referral-progress">
     <div class="flex items-start justify-between gap-3 mb-3">
       <div>
         <p class="dx-kicker" style="letter-spacing:.18em">Growth</p>
@@ -496,13 +469,21 @@
           {% endif %}
         </p>
       </div>
-      <a href="{{ url_for('dashboard.earn') }}" class="text-xs font-bold text-sky-200 hover:text-white">Share →</a>
+      <a href="{{ url_for('dashboard.earn') }}" class="text-xs font-bold text-sky-200 hover:text-white">Details →</a>
     </div>
     {% set ref_goal = 10 %}
     {% set ref_pct = [((ref_n / ref_goal) * 100)|int, 100]|min %}
     <div class="dx-bar"><i style="width:{{ ref_pct }}%"></i></div>
     <p class="text-[11px] text-zinc-500 mt-2">{{ ref_n }} / {{ ref_goal }} toward next milestone</p>
     <p class="text-sm font-bold text-emerald-300 mt-3">{{ money(current_user, referral_earnings|default(0)) }} earned from referrals</p>
+    {% set ref = current_user.referral_code or '' %}
+    {% set share = url_for('dashboard.join_invite', code=ref, _external=True) if ref else url_for('auth.register', _external=True) %}
+    <div class="flex flex-wrap gap-2 mt-4">
+      <button type="button" class="dx-btn !py-2 !px-3 !text-xs" aria-label="Copy invite link"
+              onclick="navigator.clipboard.writeText('{{ share }}');this.textContent='Copied!'">Copy invite link</button>
+      <a class="dx-btn-ghost !py-2 !px-3 !text-xs" target="_blank" rel="noopener" aria-label="Share invite on WhatsApp"
+         href="https://wa.me/?text={{ ('Join me on Taskmill: '|urlencode) ~ (share|urlencode) }}">WhatsApp</a>
+    </div>
   </section>
 
   {# LINKS #}
@@ -532,6 +513,11 @@
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
   </section>
+    </div>
+  </div>
+
+  {# REFERRALS #}
+  
 
   </div>
 
