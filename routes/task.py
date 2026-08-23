@@ -65,8 +65,8 @@ def index():
     task = TaskService.assign_task(current_user)
     if not task:
         flash(
-            "No products available within your membership product limit.",
-            "warning",
+            "You're all caught up for now — no more products in range. Check back after daily reset, or message Support if this looks wrong.",
+            "info",
         )
         return redirect(url_for("dashboard.index"))
 
@@ -152,6 +152,7 @@ def submit(id):
         flash("Negative trading result applied.", "warning")
     else:
         flash("Submitted. Product price + commission credited to your wallet.", "success")
+    # earned toast on task page
 
     # After combo item, go back to combo queue if more remain
     if is_combo_task:
@@ -161,7 +162,7 @@ def submit(id):
             Task.status.in_(["assigned", "frozen"]),
         ).count()
         if left:
-            return redirect(url_for("task.index"))
+            return redirect(url_for("task.index", earned=1))
         flash("All combo products completed.", "success")
         return redirect(url_for("dashboard.index"))
 
@@ -181,7 +182,7 @@ def submit(id):
     if progress.get("can_withdraw"):
         flash("You may now request a withdrawal (keep UGX 15,000 reserve).", "info")
 
-    return redirect(url_for("task.index"))
+    return redirect(url_for("task.index", earned=1))
 
 
 

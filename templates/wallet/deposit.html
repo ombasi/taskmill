@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Deposit · Taskmill{% endblock %}
 {% block content %}
+
+<div class="mb-3 rounded-xl border border-sky-400/20 bg-sky-950/40 px-3 py-2.5 text-xs text-sky-100/90">
+  <strong class="font-bold">After you submit:</strong> we review your payment proof. Balance updates automatically when approved — usually during support hours.
+</div>
+
 {% set bal = current_user.available_balance or 0 %}
 {% set methods = payment_settings if payment_settings is defined and payment_settings else [] %}
 {% set sym = current_user.currency_symbol or current_user.currency or 'UGX' %}

@@ -50,6 +50,17 @@ def next_step(user, progress=None, combo=None, checklist=None):
     sets_done = int(getattr(user, "daily_sets_completed", 0) or 0)
     sets_max = int(getattr(membership, "daily_sets", 2) or 2) if membership else 2
 
+    # Set 1 done, Set 2 locked
+    if sets_done >= 1 and not bool(getattr(user, "set2_unlocked", False)) and sets_max > 1:
+        return {
+            "title": "Set 1 complete — unlock Set 2",
+            "body": "Message Support to unlock your second set, then finish remaining tasks and withdraw when ready.",
+            "cta_label": "Contact support",
+            "cta_endpoint": "chat.inbox",
+            "tone": "amber",
+            "code": "set2_unlock",
+        }
+
     if done < goal or sets_done < sets_max:
         return {
             "title": "Continue your tasks",
@@ -58,6 +69,8 @@ def next_step(user, progress=None, combo=None, checklist=None):
             "cta_endpoint": "task.index",
             "tone": "emerald",
             "code": "tasks",
+            "done": done,
+            "goal": goal,
         }
 
     # Withdrawal available?

@@ -673,25 +673,25 @@ mobile.classList.toggle("hidden");
 <!-- Mobile bottom navigation -->
 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl safe-bottom">
   <div class="grid grid-cols-5 max-w-lg mx-auto">
-    <a href="{{ url_for('dashboard.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint == 'dashboard.index' %}text-indigo-400{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('dashboard.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint == 'dashboard.index' %}text-sky-300{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-house text-lg"></i>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('task.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('task.') and request.endpoint != 'task.history' %}text-sky-300{% else %}text-zinc-400{% endif %}">
       <span class="relative inline-block"><i class="fa-solid fa-list-check text-lg"></i><span data-badge="pending_tasks" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
-      <span>{{ t('nav_tasks') if t is defined else 'Tasks' }}</span>
+      <span>Tasks</span>
     </a>
-    <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-sky-300{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-wallet text-lg"></i>
-      <span>{{ t('nav_wallet') if t is defined else 'Wallet' }}</span>
+      <span>Wallet</span>
     </a>
-    <a href="{{ url_for('task.history') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint == 'task.history' %}text-indigo-400{% else %}text-zinc-400{% endif %}">
-      <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-      <span>{{ t('nav_history') if t is defined else 'History' }}</span>
+    <a href="{{ url_for('dashboard.contact') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint in ('dashboard.contact','chat.inbox','chat.thread') %}text-sky-300{% else %}text-zinc-400{% endif %}">
+      <span class="relative inline-block"><i class="fa-solid fa-headset text-lg"></i><span data-badge="chat" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
+      <span>Support</span>
     </a>
-    <a href="{{ url_for('profile.index') }}" class="flex flex-col items-center gap-1 py-3 text-[11px] {% if request.endpoint and request.endpoint.startswith('profile.') %}text-indigo-400{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('profile.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('profile.') %}text-sky-300{% else %}text-zinc-400{% endif %}">
       <i class="fa-solid fa-user text-lg"></i>
-      <span>{{ t('nav_profile') if t is defined else 'Profile' }}</span>
+      <span>Profile</span>
     </a>
   </div>
 </nav>
@@ -791,14 +791,14 @@ function showToast(msg, type){
 <div id="tm-toast-root" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
 
 <!-- Full-page broadcast overlay -->
-<div id="tm-broadcast" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
+<div id="tm-broadcast" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
   <div class="absolute inset-0 bg-zinc-950/90 backdrop-blur-md"></div>
   <div class="relative w-full max-w-lg rounded-3xl border border-white/15 bg-gradient-to-b from-zinc-900 to-zinc-950 shadow-2xl p-6 md:p-8 text-center">
     <div class="mx-auto w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-2xl mb-4">
       <i class="fa-solid fa-bullhorn"></i>
     </div>
     <p class="text-[11px] uppercase tracking-[0.25em] text-indigo-300 font-semibold">Announcement</p>
-    <h2 id="tm-broadcast-title" class="mt-2 text-2xl font-black text-white"></h2>
+    <h2 id="tm-broadcast-title" class="mt-2 text-2xl font-black bg-gradient-to-r from-white via-sky-100 to-white bg-clip-text text-transparent" class="mt-2 text-2xl font-black text-white"></h2>
     <p id="tm-broadcast-body" class="mt-4 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap"></p>
     <button type="button" id="tm-broadcast-dismiss"
             class="mt-8 w-full rounded-2xl bg-white text-zinc-900 font-bold py-3.5 hover:bg-zinc-100 transition">

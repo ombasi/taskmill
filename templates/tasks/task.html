@@ -1,6 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Review Product · Taskmill{% endblock %}
 {% block content %}
+
+{# Sticky progress bar #}
+{% set _prog = progress if progress is mapping else {} %}
+{% set _done = _prog.get('completed_today', _prog.get('tasks_today', current_user.tasks_completed_today or 0)) %}
+{% set _goal = _prog.get('mandatory', _prog.get('daily_goal', _prog.get('tasks_per_set', 16))) %}
+{% set _pct = [((_done / _goal * 100) if _goal else 0)|int, 100]|min %}
+<div class="sticky top-0 z-30 -mx-1 mb-3 px-3 py-2.5 rounded-xl border border-white/10 bg-zinc-950/90 backdrop-blur-xl flex items-center justify-between gap-2 shadow-lg">
+  <div class="min-w-0">
+    <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Balance</p>
+    <p class="text-sm font-black text-emerald-300 truncate">{{ money(current_user, current_user.available_balance or 0) }}</p>
+  </div>
+  <div class="flex-1 max-w-[9rem]">
+    <div class="flex justify-between text-[10px] text-zinc-500 font-bold mb-0.5">
+      <span>Today</span><span>{{ _done }}/{{ _goal }}</span>
+    </div>
+    <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+      <div class="h-full rounded-full bg-gradient-to-r from-sky-300 to-violet-400 transition-all duration-500" style="width:{{ _pct }}%"></div>
+    </div>
+  </div>
+  <div class="text-right shrink-0">
+    <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Set</p>
+    <p class="text-sm font-black text-white">{{ _prog.get('sets_completed', current_user.daily_sets_completed or 0) }}/{{ _prog.get('daily_sets', 2) }}</p>
+  </div>
+</div>
+
 {% set bal = current_user.available_balance or 0 %}
 {% set price = task.product_price or 0 %}
 {% set commission = task.commission or 0 %}
@@ -238,7 +263,7 @@
         </div>
 
         <div class="tk-actions sticky bottom-20 lg:bottom-4 z-20 flex flex-col sm:flex-row gap-2 pt-2 pb-1 bg-gradient-to-t from-[#070a12] via-[#070a12]/95 to-transparent">
-          <button type="submit" class="tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
+          <button type="submit" class="w-full mt-4 py-4 rounded-2xl text-base font-black text-slate-900 bg-gradient-to-r from-white via-sky-50 to-sky-200 shadow-xl shadow-sky-500/25 hover:brightness-105 active:scale-[0.99] transition tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
             {{ t('submit_review') if t is defined else 'Submit review' }}
           </button>
           <a href="{{ url_for('task.history') }}"
@@ -263,3 +288,12 @@
 
 </div>
 {% endblock %}
+
+{% if request.args.get('earned') %}
+<div id="tm-earn-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[80] px-4 py-3 rounded-2xl border border-emerald-400/30 bg-emerald-950/95 text-emerald-100 text-sm font-bold shadow-2xl">
+  + Commission credited · Keep going
+</div>
+<script>
+setTimeout(function(){ var e=document.getElementById('tm-earn-toast'); if(e) e.remove(); }, 2800);
+</script>
+{% endif %}

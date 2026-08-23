@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 {% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }} · Taskmill{% endblock %}
 {% block content %}
+
+{# ===== NEXT STEP STRIP ===== #}
+{% set ns = next_step if next_step is defined else none %}
+{% if ns %}
+<section class="mb-4 relative overflow-hidden rounded-2xl border border-white/15 px-4 py-4
+  bg-gradient-to-br from-slate-800/95 via-slate-900 to-black
+  shadow-[0_20px_50px_-24px_rgba(0,0,0,.9)]">
+  <div class="absolute inset-0 pointer-events-none opacity-50"
+       style="background: radial-gradient(ellipse at 0% 0%, rgba(186,230,253,.15), transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(167,139,250,.12), transparent 45%);"></div>
+  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0
+                bg-gradient-to-br from-white/15 to-sky-200/10 border border-white/20 text-sky-100 text-lg">
+      {% if ns.code == 'combo_hold' %}<i class="fa-solid fa-bolt"></i>
+      {% elif ns.code == 'deposit' %}<i class="fa-solid fa-wallet"></i>
+      {% elif ns.code == 'set2_unlock' %}<i class="fa-solid fa-lock-open"></i>
+      {% elif ns.code == 'withdraw' %}<i class="fa-solid fa-money-bill-transfer"></i>
+      {% else %}<i class="fa-solid fa-list-check"></i>{% endif %}
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-sky-200/80">Next step</p>
+      <p class="text-base font-black text-white mt-0.5">{{ ns.title }}</p>
+      <p class="text-xs text-zinc-400 mt-1 leading-relaxed">{{ ns.body }}</p>
+      {% if ns.done is defined and ns.goal is defined %}
+      <div class="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden max-w-xs">
+        <div class="h-full rounded-full bg-gradient-to-r from-sky-300 to-violet-300" style="width: {{ [((ns.done / ns.goal * 100) if ns.goal else 0)|int, 100]|min }}%"></div>
+      </div>
+      {% endif %}
+    </div>
+    {% if ns.cta_endpoint %}
+    <a href="{{ url_for(ns.cta_endpoint) }}"
+       class="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black text-slate-900
+              bg-gradient-to-r from-white via-sky-50 to-sky-100 shadow-lg shadow-sky-500/20 hover:brightness-105 transition">
+      {{ ns.cta_label or 'Continue' }} <i class="fa-solid fa-arrow-right text-xs"></i>
+    </a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+
 {# First-set unlock CTA — platinum #}
 {% set _sets = current_user.daily_sets_completed or 0 %}
 {% set _unlocked = current_user.set2_unlocked if current_user.set2_unlocked is defined else False %}
@@ -704,4 +744,41 @@
   {% endif %}
 
 </div>
+
+{# First-run coach marks #}
+<div id="tm-coach" class="hidden fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-2xl border border-white/15 bg-zinc-950 p-5 shadow-2xl">
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-sky-200/80">Quick start</p>
+    <p id="tm-coach-title" class="text-lg font-black text-white mt-1"></p>
+    <p id="tm-coach-body" class="text-sm text-zinc-400 mt-2 leading-relaxed"></p>
+    <div class="flex gap-2 mt-5">
+      <button type="button" id="tm-coach-skip" class="flex-1 rounded-xl py-2.5 text-xs font-bold text-zinc-400 border border-white/10">Skip</button>
+      <button type="button" id="tm-coach-next" class="flex-1 rounded-xl py-2.5 text-xs font-black text-slate-900 bg-gradient-to-r from-white to-sky-100">Next</button>
+    </div>
+    <p class="text-center text-[10px] text-zinc-600 mt-3"><span id="tm-coach-step">1</span>/3</p>
+  </div>
+</div>
+<script>
+(function(){
+  try {
+    if (localStorage.getItem('tm_coach_v1') === '1') return;
+    var steps = [
+      {t:'Deposit once to start', b:'Top up your wallet so you can take product review tasks and earn commission on each submit.'},
+      {t:'Submit reviews daily', b:'Open Tasks, rate the product, and submit. Your balance updates instantly with commission.'},
+      {t:'Finish sets, then withdraw', b:'Complete your daily sets, clear any combo hold, then withdraw to your confirmed payout method.'}
+    ];
+    var i = 0;
+    var el = document.getElementById('tm-coach');
+    var title = document.getElementById('tm-coach-title');
+    var body = document.getElementById('tm-coach-body');
+    var step = document.getElementById('tm-coach-step');
+    function show(){ title.textContent = steps[i].t; body.textContent = steps[i].b; step.textContent = String(i+1); el.classList.remove('hidden'); }
+    function done(){ localStorage.setItem('tm_coach_v1','1'); el.classList.add('hidden'); }
+    document.getElementById('tm-coach-skip').onclick = done;
+    document.getElementById('tm-coach-next').onclick = function(){ i++; if(i>=steps.length) done(); else show(); };
+    setTimeout(show, 600);
+  } catch(e) {}
+})();
+</script>
+
 {% endblock %}

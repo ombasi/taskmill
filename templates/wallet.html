@@ -108,14 +108,17 @@
     <p class="text-4xl sm:text-5xl font-black mt-1 {% if bal|float < 0 %}dx-metal neg{% else %}dx-metal{% endif %}">
       {{ money(current_user, bal) }}
     </p>
-    <div class="grid grid-cols-2 gap-2.5 mt-5">
+    <p class="text-[11px] text-zinc-500 mt-2">Available = ready for tasks &amp; withdraw. Pending = waiting approval. Hold = combo/negative.</p>
+    <div class="grid grid-cols-2 gap-2.5 mt-4">
       <div class="dx-tile p-3.5">
-        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">{{ t('pending') if t is defined else 'Pending' }}</p>
-        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, pending) }}</p>
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Pending</p>
+        <p class="text-sm font-black mt-1 text-amber-200">{{ money(current_user, pending) }}</p>
+        <p class="text-[10px] text-zinc-500 mt-1">Deposits awaiting approval</p>
       </div>
       <div class="dx-tile p-3.5">
-        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Combo hold</p>
-        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, combo) }}</p>
+        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">On hold</p>
+        <p class="text-sm font-black mt-1 {% if bal|float < 0 %}text-rose-300{% else %}text-zinc-100{% endif %}">{{ money(current_user, combo) }}</p>
+        <p class="text-[10px] text-zinc-500 mt-1">{% if bal|float < 0 %}Deposit to clear combo{% else %}Combo reserve{% endif %}</p>
       </div>
     </div>
     <div class="grid grid-cols-2 gap-2.5 mt-4">
@@ -193,7 +196,7 @@
       <div class="dx-tile px-3.5 py-3 flex items-center justify-between gap-3">
         <div class="min-w-0">
           <p class="text-sm font-semibold truncate">{{ tx.description or tx.transaction_type or 'Transaction' }}</p>
-          <p class="text-[11px] text-zinc-500 mt-0.5">{% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}</p>
+          <p class="text-[11px] text-zinc-500 mt-0.5">{% if tx.created_at %}{{ tx.created_at|localtime('%d %b · %H:%M') }}{% endif %}</p>
         </div>
         <p class="text-sm font-black shrink-0 {% if (tx.amount or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
           {{ money(current_user, tx.amount) }}
