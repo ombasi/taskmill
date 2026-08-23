@@ -148,7 +148,7 @@
       <input class="inp" name="payment_method" placeholder="Method (e.g. MTN, Bank)" required>
       <input class="inp" name="account_name" placeholder="Account name" required>
       <input class="inp" name="account_number" placeholder="Account / phone number" required>
-      <button type="submit" class="btn">Save payout method</button>
+      <button type="submit" class="btn" aria-label="Save payout method">Save payout method</button>
     </form>
     {% endif %}
     {% endif %}
@@ -161,7 +161,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
         <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Amount</label>
-        <input class="inp mt-1" type="number" name="amount" id="wd-amount"
+        <input class="inp mt-1" type="number" name="amount" id="wd-amount" aria-label="Withdrawal amount"
                min="{{ min_local }}" max="{{ max_local }}" step="{{ amount_step|default(1) }}"
                placeholder="Min {{ money(current_user, min_local) }}" required>
         <p class="text-[11px] text-zinc-500 mt-1">Max {{ money(current_user, max_local) }}</p>
@@ -174,11 +174,11 @@
       {% else %}
       <div>
         <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Withdraw PIN</label>
-        <input class="inp pin mt-1" type="password" name="withdraw_pin" inputmode="numeric"
+        <input class="inp pin mt-1" type="password" name="withdraw_pin" aria-label="Withdraw PIN" inputmode="numeric"
                pattern="[0-9]*" maxlength="6" required placeholder="••••" autocomplete="one-time-code">
       </div>
       {% endif %}
-      <button type="submit" class="btn" {% if not all_ok %}disabled{% endif %}>Submit withdrawal</button>
+      <button type="submit" class="btn" aria-label="Submit withdrawal request" {% if not all_ok %}disabled{% endif %}>Submit withdrawal</button>
       {% if not all_ok %}
       <p class="text-[11px] text-center text-zinc-500">Finish the checklist to unlock submit.</p>
       {% endif %}

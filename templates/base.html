@@ -350,7 +350,7 @@ Earn • Review • Grow
 <a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
 <a href="{{ url_for('auth.logout') }}"
-class="px-5 py-3 rounded-2xl tm-logout-btn hover:scale-105 transition">{{ t('nav_logout') if t is defined else 'Logout' }}</a>
+class="px-5 py-3 rounded-2xl tm-logout-btn hover:scale-105 transition" aria-label="Log out">{{ t('nav_logout') if t is defined else 'Logout' }}</a>
 
 </div>
 
@@ -429,7 +429,7 @@ class="hidden mx-5 mt-4 backdrop-blur-xl bg-zinc-900/90 border border-white/10 r
 <a href="{{ url_for('profile.index') }}">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
 <a href="{{ url_for('auth.logout') }}"
-class="text-red-400">
+class="text-red-400" aria-label="Log out">
 
 Logout
 
@@ -673,23 +673,23 @@ mobile.classList.toggle("hidden");
 <!-- Mobile bottom navigation -->
 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl safe-bottom">
   <div class="grid grid-cols-5 max-w-lg mx-auto">
-    <a href="{{ url_for('dashboard.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint == 'dashboard.index' %}text-sky-300{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('dashboard.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint == 'dashboard.index' %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Home">
       <i class="fa-solid fa-house text-lg"></i>
       <span>Home</span>
     </a>
-    <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('task.') and request.endpoint != 'task.history' %}text-sky-300{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('task.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('task.') and request.endpoint != 'task.history' %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Tasks">
       <span class="relative inline-block"><i class="fa-solid fa-list-check text-lg"></i><span data-badge="pending_tasks" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
       <span>Tasks</span>
     </a>
-    <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-sky-300{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Wallet">
       <i class="fa-solid fa-wallet text-lg"></i>
       <span>Wallet</span>
     </a>
-    <a href="{{ url_for('dashboard.contact') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint in ('dashboard.contact','chat.inbox','chat.thread') %}text-sky-300{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('dashboard.contact') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint in ('dashboard.contact','chat.inbox','chat.thread') %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Support">
       <span class="relative inline-block"><i class="fa-solid fa-headset text-lg"></i><span data-badge="chat" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
       <span>Support</span>
     </a>
-    <a href="{{ url_for('profile.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('profile.') %}text-sky-300{% else %}text-zinc-400{% endif %}">
+    <a href="{{ url_for('profile.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('profile.') %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Profile">
       <i class="fa-solid fa-user text-lg"></i>
       <span>Profile</span>
     </a>

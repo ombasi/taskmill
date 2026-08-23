@@ -45,7 +45,7 @@
   <div class="sp-card p-3 space-y-2">
     {# In-app chat — always first for logged-in users #}
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('chat.inbox') }}" class="sp-btn">
+    <a href="{{ url_for('chat.inbox') }}" class="sp-btn" aria-label="Open live chat">
       <span class="sp-ico bg-violet-500/20 text-violet-200"><i class="fa-solid fa-comments"></i></span>
       <span class="min-w-0 flex-1 text-left">
         <span class="block text-sm font-bold text-white">Live chat</span>

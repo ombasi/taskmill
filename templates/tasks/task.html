@@ -263,7 +263,7 @@
         </div>
 
         <div class="tk-actions sticky bottom-20 lg:bottom-4 z-20 flex flex-col sm:flex-row gap-2 pt-2 pb-1 bg-gradient-to-t from-[#070a12] via-[#070a12]/95 to-transparent">
-          <button type="submit" class="w-full mt-4 py-4 rounded-2xl text-base font-black text-slate-900 bg-gradient-to-r from-white via-sky-50 to-sky-200 shadow-xl shadow-sky-500/25 hover:brightness-105 active:scale-[0.99] transition tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
+          <button type="submit" aria-label="Submit product review" class="w-full mt-4 py-4 rounded-2xl text-base font-black text-slate-900 bg-gradient-to-r from-white via-sky-50 to-sky-200 shadow-xl shadow-sky-500/25 hover:brightness-105 active:scale-[0.99] transition tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
             {{ t('submit_review') if t is defined else 'Submit review' }}
           </button>
           <a href="{{ url_for('task.history') }}"

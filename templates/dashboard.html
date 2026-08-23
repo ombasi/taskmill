@@ -258,10 +258,10 @@
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
-          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn text-center">Deposit</a>
-          <a href="{{ url_for('wallet.withdraw') }}" class="dx-btn-ghost text-center">Withdraw</a>
+          <a href="{{ url_for('wallet.deposit') }}" class="dx-btn text-center" aria-label="Deposit">Deposit</a>
+          <a href="{{ url_for('wallet.withdraw') }}" class="dx-btn-ghost text-center" aria-label="Withdraw">Withdraw</a>
         </div>
-        <a href="{{ url_for('task.index') }}" class="dx-btn w-full mt-2.5 text-center !py-3">Continue tasks</a>
+        <a href="{{ url_for('task.index') }}" class="dx-btn w-full mt-2.5 text-center !py-3" aria-label="Continue tasks">Continue tasks</a>
       </div>
     </div>
   </section>
@@ -574,8 +574,8 @@
     <p id="tm-coach-title" class="text-lg font-black text-white mt-1"></p>
     <p id="tm-coach-body" class="text-sm text-zinc-400 mt-2 leading-relaxed"></p>
     <div class="flex gap-2 mt-5">
-      <button type="button" id="tm-coach-skip" class="flex-1 rounded-xl py-2.5 text-xs font-bold text-zinc-400 border border-white/10">Skip</button>
-      <button type="button" id="tm-coach-next" class="flex-1 rounded-xl py-2.5 text-xs font-black text-slate-900 bg-gradient-to-r from-white to-sky-100">Next</button>
+      <button type="button" id="tm-coach-skip" aria-label="Skip quick start tips" class="flex-1 rounded-xl py-2.5 text-xs font-bold text-zinc-400 border border-white/10">Skip</button>
+      <button type="button" id="tm-coach-next" aria-label="Next quick start tip" class="flex-1 rounded-xl py-2.5 text-xs font-black text-slate-900 bg-gradient-to-r from-white to-sky-100">Next</button>
     </div>
     <p class="text-center text-[10px] text-zinc-600 mt-3"><span id="tm-coach-step">1</span>/3</p>
   </div>
