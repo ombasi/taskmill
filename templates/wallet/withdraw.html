@@ -1,204 +1,117 @@
 {% extends "base.html" %}
-{% block title %}Withdraw · Taskmill{% endblock %}
+{% block title %}Withdraw{% endblock %}
 {% block content %}
-{% set bal = current_user.available_balance or 0 %}
+{% set bal = (current_user.available_balance or 0)|float %}
 {% set reserve = reserve|default(15000) %}
-{% set max_wd = max_wd|default(0) %}
-{% set max_local = max_wd_local|default(max_wd)|default(0) %}
 {% set min_local = min_wd_local|default(1) %}
-{% set step = amount_step|default(1) %}
-{% set cl_items = checklist.get('items', []) if checklist is mapping else (checklist or []) %}
-{% set ok_count = cl_items|selectattr('ok')|list|length %}
-{% set total_c = cl_items|length %}
+{% set max_local = max_wd_local|default(0) %}
+{% set cl_items = checklist.get('items', []) if checklist is mapping else (checklist_items if checklist_items is defined else (checklist or [])) %}
+{% if cl_items is mapping %}{% set cl_items = cl_items.get('items', []) %}{% endif %}
+{% set ok_count = (cl_items|selectattr('ok')|list|length) if cl_items else 0 %}
+{% set total_c = cl_items|length if cl_items else 0 %}
 {% set all_ok = checklist.get('all_ok', false) if checklist is mapping else (ok_count == total_c and total_c > 0) %}
 {% set payout_ready = current_user.payout_method and current_user.payout_confirmed %}
 
 <style>
-  .dx-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
-  @media (min-width: 1024px) {
-    .dx-page { max-width: 56rem; padding: 1rem 1.5rem 3rem; }
-    .dx-page.dx-wide-split {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 1.15rem;
-      align-items: start;
-      max-width: 64rem;
-    }
-  }
-  .dx-card {
+  .wd { max-width: 26rem; margin: 0 auto; padding: 0.75rem 0.9rem 6rem; }
+  @media (min-width: 768px) { .wd { max-width: 32rem; } }
+  .dx {
+    border-radius: 1.4rem; border: 1px solid rgba(255,255,255,.12);
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.7rem;
-    box-shadow: 0 28px 70px -34px rgba(0,0,0,.92), 0 0 56px -22px rgba(253,164,175,.14);
-    position: relative; overflow: hidden;
+    box-shadow: 0 22px 50px -28px rgba(0,0,0,.9);
   }
-  .dx-card::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(253,164,175,.28) 35%, rgba(255,255,255,.08) 70%, rgba(186,230,253,.18) 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
-  }
-  .dx-card > * { position: relative; z-index: 1; }
   .dx-title {
-    background: linear-gradient(120deg, #fff 0%, #ffe4e6 28%, #f8fafc 55%, #fecdd3 78%, #fff 100%);
+    background: linear-gradient(120deg, #fff, #fecdd3 45%, #e2e8f0);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .dx-metal {
-    background: linear-gradient(120deg, #fff 0%, #e2e8f0 40%, #f1f5f9 70%, #fecdd3 100%);
+    background: linear-gradient(120deg, #fff, #e2e8f0 50%, #fecdd3);
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 0 16px rgba(253,164,175,.22));
   }
-  .dx-gem {
-    width: 3rem; height: 3rem; border-radius: 1.05rem; display: grid; place-items: center;
-    background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(253,164,175,.14) 45%, rgba(148,163,184,.15));
-    border: 1px solid rgba(255,255,255,.28);
-    box-shadow: 0 10px 28px -12px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.4);
-    color: #fecdd3;
+  .tile {
+    border-radius: 0.9rem; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04); padding: 0.75rem 0.9rem;
   }
-  .dx-kicker {
-    font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase;
-    color: rgba(254,205,211,.9);
+  .step {
+    display: flex; gap: 0.75rem; align-items: flex-start;
+    padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,.05);
+    text-decoration: none; color: inherit;
   }
-  .dx-tile {
-    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(15,23,42,.55));
-    border: 1px solid rgba(255,255,255,.1);
-    border-radius: 1.15rem;
-  }
-  .dx-label {
-    display: block; font-size: 10px; font-weight: 800; letter-spacing: .14em;
-    text-transform: uppercase; color: #71717a; margin-bottom: .45rem;
-  }
-  .dx-input {
-    width: 100%; border-radius: 1.1rem; background: rgba(2,6,14,.85);
-    border: 1px solid rgba(255,255,255,.12); padding: .95rem 1.05rem;
-    color: #f8fafc; font-size: .95rem; font-weight: 700; outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .dx-input:focus {
-    border-color: rgba(253,164,175,.5);
-    box-shadow: 0 0 0 4px rgba(251,113,133,.12);
-  }
-  .dx-input.pin { letter-spacing: .45em; text-align: center; font-size: 1.25rem; }
-  .dx-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
-  .dx-chips button {
-    border-radius: 999px; border: 1px solid rgba(255,255,255,.12);
-    background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-    color: #e2e8f0; font-size: 11px; font-weight: 800; padding: .4rem .75rem;
-    transition: all .15s;
-  }
-  .dx-chips button:hover {
-    border-color: rgba(255,255,255,.35);
-    background: linear-gradient(145deg, rgba(255,255,255,.18), rgba(253,164,175,.12));
-    color: #fff; box-shadow: 0 0 16px -6px rgba(255,255,255,.35);
-  }
-  .dx-btn {
-    width: 100%; border: 0; border-radius: 1.2rem; padding: 1.05rem 1.25rem;
-    font-size: .95rem; font-weight: 900; color: #0f172a;
-    background: linear-gradient(145deg, #ffffff 0%, #fff1f2 22%, #e2e8f0 48%, #fecdd3 72%, #ffffff 100%);
-    box-shadow: 0 16px 36px -12px rgba(251,113,133,.5), inset 0 1px 0 rgba(255,255,255,.9);
-    transition: filter .15s, transform .15s;
-  }
-  .dx-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
-  .dx-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
-  .dx-ring {
-    width: 2.85rem; height: 2.85rem; border-radius: 999px; display: grid; place-items: center;
-    background: conic-gradient(#fda4af calc(var(--p) * 1%), rgba(255,255,255,.08) 0);
-    box-shadow: inset 0 0 0 3px #0a0e18;
-  }
-  .dx-ring > span {
-    width: 2.15rem; height: 2.15rem; border-radius: 999px; background: #0a0e18;
-    display: grid; place-items: center; font-size: 10px; font-weight: 900; color: #fecdd3;
-  }
-  .dx-step {
-    display: flex; gap: .8rem; align-items: flex-start;
-    padding: .85rem 0; border-bottom: 1px solid rgba(255,255,255,.05);
-  }
-  .dx-step:last-child { border-bottom: 0; }
-  .dx-dot {
-    width: 1.55rem; height: 1.55rem; border-radius: 999px; flex-shrink: 0;
+  .step:last-child { border-bottom: 0; }
+  .dot {
+    width: 1.45rem; height: 1.45rem; border-radius: 999px; flex-shrink: 0;
     display: grid; place-items: center; font-size: 10px; margin-top: 1px;
   }
-  .dx-dot.ok { background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,.35); }
-  .dx-dot.bad { background: rgba(244,63,94,.12); color: #fda4af; border: 1px solid rgba(251,113,133,.3); }
-  .dx-badge {
-    display: inline-flex; align-items: center; gap: .3rem;
-    font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-    border-radius: 999px; padding: .28rem .55rem;
+  .dot.ok { background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,.35); }
+  .dot.bad { background: rgba(244,63,94,.12); color: #fda4af; border: 1px solid rgba(251,113,133,.3); }
+  .inp {
+    width: 100%; border-radius: 0.9rem; background: rgba(2,6,14,.9);
+    border: 1px solid rgba(255,255,255,.12); padding: 0.85rem 1rem;
+    color: #f8fafc; font-size: 0.95rem; font-weight: 700;
   }
-  .dx-badge.ok { background: rgba(16,185,129,.14); color: #6ee7b7; border: 1px solid rgba(52,211,153,.25); }
-  .dx-badge.wait { background: rgba(245,158,11,.12); color: #fcd34d; border: 1px solid rgba(251,191,36,.25); }
+  .inp:focus { outline: none; border-color: rgba(253,164,175,.45); }
+  .inp.pin { letter-spacing: .4em; text-align: center; }
+  .btn {
+    width: 100%; border: 0; border-radius: 1rem; padding: 0.95rem;
+    font-weight: 900; font-size: 0.9rem; color: #0f172a;
+    background: linear-gradient(145deg, #fff, #fff1f2 40%, #fecdd3 80%, #fff);
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .badge {
+    font-size: 10px; font-weight: 800; border-radius: 999px; padding: 0.25rem 0.55rem;
+  }
+  .badge.ok { background: rgba(16,185,129,.14); color: #6ee7b7; }
+  .badge.wait { background: rgba(245,158,11,.12); color: #fcd34d; }
 </style>
 
-<div class="dx-page space-y-4">
+<div class="wd space-y-3.5">
 
-  <section class="dx-card p-4 mb-3">
-    <p class="dx-kicker mb-3">Withdrawal checklist</p>
-    <ul class="space-y-2">
-      {% set items = checklist_items if checklist_items is defined and checklist_items else [] %}
-      {% if items %}
-        {% for it in items %}
-        {% set ok = it.ok if it.ok is defined else (it.done if it.done is defined else false) %}
-        {% set label = it.label if it.label is defined else (it.title if it.title is defined else it) %}
-        <li class="flex items-center gap-2 text-sm">
-          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border
-            {% if ok %}border-emerald-400/40 bg-emerald-500/15 text-emerald-300{% else %}border-white/10 bg-white/5 text-zinc-500{% endif %}">
-            {% if ok %}<i class="fa-solid fa-check"></i>{% else %}•{% endif %}
-          </span>
-          <span class="{% if ok %}text-zinc-200{% else %}text-zinc-500{% endif %}">{{ label }}</span>
-        </li>
-        {% endfor %}
-      {% else %}
-        <li class="text-xs text-zinc-500">Complete daily sets, keep reserve balance, confirm payout method, and set withdraw PIN.</li>
-      {% endif %}
-    </ul>
-  </section>
-
-
-  <section class="dx-card p-5 sm:p-7">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <p class="dx-kicker">Wallet · Cash out</p>
-        <h1 class="dx-title text-3xl font-black mt-1.5 tracking-tight">Withdraw</h1>
-        <p class="text-sm text-zinc-400 mt-2 max-w-sm leading-relaxed">
-          Secure payout to your confirmed method after eligibility checks pass.
-        </p>
+  {# Balance #}
+  <section class="dx p-5">
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-rose-200/80">Withdraw</p>
+    <h1 class="text-2xl font-black dx-title mt-0.5">Cash out</h1>
+    <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-4">Available</p>
+    <p class="text-3xl font-black dx-metal mt-0.5">{{ money(current_user, bal) }}</p>
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <div class="tile">
+        <p class="text-[10px] text-zinc-500 font-bold uppercase">Must leave</p>
+        <p class="text-sm font-black mt-0.5">{{ money(current_user, reserve) }}</p>
       </div>
-      {% if total_c > 0 %}
-      <div class="dx-ring" style="--p: {{ ((ok_count / total_c) * 100)|round if total_c else 0 }}">
-        <span>{{ ok_count }}/{{ total_c }}</span>
-      </div>
-      {% else %}
-      <div class="dx-gem"><i class="fa-solid fa-gem"></i></div>
-      {% endif %}
-    </div>
-    <p class="text-[10px] uppercase tracking-[0.16em] text-zinc-500 font-bold mt-6">Available</p>
-    <p class="dx-metal text-4xl font-black mt-1">{{ money(current_user, bal) }}</p>
-    <div class="grid grid-cols-2 gap-2.5 mt-5">
-      <div class="dx-tile p-3.5">
-        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">Must leave</p>
-        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, reserve) }}</p>
-      </div>
-      <div class="dx-tile p-3.5">
-        <p class="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-bold">You can take</p>
-        <p class="text-sm font-black mt-1 text-zinc-100">{{ money(current_user, max_local) }}</p>
+      <div class="tile">
+        <p class="text-[10px] text-zinc-500 font-bold uppercase">You can take</p>
+        <p class="text-sm font-black mt-0.5">{{ money(current_user, max_local) }}</p>
       </div>
     </div>
   </section>
 
-  <section class="dx-card p-5">
+  {# Checklist #}
+  <section class="dx p-4">
     <div class="flex items-center justify-between mb-1">
-      <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Eligibility</p>
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Checklist</p>
       {% if all_ok %}
-      <span class="dx-badge ok"><i class="fa-solid fa-check"></i> Ready</span>
+      <span class="badge ok">Ready</span>
       {% else %}
-      <span class="dx-badge wait"><i class="fa-solid fa-hourglass-half"></i> {{ total_c - ok_count }} left</span>
+      <span class="badge wait">{{ total_c - ok_count }} left</span>
       {% endif %}
     </div>
     {% for item in cl_items %}
     {% if item is mapping %}
-    <div class="dx-step">
-      <div class="dx-dot {% if item.ok %}ok{% else %}bad{% endif %}">
+    {% set href = item.href if item.href is defined else none %}
+    {% if not item.ok and href %}
+    <a href="{{ href }}" class="step hover:opacity-90">
+      <div class="dot bad"><i class="fa-solid fa-xmark"></i></div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-bold text-zinc-200">{{ item.label }}</p>
+        {% if item.detail %}<p class="text-[11px] text-zinc-500 mt-0.5">{{ item.detail }}</p>{% endif %}
+        <p class="text-[11px] font-bold text-rose-300/90 mt-1">
+          {{ item.action_label if item.action_label is defined and item.action_label else 'Fix this' }}
+          <i class="fa-solid fa-arrow-right text-[9px] ml-0.5"></i>
+        </p>
+      </div>
+    </a>
+    {% else %}
+    <div class="step">
+      <div class="dot {% if item.ok %}ok{% else %}bad{% endif %}">
         <i class="fa-solid {% if item.ok %}fa-check{% else %}fa-xmark{% endif %}"></i>
       </div>
       <div class="min-w-0">
@@ -207,134 +120,81 @@
       </div>
     </div>
     {% endif %}
+    {% endif %}
     {% else %}
-    <p class="text-sm text-zinc-500 py-3">Checklist unavailable.</p>
+    <p class="text-xs text-zinc-500 py-2">Complete daily sets, keep reserve, confirm payout, set PIN.</p>
     {% endfor %}
   </section>
 
-  <section class="dx-card p-5">
-    <div class="flex items-center justify-between mb-3">
-      <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Payout to</p>
-      {% if current_user.payout_confirmed %}
-      <span class="dx-badge ok">Confirmed</span>
-      {% elif current_user.payout_method %}
-      <span class="dx-badge wait">Pending admin</span>
-      {% endif %}
-    </div>
+  {# Payout #}
+  <section class="dx p-4">
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-2">Payout method</p>
     {% if current_user.payout_method %}
-    <div class="dx-tile p-4 flex items-center gap-3">
-      <span class="dx-gem !w-11 !h-11 !rounded-xl text-sm"><i class="fa-solid fa-building-columns"></i></span>
-      <div class="min-w-0">
-        <p class="text-sm font-bold text-zinc-100 truncate">{{ current_user.payout_method }}</p>
-        <p class="text-xs text-zinc-500 mt-0.5 truncate">
-          {{ current_user.payout_account_name or '—' }}
-          {% if current_user.payout_account_number %} · {{ current_user.payout_account_number }}{% endif %}
-        </p>
-      </div>
+    <div class="tile">
+      <p class="text-sm font-bold">{{ current_user.payout_method }}
+        {% if current_user.payout_confirmed %}<span class="badge ok ml-1">Confirmed</span>
+        {% else %}<span class="badge wait ml-1">Pending admin</span>{% endif %}
+      </p>
+      <p class="text-[11px] text-zinc-500 mt-0.5 truncate">
+        {{ current_user.payout_account_name or '—' }}
+        {% if current_user.payout_account_number %} · {{ current_user.payout_account_number }}{% endif %}
+      </p>
     </div>
     {% else %}
-    <div class="dx-tile p-4 text-sm text-zinc-400">No payout method yet. Contact support or wait for admin setup.</div>
+    <p class="text-xs text-zinc-500">No payout method yet. Add one below or contact Support.</p>
+    {% if not current_user.payout_method %}
+    <form method="POST" action="{{ url_for('wallet.set_payout_method') }}" class="mt-3 space-y-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <input class="inp" name="payment_method" placeholder="Method (e.g. MTN, Bank)" required>
+      <input class="inp" name="account_name" placeholder="Account name" required>
+      <input class="inp" name="account_number" placeholder="Account / phone number" required>
+      <button type="submit" class="btn">Save payout method</button>
+    </form>
+    {% endif %}
     {% endif %}
   </section>
 
+  {# Form #}
   {% if payout_ready %}
-  
-  <section class="dx-card p-4 mb-3" id="withdraw-preview">
-    <p class="dx-kicker mb-2">You will receive</p>
-    <p class="text-2xl font-black text-white" id="wd-receive">—</p>
-    <p class="text-xs text-zinc-500 mt-1">Reserve kept for next day: <span id="wd-reserve">—</span></p>
-  </section>
-  <script>
-  (function(){
-    var reserve = {{ (15000)|tojson }};
-    try { reserve = {{ (checklist.min_reserve if checklist is mapping and checklist.min_reserve is defined else 15000)|tojson }}; } catch(e) {}
-    var inp = document.querySelector('[name="amount"]');
-    var recv = document.getElementById('wd-receive');
-    var res = document.getElementById('wd-reserve');
-    if (res) res.textContent = reserve;
-    function upd(){
-      if (!inp || !recv) return;
-      var v = parseFloat(inp.value || 0) || 0;
-      recv.textContent = v > 0 ? v.toLocaleString(undefined,{maximumFractionDigits:0}) : '—';
-    }
-    if (inp) { inp.addEventListener('input', upd); upd(); }
-  })();
-  </script>
-<section class="dx-card p-5 space-y-4">
-    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">Request amount</p>
-    <form method="POST" action="{{ url_for('wallet.withdraw') }}" class="space-y-4">
+  <section class="dx p-4">
+    <form method="POST" class="space-y-3" id="withdraw-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
-        <label class="dx-label">Amount · {{ current_user.currency or 'UGX' }}</label>
-        <input class="dx-input" type="number" name="amount" id="wd-amount"
-               step="{{ step }}" min="{{ min_local }}" max="{{ max_local }}" required placeholder="0">
-        <div class="dx-chips">
-          <button type="button" data-pct="25">25%</button>
-          <button type="button" data-pct="50">50%</button>
-          <button type="button" data-pct="75">75%</button>
-          <button type="button" data-pct="100">Max</button>
-        </div>
-        <p class="text-[11px] text-zinc-500 mt-2">Min {{ money(current_user, min_local) }} · Max {{ money(current_user, max_local) }}</p>
+        <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Amount</label>
+        <input class="inp mt-1" type="number" name="amount" id="wd-amount"
+               min="{{ min_local }}" max="{{ max_local }}" step="{{ amount_step|default(1) }}"
+               placeholder="Min {{ money(current_user, min_local) }}" required>
+        <p class="text-[11px] text-zinc-500 mt-1">Max {{ money(current_user, max_local) }}</p>
       </div>
       {% if current_user.has_withdraw_pin is defined and not current_user.has_withdraw_pin() %}
-      <div class="dx-tile p-4 text-sm text-amber-100 border border-amber-400/20">
-        Set a withdraw PIN in Profile first.
-        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="font-bold underline ml-1">Set PIN</a>
-      </div>
+      <p class="text-xs text-amber-200">
+        Set a withdraw PIN first.
+        <a href="{{ url_for('profile.set_withdraw_pin') }}" class="font-bold underline">Set PIN</a>
+      </p>
       {% else %}
       <div>
-        <label class="dx-label">Withdraw PIN</label>
-        <input class="dx-input pin" type="password" name="withdraw_pin" inputmode="numeric" pattern="[0-9]*"
-               maxlength="6" required placeholder="••••••" autocomplete="one-time-code">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Withdraw PIN</label>
+        <input class="inp pin mt-1" type="password" name="withdraw_pin" inputmode="numeric"
+               pattern="[0-9]*" maxlength="6" required placeholder="••••" autocomplete="one-time-code">
       </div>
       {% endif %}
-      <button type="submit" class="dx-btn" {% if not all_ok %}disabled{% endif %}>Submit withdrawal</button>
+      <button type="submit" class="btn" {% if not all_ok %}disabled{% endif %}>Submit withdrawal</button>
       {% if not all_ok %}
-      <p class="text-[11px] text-center text-zinc-500">Complete every eligibility item to unlock submit.</p>
+      <p class="text-[11px] text-center text-zinc-500">Finish the checklist to unlock submit.</p>
       {% endif %}
     </form>
   </section>
-  {% else %}
-  <section class="dx-card p-6 text-center">
-    <div class="dx-gem mx-auto mb-3"><i class="fa-solid fa-lock"></i></div>
-    <p class="text-sm font-bold text-zinc-200">Withdrawal locked</p>
-    <p class="text-xs text-zinc-500 mt-1.5 max-w-[16rem] mx-auto">
-      {% if not current_user.payout_method %}Add a payout method and wait for admin confirmation.
-      {% else %}Your payout method is waiting for admin confirmation.{% endif %}
-    </p>
+  {% elif current_user.payout_method and not current_user.payout_confirmed %}
+  <section class="dx p-4 text-center">
+    <p class="text-sm font-bold text-zinc-200">Waiting for admin to confirm payout</p>
+    <p class="text-xs text-zinc-500 mt-1">You’ll be able to withdraw once it’s confirmed.</p>
+    <a href="{{ url_for('chat.inbox') }}" class="inline-block mt-3 text-xs font-bold text-rose-200">Message Support</a>
   </section>
   {% endif %}
 
-  <section class="dx-card p-5">
-    <p class="dx-kicker mb-3" style="letter-spacing:.18em">Rules</p>
-    <ul class="space-y-2.5 text-xs text-zinc-400">
-      <li class="flex gap-2"><i class="fa-solid fa-gem text-rose-200/70 mt-0.5 text-[10px]"></i> Leave at least {{ money(current_user, reserve) }} for the next day</li>
-      <li class="flex gap-2"><i class="fa-solid fa-gem text-rose-200/70 mt-0.5 text-[10px]"></i> Finish required task sets first</li>
-      <li class="flex gap-2"><i class="fa-solid fa-gem text-rose-200/70 mt-0.5 text-[10px]"></i> Clear any combo / escrow hold</li>
-      <li class="flex gap-2"><i class="fa-solid fa-gem text-rose-200/70 mt-0.5 text-[10px]"></i> Paid only to your confirmed payout method</li>
-    </ul>
-    <a href="{{ url_for('wallet.index') }}" class="inline-flex items-center gap-2 mt-5 text-sm font-bold text-rose-200/90 hover:text-white">
-      <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to wallet
-    </a>
-  </section>
+  <p class="text-center text-[11px] text-zinc-600">
+    Leave at least {{ money(current_user, reserve) }} for the next day ·
+    <a href="{{ url_for('wallet.index') }}" class="text-zinc-400 hover:text-white">Wallet</a>
+  </p>
 </div>
-
-<script>
-(function(){
-  var maxV = parseFloat("{{ max_local }}") || 0;
-  var step = parseFloat("{{ step }}") || 1;
-  var input = document.getElementById('wd-amount');
-  if (!input) return;
-  document.querySelectorAll('.dx-chips button').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var pct = parseFloat(btn.getAttribute('data-pct') || '0') / 100;
-      var val = maxV * pct;
-      if (step >= 1) val = Math.floor(val / step) * step;
-      else val = Math.round(val * 100) / 100;
-      input.value = val > 0 ? val : '';
-      input.focus();
-    });
-  });
-})();
-</script>
 {% endblock %}
