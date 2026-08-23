@@ -2,43 +2,6 @@
 {% block title %}{{ t('nav_dashboard') if t is defined else 'Dashboard' }} · Taskmill{% endblock %}
 {% block content %}
 
-{# ===== NEXT STEP STRIP ===== #}
-{% set ns = next_step if next_step is defined else none %}
-{% if ns %}
-<section class="mb-4 relative overflow-hidden rounded-2xl border border-white/15 px-4 py-4
-  bg-gradient-to-br from-slate-800/95 via-slate-900 to-black
-  shadow-[0_20px_50px_-24px_rgba(0,0,0,.9)]">
-  <div class="absolute inset-0 pointer-events-none opacity-50"
-       style="background: radial-gradient(ellipse at 0% 0%, rgba(186,230,253,.15), transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(167,139,250,.12), transparent 45%);"></div>
-  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
-    <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0
-                bg-gradient-to-br from-white/15 to-sky-200/10 border border-white/20 text-sky-100 text-lg">
-      {% if ns.code == 'combo_hold' %}<i class="fa-solid fa-bolt"></i>
-      {% elif ns.code == 'deposit' %}<i class="fa-solid fa-wallet"></i>
-      {% elif ns.code == 'set2_unlock' %}<i class="fa-solid fa-lock-open"></i>
-      {% elif ns.code == 'withdraw' %}<i class="fa-solid fa-money-bill-transfer"></i>
-      {% else %}<i class="fa-solid fa-list-check"></i>{% endif %}
-    </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-sky-200/80">Next step</p>
-      <p class="text-base font-black text-white mt-0.5">{{ ns.title }}</p>
-      <p class="text-xs text-zinc-400 mt-1 leading-relaxed">{{ ns.body }}</p>
-      {% if ns.done is defined and ns.goal is defined %}
-      <div class="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden max-w-xs">
-        <div class="h-full rounded-full bg-gradient-to-r from-sky-300 to-violet-300" style="width: {{ [((ns.done / ns.goal * 100) if ns.goal else 0)|int, 100]|min }}%"></div>
-      </div>
-      {% endif %}
-    </div>
-    {% if ns.cta_endpoint %}
-    <a href="{{ url_for(ns.cta_endpoint) }}"
-       class="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black text-slate-900
-              bg-gradient-to-r from-white via-sky-50 to-sky-100 shadow-lg shadow-sky-500/20 hover:brightness-105 transition">
-      {{ ns.cta_label or 'Continue' }} <i class="fa-solid fa-arrow-right text-xs"></i>
-    </a>
-    {% endif %}
-  </div>
-</section>
-{% endif %}
 
 
 {# First-set unlock CTA — platinum #}
@@ -46,61 +9,7 @@
 {% set _unlocked = current_user.set2_unlocked if current_user.set2_unlocked is defined else False %}
 
 {# Combo platinum notice #}
-{% if current_user.combo_active or (current_user.available_balance is defined and (current_user.available_balance or 0) < 0) %}
-<div class="combo-dx-banner mb-4 relative overflow-hidden rounded-2xl border border-amber-400/20 px-4 py-4
-            bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black
-            shadow-[0_0_40px_-12px_rgba(251,191,36,0.22)]">
-  <div class="absolute inset-0 pointer-events-none opacity-40"
-       style="background: radial-gradient(ellipse at 10% 0%, rgba(251,191,36,.18), transparent 50%), radial-gradient(ellipse at 90% 100%, rgba(167,139,250,.12), transparent 45%);"></div>
-  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
-    <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
-                bg-gradient-to-br from-amber-100/20 to-violet-200/15 border border-white/20 text-amber-100">
-      <i class="fa-solid fa-bolt"></i>
-    </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-200/80">Diamond notice</p>
-      <p class="text-sm font-black text-white mt-0.5">Combo active — deposit, then submit</p>
-      <p class="text-xs text-zinc-400 mt-0.5">Higher commission after you clear the hold. Read the short guide, then deposit or open Tasks.</p>
-    </div>
-    <div class="flex flex-wrap gap-2 shrink-0">
-      <a href="{{ url_for('task.combo_guide') }}"
-         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900
-                bg-gradient-to-r from-white via-amber-50 to-amber-100">Guide</a>
-      <a href="{{ url_for('wallet.deposit') }}"
-         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white
-                border border-white/20 bg-white/5">Deposit</a>
-    </div>
-  </div>
-</div>
-{% endif %}
 
-{% if _sets >= 1 and not _unlocked and _sets < 2 %}
-<div class="mb-4 relative overflow-hidden rounded-2xl border border-white/15 px-4 py-4
-            bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-black
-            shadow-[0_0_40px_-12px_rgba(186,230,253,0.25)]">
-  <div class="absolute inset-0 pointer-events-none opacity-40"
-       style="background: radial-gradient(ellipse at 10% 0%, rgba(186,230,253,.2), transparent 50%), radial-gradient(ellipse at 90% 100%, rgba(167,139,250,.15), transparent 45%);"></div>
-  <div class="relative flex flex-col sm:flex-row sm:items-center gap-3">
-    <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
-                bg-gradient-to-br from-white/15 to-sky-200/20 border border-white/20 text-sky-100">
-      <i class="fa-solid fa-gem"></i>
-    </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-sky-200/80">Diamond notice</p>
-      <p class="text-sm font-black text-white mt-0.5">Set 1 complete — unlock Set 2 with Support</p>
-      <p class="text-xs text-zinc-400 mt-0.5">Message Support once. Then finish Set 2 and stay on your daily path.</p>
-    </div>
-    <div class="flex flex-wrap gap-2 shrink-0">
-      <a href="{{ '/tasks/set1-complete' }}"
-         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900
-                bg-gradient-to-r from-white via-slate-100 to-sky-100 shadow-lg shadow-sky-500/10">Guide</a>
-      <a href="{{ url_for('chat.inbox') }}"
-         class="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white
-                border border-white/20 bg-white/5">Live chat</a>
-    </div>
-  </div>
-</div>
-{% endif %}
 
 {% set mname = current_user.membership.name if current_user.membership else "Member" %}
 {% set name = current_user.full_name or current_user.username or "Member" %}
@@ -357,34 +266,8 @@
     </div>
   </section>
 
-  {# === 1 Next step · 4 Combo timeline · 8 Check-in · 9 Product of day · 10 Referral share === #}
-  {% if next_step %}
-  {% set tone = next_step.tone|default('sky') %}
-  <section class="dx-card p-4 sm:p-5 border {% if tone=='rose' %}border-rose-400/25{% elif tone=='emerald' %}border-emerald-400/20{% elif tone=='amber' %}border-amber-400/25{% else %}border-white/10{% endif %}">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div class="min-w-0 flex-1">
-        <p class="dx-kicker">Next step</p>
-        <h2 class="text-lg font-black mt-1 text-white">{{ next_step.title }}</h2>
-        <p class="text-sm text-zinc-400 mt-1.5 leading-relaxed">{{ next_step.body }}</p>
-      </div>
-      {% if next_step.cta_endpoint %}
-      <a href="{{ url_for(next_step.cta_endpoint) }}" class="dx-btn shrink-0">{{ next_step.cta_label|default('Continue') }}</a>
-      {% endif %}
-    </div>
-    {% if next_step.code == 'combo_hold' and combo_steps is defined and combo_steps %}
-    <div class="mt-4 flex flex-wrap gap-2">
-      {% for s in combo_steps %}
-      <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold border
-        {% if s.done %}border-emerald-400/30 bg-emerald-500/10 text-emerald-200{% else %}border-white/10 bg-white/5 text-zinc-500{% endif %}">
-        {% if s.done %}<i class="fa-solid fa-check text-[9px]"></i>{% else %}<i class="fa-regular fa-circle text-[9px]"></i>{% endif %}
-        {{ s.label }}
-      </span>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </section>
-  {% endif %}
-
+  
+  
   <div class="grid sm:grid-cols-2 gap-3">
     <a href="{{ url_for('engagement.check_in') }}" class="dx-card p-4 flex items-center gap-3 hover:border-amber-300/30 transition">
       <span class="dx-gem !w-10 !h-10 !rounded-xl text-amber-200"><i class="fa-solid fa-calendar-check"></i></span>
@@ -406,24 +289,7 @@
     </div>
   </div>
 
-  {% if recent_deposits is defined and recent_deposits %}
-  <section class="dx-card p-4">
-    <div class="flex items-center justify-between mb-2">
-      <p class="dx-kicker">Recent deposits</p>
-      <a href="{{ url_for('wallet.deposit') }}" class="text-xs font-bold text-sky-200">Deposit →</a>
-    </div>
-    <ul class="space-y-2">
-      {% for dep in recent_deposits[:4] %}
-      <li class="flex justify-between gap-2 text-sm">
-        <span class="text-zinc-400">{{ money(current_user, dep.amount) }} · {{ dep.payment_method or 'Pay' }}</span>
-        {% set st = (dep.status or '')|lower %}
-        <span class="font-bold text-xs {% if st=='approved' %}text-emerald-300{% elif st=='rejected' %}text-rose-300{% else %}text-amber-200{% endif %}">{{ dep.status or 'Pending' }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
-
+  
 
 
   {% if combo %}
@@ -458,35 +324,9 @@
 
   <div class="dx-grid-main">
   
-  {# Goal jar · loss protection · ops ticker hooks #}
   
-  {% if interest_info %}
-  <section class="dx-card p-4 border border-emerald-400/20">
-    <p class="dx-kicker text-emerald-200/80">Balance interest</p>
-    <p class="text-sm text-zinc-300 mt-1">After you withdraw, 10% of the balance left in your account is credited <strong class="text-white">the next day</strong> (not the same day).</p>
-    <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-      <div class="dx-tile p-2.5">
-        <p class="text-zinc-500">Threshold</p>
-        <p class="font-bold">{{ money(current_user, interest_info.min_ugx) }}</p>
-      </div>
-      <div class="dx-tile p-2.5">
-        <p class="text-zinc-500">Next credit</p>
-        <p class="font-bold">{{ money(current_user, interest_info.interest_ugx) }}</p>
-      </div>
-    </div>
-    {% if interest_info.just_credited %}
-    <p class="text-emerald-300 text-xs font-bold mt-2">Just credited {{ money(current_user, interest_info.credited_amount) }}</p>
-    {% elif interest_info.can_claim %}
-    <form method="POST" action="{{ url_for('extras.claim_balance_interest') }}" class="mt-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <button class="dx-btn !text-xs !py-2">Claim interest</button>
-    </form>
-    {% else %}
-    <p class="text-[11px] text-zinc-500 mt-2">{{ interest_info.reason }}</p>
-    {% endif %}
-  </section>
-  {% endif %}
-
+  
+  
   <section class="dx-card p-4" 
   {% if (current_user.available_balance or 0)|float < 0 %}
   <section class="dx-card p-4 border border-amber-400/25" id="combo-helper">
@@ -502,24 +342,6 @@
     <p class="dx-kicker">Weekly mission</p>
     <p class="text-sm font-bold mt-1">Finish 2 full task days this week</p>
     <p class="text-xs text-zinc-500 mt-1">Sets completed today: {{ current_user.daily_sets_completed or 0 }} · Keep a streak for badges &amp; spins.</p>
-  </section>
-
-  <section class="dx-card p-4" id="goal-jar">
-    <p class="dx-kicker mb-2">Goal jar</p>
-    {% set gt = current_user.goal_target|default(0)|float %}
-    {% set earned = current_user.total_earned|default(0)|float %}
-    {% set pct = ([100, ((earned / gt) * 100)|int]|min) if gt > 0 else 0 %}
-    <p class="text-sm font-bold">{{ current_user.goal_title or 'Set a savings goal' }}</p>
-    {% if gt > 0 %}
-    <p class="text-xs text-zinc-500 mt-1">{{ money(current_user, earned) }} / {{ money(current_user, gt) }} · {{ pct }}%</p>
-    <div class="h-2 rounded-full bg-white/10 mt-2 overflow-hidden"><div class="h-full bg-gradient-to-r from-sky-300 to-white" style="width:{{ pct }}%"></div></div>
-    {% endif %}
-    <form method="POST" action="{{ url_for('extras.set_goal') }}" class="mt-3 flex flex-wrap gap-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input name="goal_title" class="dx-input !py-2 flex-1 min-w-[8rem]" placeholder="Goal name" value="{{ current_user.goal_title or '' }}">
-      <input name="goal_target" type="number" step="any" class="dx-input !py-2 w-28" placeholder="Target" value="{{ current_user.goal_target or '' }}">
-      <button class="dx-btn !py-2 !px-3 !text-xs">Save</button>
-    </form>
   </section>
 
   {% if current_user.referred_by_id and (current_user.completed_tasks|default(0)|int) < 20 %}
