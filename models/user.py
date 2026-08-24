@@ -347,6 +347,12 @@ class User(db.Model, UserMixin):
         db.DateTime
     )
 
+    last_seen = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
     # =====================================================
     # RELATIONSHIPS
     # =====================================================

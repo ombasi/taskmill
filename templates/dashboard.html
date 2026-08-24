@@ -41,13 +41,49 @@
   @media (min-width: 1024px) {
     .dx-page { padding: 1.25rem 1.5rem 3rem; }
   }
+  .dx-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-pair { grid-template-columns: 1fr 1fr; align-items: stretch; }
+  }
+  .dx-actions-full .dx-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (min-width: 1024px) {
+    .dx-actions-full .dx-grid-3 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .dx-actions-full .dx-action { min-height: 5rem; }
+  }
   .dx-layout {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
   @media (min-width: 1024px) {
-    .dx-layout {
+    .dx-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .dx-pair { grid-template-columns: 1fr 1fr; align-items: stretch; }
+  }
+  .dx-actions-full .dx-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (min-width: 1024px) {
+    .dx-actions-full .dx-grid-3 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .dx-actions-full .dx-action { min-height: 5rem; }
+  }
+  .dx-layout {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
       gap: 1.25rem;
@@ -344,8 +380,9 @@
 
   {# TODAY PROGRESS #}
   
-  <div class="dx-layout">
-    <div class="dx-col">
+  
+  {# Progress + Snapshot side by side #}
+  <div class="dx-pair">
 <section class="dx-card p-5">
     <div class="flex items-center justify-between mb-4">
       <div>
@@ -382,9 +419,7 @@
 
     <a href="{{ url_for('task.index') }}" class="dx-btn w-full mt-5">Continue tasks</a>
   </section>
-
-  {# SNAPSHOT #}
-  <section class="dx-card p-5">
+<section class="dx-card p-5">
     <div class="flex items-center justify-between mb-4">
       <div>
         <p class="dx-kicker" style="letter-spacing:.18em">Snapshot</p>
@@ -429,11 +464,10 @@
     </div>
     {% endif %}
   </section>
-
   </div>
 
-  {# QUICK ACTIONS #}
-  <section class="dx-card p-4">
+  {# Quick actions full width #}
+<section class="dx-card p-4 dx-actions-full">
     <p class="dx-kicker px-1 mb-3" style="letter-spacing:.18em">Quick actions</p>
     <div class="dx-grid-3">
       {% set actions = [
@@ -455,8 +489,8 @@
       {% endfor %}
     </div>
   </section>
-    </div>
-    <div class="dx-col">
+
+  <div class="dx-pair">
 <section class="dx-card p-5" id="referral-progress">
     <div class="flex items-start justify-between gap-3 mb-3">
       <div>
@@ -485,9 +519,7 @@
          href="https://wa.me/?text={{ ('Join me on Taskmill: '|urlencode) ~ (share|urlencode) }}">WhatsApp</a>
     </div>
   </section>
-
-  {# LINKS #}
-  <section class="dx-card p-2">
+<section class="dx-card p-2">
     <a href="{{ url_for('wallet.index') }}" class="dx-row">
       <span class="ico text-emerald-300"><i class="fa-solid fa-wallet"></i></span>
       <span class="flex-1 min-w-0">
@@ -513,15 +545,9 @@
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
   </section>
-    </div>
   </div>
 
-  {# REFERRALS #}
-  
-
-  </div>
-
-  {% if show_onboarding %}
+{% if show_onboarding %}
   <section class="dx-card p-5" id="onboarding">
     <p class="dx-kicker mb-2">Getting started</p>
     <h2 class="dx-title text-lg font-black">Quick tour</h2>

@@ -41,7 +41,7 @@
           <th class="p-5">Membership</th>
           <th class="p-5">Telegram</th>
           <th class="p-5">Balance</th>
-          <th class="p-5">Status</th>
+          <th class="p-5">Presence</th>
           <th class="p-5 text-right">Action</th>
         </tr>
       </thead>
@@ -81,19 +81,26 @@
             </p>
           </td>
           <td class="p-5">
+            {% set ls = user.last_seen or user.last_login %}
+            {% set online = ls and ((now_utc - ls).total_seconds() < 300) if now_utc is defined and ls else false %}
             {% if user.is_blocked %}
             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-rose-300">
               <span class="w-2 h-2 rounded-full bg-rose-400"></span> Blocked
             </span>
-            {% elif user.is_active %}
+            {% elif online %}
             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Active
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online
             </span>
             {% else %}
-            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500">
-              <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Inactive
+            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-400">
+              <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline
             </span>
             {% endif %}
+            <p class="text-[11px] text-zinc-500 mt-1">
+              {% if ls %}
+                {% if localtime is defined %}{{ ls|localtime('%d %b %H:%M') }}{% else %}{{ ls.strftime('%d %b %H:%M') }}{% endif %}
+              {% else %}Never{% endif %}
+            </p>
           </td>
           <td class="p-5 text-right">
             <a href="{{ url_for('admin.view_user', user_id=user.id) }}"

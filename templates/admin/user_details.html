@@ -2,6 +2,21 @@
 {% block title %}User · {{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
+
+{# Presence #}
+{% set ls = user.last_seen or user.last_login %}
+{% set online = ls and now_utc is defined and ((now_utc - ls).total_seconds() < 300) %}
+<div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+  {% if online %}
+  <span class="inline-flex items-center gap-1.5 text-emerald-300 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online</span>
+  {% else %}
+  <span class="inline-flex items-center gap-1.5 text-zinc-400 font-semibold"><span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline</span>
+  {% endif %}
+  <span class="text-zinc-500">Last seen:
+    {% if ls %}{% if localtime is defined %}{{ ls|localtime('%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }}{% endif %}{% else %}Never{% endif %}
+  </span>
+</div>
+
 {% set is_full_admin = current_user.is_admin %}
 {% set is_support_agent = current_user.is_agent and not current_user.is_admin %}
 {% if is_support_agent %}
@@ -229,7 +244,7 @@
             {% for row in login_history|default([]) %}
             <tr class="hover:bg-white/[0.03]">
               <td class="py-2.5 pr-3 text-zinc-300 whitespace-nowrap">
-                {% if row.login_time %}{{ row.login_time.strftime('%d %b %Y · %H:%M') }}{% else %}—{% endif %}
+                {% if row.login_time %}{{ row.login_time|localtime('%d %b %Y · %H:%M') }}{% else %}—{% endif %}
               </td>
               <td class="py-2.5 pr-3 font-mono text-xs">{{ row.ip_address or '—' }}</td>
               <td class="py-2.5 pr-3">{{ row.location or '—' }}</td>
@@ -394,7 +409,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
         <p class="text-zinc-200">{{ n.body }}</p>
         <p class="text-[11px] text-zinc-500 mt-1">
           {{ n.author.username if n.author else n.author_id }}
-          · {% if n.created_at %}{{ n.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}
+          · {% if n.created_at %}{{ n.created_at|localtime('%d %b %Y %H:%M') }}{% endif %}
         </p>
       </div>
       {% else %}

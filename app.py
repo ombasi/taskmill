@@ -98,6 +98,7 @@ def _ensure_schema_columns():
                 ("skips_used_today", int_t),
                 ("mystery_opened_today", bool_t),
                 ("last_big_withdraw_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+                ("last_seen", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
             ]
             for n, typ in user_cols:
                 _add("users", n, typ)
@@ -353,6 +354,31 @@ def create_app():
             pass
         return None
 
+
+
+    @app.before_request
+    def _touch_last_seen():
+        """Throttle presence updates (~every 2 min) for online/offline admin display."""
+        from flask import request as req
+        from flask_login import current_user as cu
+        if not getattr(cu, "is_authenticated", False):
+            return None
+        if req.endpoint and req.endpoint.startswith("static"):
+            return None
+        try:
+            from datetime import datetime, timedelta
+            now = datetime.utcnow()
+            prev = getattr(cu, "last_seen", None)
+            if prev is not None and (now - prev) < timedelta(minutes=2):
+                return None
+            cu.last_seen = now
+            db.session.commit()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+        return None
 
     # Create tables + first-boot seed (no Shell required on Render)
     with app.app_context():

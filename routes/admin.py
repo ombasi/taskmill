@@ -415,6 +415,7 @@ def users():
         page=page, per_page=30, error_out=False
     )
     memberships = Membership.query.order_by(Membership.price.asc()).all()
+    from datetime import datetime
     return render_template(
         "admin/users.html",
         users=users,
@@ -422,6 +423,7 @@ def users():
         filter_neg=filter_neg,
         filter_membership=filter_membership,
         memberships=memberships,
+        now_utc=datetime.utcnow(),
     )
 
 
@@ -684,6 +686,7 @@ def view_user(user_id):
 
     return render_template(
         "admin/user_details.html",
+        now_utc=__import__("datetime").datetime.utcnow(),
         user=user,
         tasks=tasks or [],
         deposits=deposits or [],
@@ -2180,9 +2183,38 @@ from models.settings import Settings
 
 @admin_bp.route("/settings", methods=["GET", "POST"])
 @login_required
-@admin_required
+@full_admin_required
 def settings():
+    """Main admin system settings (site name, telegram, toggles)."""
     from models.settings import Settings
+    from sqlalchemy import text, inspect
+
+    # Ensure optional columns exist (Postgres + SQLite)
+    try:
+        insp = inspect(db.engine)
+        if "settings" in insp.get_table_names():
+            cols = {c["name"] for c in insp.get_columns("settings")}
+            dialect = db.engine.dialect.name
+            for col, typ in (
+                ("admin_telegram_chat_ids", "TEXT"),
+                ("telegram_bot_token", "VARCHAR(120)"),
+                ("interest_enabled", "BOOLEAN DEFAULT FALSE" if dialect == "postgresql" else "BOOLEAN DEFAULT 0"),
+                ("interest_min_ugx", "DOUBLE PRECISION DEFAULT 30000" if dialect == "postgresql" else "FLOAT DEFAULT 30000"),
+                ("interest_rate", "DOUBLE PRECISION DEFAULT 5" if dialect == "postgresql" else "FLOAT DEFAULT 5"),
+            ):
+                if col not in cols:
+                    if dialect == "postgresql":
+                        db.session.execute(text(f"ALTER TABLE settings ADD COLUMN IF NOT EXISTS {col} {typ}"))
+                    else:
+                        db.session.execute(text(f"ALTER TABLE settings ADD COLUMN {col} {typ}"))
+                    db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print("settings cols:", e)
+
     settings = Settings.query.first()
     if not settings:
         settings = Settings(site_name="Taskmill")
@@ -2190,78 +2222,47 @@ def settings():
         db.session.commit()
 
     if request.method == "POST":
-        def _f(name, default=0.0):
+        try:
+            settings.site_name = (request.form.get("site_name") or settings.site_name or "Taskmill").strip()[:100]
+            settings.site_url = (request.form.get("site_url") or "").strip() or None
+            if hasattr(settings, "registration_enabled"):
+                settings.registration_enabled = request.form.get("registration_enabled") in ("on", "1", "true", "yes")
+            if hasattr(settings, "deposits_enabled"):
+                settings.deposits_enabled = request.form.get("deposits_enabled") in ("on", "1", "true", "yes")
+            if hasattr(settings, "withdrawals_enabled"):
+                settings.withdrawals_enabled = request.form.get("withdrawals_enabled") in ("on", "1", "true", "yes")
+            settings.maintenance = request.form.get("maintenance") in ("on", "1", "true", "yes")
+            token = (request.form.get("telegram_bot_token") or "").strip() or None
             try:
-                return float(request.form.get(name) or default)
-            except (TypeError, ValueError):
-                return float(default)
-        def _i(name, default=0):
-            try:
-                return int(float(request.form.get(name) or default))
-            except (TypeError, ValueError):
-                return int(default)
-
-        settings.site_name = (request.form.get("site_name") or settings.site_name or "Taskmill").strip()
-        settings.site_url = (request.form.get("site_url") or "").strip() or None
-        settings.registration_enabled = request.form.get("registration_enabled") in ("on", "1", "true", "yes")
-        settings.deposits_enabled = request.form.get("deposits_enabled") in ("on", "1", "true", "yes")
-        settings.withdrawals_enabled = request.form.get("withdrawals_enabled") in ("on", "1", "true", "yes")
-        settings.maintenance = request.form.get("maintenance") in ("on", "1", "true", "yes")
-        if hasattr(settings, "telegram_bot_token"):
-            settings.telegram_bot_token = (request.form.get("telegram_bot_token") or "").strip() or None
-        if hasattr(settings, "admin_telegram_chat_ids") or True:
-            try:
-                settings.admin_telegram_chat_ids = (request.form.get("admin_telegram_chat_ids") or "").strip() or None
+                settings.telegram_bot_token = token
             except Exception:
                 pass
-        if hasattr(settings, "kyc_withdraw_threshold"):
+            admin_ids = (request.form.get("admin_telegram_chat_ids") or "").strip() or None
             try:
-                settings.kyc_withdraw_threshold = float(request.form.get("kyc_withdraw_threshold") or 500000)
-            except (TypeError, ValueError):
-                pass
-        settings.referral_bonus = _f("referral_bonus", getattr(settings, "referral_bonus", 0) or 0)
-        settings.referral_activation = _f("referral_activation", getattr(settings, "referral_activation", 0) or 0)
-        if hasattr(settings, "daily_task_reset_hour"):
-            settings.daily_task_reset_hour = _i("daily_task_reset_hour", 0)
-        if hasattr(settings, "task_delay"):
-            settings.task_delay = _i("task_delay", 3)
-        if hasattr(settings, "combo_probability"):
-            settings.combo_probability = _f("combo_probability", 0)
-        if hasattr(settings, "combo_penalty"):
-            settings.combo_penalty = _f("combo_penalty", 0)
-        if hasattr(settings, "max_daily_combo"):
-            settings.max_daily_combo = _i("max_daily_combo", 1)
-        if hasattr(settings, "combo_minimum_amount"):
-            settings.combo_minimum_amount = _f("combo_minimum_amount", 0)
-        if hasattr(settings, "daily_spins"):
-            settings.daily_spins = _i("daily_spins", 1)
-        if hasattr(settings, "max_spin_reward"):
-            settings.max_spin_reward = _f("max_spin_reward", 100)
-        if hasattr(settings, "smtp_host"):
-            settings.smtp_host = request.form.get("smtp_host") or None
-        if hasattr(settings, "smtp_port"):
-            settings.smtp_port = _i("smtp_port", 587)
-        if hasattr(settings, "smtp_username"):
-            settings.smtp_username = request.form.get("smtp_username") or None
-        if hasattr(settings, "smtp_password"):
-            pwd = request.form.get("smtp_password")
-            if pwd:
-                settings.smtp_password = pwd
-        if hasattr(settings, "sender_email"):
-            settings.sender_email = request.form.get("sender_email") or None
-        if hasattr(settings, "minimum_withdrawal"):
-            settings.minimum_withdrawal = _f("minimum_withdrawal", 10)
-        if hasattr(settings, "maximum_withdrawal"):
-            settings.maximum_withdrawal = _f("maximum_withdrawal", 100000)
-        try:
+                settings.admin_telegram_chat_ids = admin_ids
+            except Exception:
+                # column missing on mapped class — raw SQL
+                try:
+                    db.session.execute(
+                        text("UPDATE settings SET admin_telegram_chat_ids = :v WHERE id = :id"),
+                        {"v": admin_ids, "id": settings.id},
+                    )
+                except Exception as e2:
+                    print("admin_telegram_chat_ids save:", e2)
             db.session.commit()
             flash("Settings saved.", "success")
         except Exception as e:
-            db.session.rollback()
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             flash(f"Could not save settings: {e}", "danger")
+            print("settings save:", e)
         return redirect(url_for("admin.settings"))
 
     return render_template("admin/settings.html", settings=settings)
+
+
 
 
 
