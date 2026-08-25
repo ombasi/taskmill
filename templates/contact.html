@@ -7,130 +7,237 @@
 {% set has_tg1 = s and s.telegram1_enabled and s.telegram1 %}
 {% set has_tg2 = s and s.telegram2_enabled and s.telegram2 %}
 {% set has_lc  = s and s.livechat_enabled and s.livechat %}
+{% set hours = (s.support_hours if s and s.support_hours else None) or '10:00 – 22:00' %}
+{% set email = s.email if s and s.email else None %}
 
 <style>
-  .sp { max-width: 24rem; margin: 0 auto; padding: 1rem 0.85rem 6rem; }
-  @media (min-width: 768px) { .sp { max-width: 28rem; } }
-  .sp-card {
-    border-radius: 1.35rem; border: 1px solid rgba(255,255,255,.12);
-    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
-    box-shadow: 0 24px 50px -28px rgba(0,0,0,.9);
+  .ct-page {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0.75rem 0.9rem 6.5rem;
   }
-  .sp-btn {
-    display: flex; align-items: center; gap: 0.85rem;
-    width: 100%; padding: 0.95rem 1rem; border-radius: 1rem;
-    border: 1px solid rgba(255,255,255,.1);
-    background: rgba(255,255,255,.04);
-    text-decoration: none; color: inherit;
-    transition: border-color .15s, background .15s;
+  @media (min-width: 1024px) {
+    .ct-page { max-width: 52rem; padding-bottom: 3rem; }
   }
-  .sp-btn:hover { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.07); }
-  .sp-ico {
-    width: 2.5rem; height: 2.5rem; border-radius: 0.85rem;
-    display: grid; place-items: center; font-size: 1.15rem; flex-shrink: 0;
+  .ct-hero {
+    position: relative;
+    border-radius: 1.75rem;
+    padding: 1.5rem 1.25rem 1.35rem;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 0%, rgba(99,102,241,.28), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 90% 20%, rgba(56,189,248,.18), transparent 50%),
+      linear-gradient(160deg, rgba(24,32,48,.98), rgba(8,12,20,.99));
+    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 40px -18px rgba(99,102,241,.25);
   }
-  .sp-title {
-    background: linear-gradient(120deg, #fff, #e0f2fe 50%, #bae6fd);
+  .ct-hero::before {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(186,230,253,.2) 40%, rgba(255,255,255,.06));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .ct-title {
+    background: linear-gradient(120deg, #fff 0%, #e0f2fe 40%, #c4b5fd 75%, #fff);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  .ct-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(186,230,253,.85);
+  }
+  .ct-card {
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(165deg, rgba(30,41,59,.92), rgba(10,14,22,.98));
+    box-shadow: 0 20px 48px -28px rgba(0,0,0,.9);
+  }
+  .ct-channel {
+    display: flex; align-items: center; gap: 0.9rem;
+    width: 100%; padding: 1rem 1.05rem;
+    border-radius: 1.15rem;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03);
+    text-decoration: none; color: inherit;
+    transition: transform .15s, border-color .15s, background .15s, box-shadow .15s;
+  }
+  .ct-channel:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.22);
+    background: rgba(255,255,255,.06);
+    box-shadow: 0 12px 28px -16px rgba(0,0,0,.7);
+  }
+  .ct-channel.primary {
+    border-color: rgba(139,92,246,.35);
+    background: linear-gradient(135deg, rgba(99,102,241,.22), rgba(139,92,246,.08));
+  }
+  .ct-channel.primary:hover {
+    border-color: rgba(167,139,250,.55);
+  }
+  .ct-ico {
+    width: 2.85rem; height: 2.85rem; border-radius: 1rem;
+    display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0;
+  }
+  .ct-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  @media (min-width: 640px) {
+    .ct-grid.two { grid-template-columns: 1fr 1fr; }
+  }
+  .ct-pill {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 0.7rem; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.04);
+    color: #cbd5e1;
+  }
+  .ct-dot {
+    width: 0.45rem; height: 0.45rem; border-radius: 999px;
+    background: #34d399; box-shadow: 0 0 8px #34d399;
+  }
+  .ct-link {
+    color: #94a3b8; font-size: 12px; font-weight: 600;
+    text-decoration: none;
+  }
+  .ct-link:hover { color: #e2e8f0; }
 </style>
 
-<div class="sp space-y-4">
-  <div class="text-center pt-2">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-sky-200/80">Help</p>
-    <h1 class="text-2xl font-black sp-title mt-1">Contact support</h1>
-    <p class="text-xs text-zinc-500 mt-1.5">Pick a channel. We reply during support hours.</p>
-  </div>
+<div class="ct-page space-y-5">
 
-  <div class="sp-card p-3 space-y-2">
-    {# In-app chat — always first for logged-in users #}
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('chat.inbox') }}" class="sp-btn" aria-label="Open live chat">
-      <span class="sp-ico bg-violet-500/20 text-violet-200"><i class="fa-solid fa-comments"></i></span>
+  {# Hero #}
+  <section class="ct-hero">
+    <div class="relative z-[1]">
+      <p class="ct-kicker">Support</p>
+      <h1 class="text-2xl sm:text-3xl font-black ct-title mt-2 tracking-tight">We’re here to help</h1>
+      <p class="text-sm text-zinc-400 mt-2 max-w-md leading-relaxed">
+        Questions about deposits, tasks, combo holds, or payouts? Reach us on your preferred channel.
+      </p>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <span class="ct-pill"><span class="ct-dot"></span> Online during hours</span>
+        <span class="ct-pill"><i class="fa-regular fa-clock text-sky-300/80"></i> {{ hours }}</span>
+        {% if email %}
+        <span class="ct-pill"><i class="fa-regular fa-envelope text-violet-300/80"></i> {{ email }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  {# Primary: in-app chat #}
+  {% if current_user.is_authenticated %}
+  <section class="ct-card p-3 sm:p-4">
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 px-1 mb-2">Fastest response</p>
+    <a href="{{ url_for('chat.inbox') }}" class="ct-channel primary" aria-label="Open live chat">
+      <span class="ct-ico bg-violet-500/25 text-violet-200"><i class="fa-solid fa-comments"></i></span>
       <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">Live chat</span>
-        <span class="block text-[11px] text-zinc-500">Message admin inside the app</span>
+        <span class="block text-base font-black text-white">Live chat</span>
+        <span class="block text-xs text-zinc-400 mt-0.5">Message the team inside Taskmill · secure &amp; logged</span>
       </span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      <span class="text-[11px] font-bold text-violet-200 hidden sm:inline">Open</span>
+      <i class="fa-solid fa-arrow-right text-violet-300/80 text-sm"></i>
     </a>
-    {% endif %}
-
-    {% if has_wa1 %}
-    {% set wa1 = s.whatsapp1 %}
-    {% set wa1_href = wa1 if wa1.startswith('http') else ('https://wa.me/' ~ wa1|replace('+','')|replace(' ','')|replace('-','')) %}
-    <a href="{{ wa1_href }}" target="_blank" rel="noopener" class="sp-btn">
-      <span class="sp-ico bg-emerald-500/20 text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
-      <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">WhatsApp</span>
-        <span class="block text-[11px] text-zinc-500 truncate">{{ wa1 }}</span>
-      </span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if has_wa2 %}
-    {% set wa2 = s.whatsapp2 %}
-    {% set wa2_href = wa2 if wa2.startswith('http') else ('https://wa.me/' ~ wa2|replace('+','')|replace(' ','')|replace('-','')) %}
-    <a href="{{ wa2_href }}" target="_blank" rel="noopener" class="sp-btn">
-      <span class="sp-ico bg-emerald-500/15 text-emerald-200"><i class="fa-brands fa-whatsapp"></i></span>
-      <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">WhatsApp 2</span>
-        <span class="block text-[11px] text-zinc-500 truncate">{{ wa2 }}</span>
-      </span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if has_tg1 %}
-    {% set tg1 = s.telegram1 %}
-    {% set tg1_href = tg1 if (tg1.startswith('http') or tg1.startswith('tg:')) else ('https://t.me/' ~ tg1|replace('@','')) %}
-    <a href="{{ tg1_href }}" target="_blank" rel="noopener" class="sp-btn">
-      <span class="sp-ico bg-sky-500/20 text-sky-300"><i class="fa-brands fa-telegram"></i></span>
-      <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">Telegram</span>
-        <span class="block text-[11px] text-zinc-500 truncate">{{ tg1 }}</span>
-      </span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if has_tg2 %}
-    {% set tg2 = s.telegram2 %}
-    {% set tg2_href = tg2 if (tg2.startswith('http') or tg2.startswith('tg:')) else ('https://t.me/' ~ tg2|replace('@','')) %}
-    <a href="{{ tg2_href }}" target="_blank" rel="noopener" class="sp-btn">
-      <span class="sp-ico bg-sky-500/15 text-sky-200"><i class="fa-brands fa-telegram"></i></span>
-      <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">Telegram 2</span>
-        <span class="block text-[11px] text-zinc-500 truncate">{{ tg2 }}</span>
-      </span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-
-    {% if has_lc %}
-    <a href="{{ s.livechat }}" target="_blank" rel="noopener" class="sp-btn">
-      <span class="sp-ico bg-amber-500/15 text-amber-200"><i class="fa-solid fa-headset"></i></span>
-      <span class="min-w-0 flex-1 text-left">
-        <span class="block text-sm font-bold text-white">Live chat widget</span>
-        <span class="block text-[11px] text-zinc-500">External support desk</span>
-      </span>
-      <i class="fa-solid fa-arrow-up-right-from-square text-zinc-600 text-xs"></i>
-    </a>
-    {% endif %}
-  </div>
-
-  {% if s and (s.email or s.hours) %}
-  <p class="text-center text-[11px] text-zinc-600 leading-relaxed">
-    {% if s.hours %}{{ s.hours }}{% endif %}
-    {% if s.email %}<br>{{ s.email }}{% endif %}
-  </p>
-  {% else %}
-  <p class="text-center text-[11px] text-zinc-600">Typical support hours: 10:00 – 22:00</p>
+  </section>
   {% endif %}
 
-  <div class="flex justify-center gap-4 text-[11px]">
-    <a href="{{ url_for('dashboard.faq') if 'dashboard.faq' else url_for('dashboard.index') }}" class="text-zinc-500 hover:text-zinc-300">FAQ</a>
-    <a href="{{ url_for('dashboard.index') }}" class="text-zinc-500 hover:text-zinc-300">Home</a>
+  {# External channels #}
+  <section class="ct-card p-3 sm:p-4">
+    <div class="flex items-center justify-between px-1 mb-3">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Messaging apps</p>
+      <span class="text-[10px] text-zinc-600">Tap to open</span>
+    </div>
+    <div class="ct-grid two">
+      {% if has_wa1 %}
+      <a href="https://wa.me/{{ s.whatsapp1|replace('+', '')|replace(' ', '') }}" target="_blank" rel="noopener"
+         class="ct-channel" aria-label="WhatsApp support">
+        <span class="ct-ico bg-emerald-500/20 text-emerald-300"><i class="fa-brands fa-whatsapp"></i></span>
+        <span class="min-w-0 flex-1 text-left">
+          <span class="block text-sm font-bold text-white">WhatsApp</span>
+          <span class="block text-[11px] text-zinc-500">Support line 1</span>
+        </span>
+        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      </a>
+      {% endif %}
+      {% if has_wa2 %}
+      <a href="https://wa.me/{{ s.whatsapp2|replace('+', '')|replace(' ', '') }}" target="_blank" rel="noopener"
+         class="ct-channel" aria-label="WhatsApp support 2">
+        <span class="ct-ico bg-emerald-500/15 text-emerald-200"><i class="fa-brands fa-whatsapp"></i></span>
+        <span class="min-w-0 flex-1 text-left">
+          <span class="block text-sm font-bold text-white">WhatsApp</span>
+          <span class="block text-[11px] text-zinc-500">Support line 2</span>
+        </span>
+        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      </a>
+      {% endif %}
+      {% if has_tg1 %}
+      <a href="{{ s.telegram1 if s.telegram1.startswith('http') else 'https://t.me/' ~ s.telegram1|replace('@','') }}"
+         target="_blank" rel="noopener" class="ct-channel" aria-label="Telegram support">
+        <span class="ct-ico bg-sky-500/20 text-sky-300"><i class="fa-brands fa-telegram"></i></span>
+        <span class="min-w-0 flex-1 text-left">
+          <span class="block text-sm font-bold text-white">Telegram</span>
+          <span class="block text-[11px] text-zinc-500">Chat with support</span>
+        </span>
+        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      </a>
+      {% endif %}
+      {% if has_tg2 %}
+      <a href="{{ s.telegram2 if s.telegram2.startswith('http') else 'https://t.me/' ~ s.telegram2|replace('@','') }}"
+         target="_blank" rel="noopener" class="ct-channel" aria-label="Telegram support 2">
+        <span class="ct-ico bg-sky-500/15 text-sky-200"><i class="fa-brands fa-telegram"></i></span>
+        <span class="min-w-0 flex-1 text-left">
+          <span class="block text-sm font-bold text-white">Telegram</span>
+          <span class="block text-[11px] text-zinc-500">Alternate line</span>
+        </span>
+        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      </a>
+      {% endif %}
+      {% if has_lc %}
+      <a href="{{ s.livechat }}" target="_blank" rel="noopener" class="ct-channel" aria-label="External live chat">
+        <span class="ct-ico bg-fuchsia-500/20 text-fuchsia-200"><i class="fa-solid fa-headset"></i></span>
+        <span class="min-w-0 flex-1 text-left">
+          <span class="block text-sm font-bold text-white">Live chat widget</span>
+          <span class="block text-[11px] text-zinc-500">Opens in a new tab</span>
+        </span>
+        <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+      </a>
+      {% endif %}
+    </div>
+    {% if not has_wa1 and not has_wa2 and not has_tg1 and not has_tg2 and not has_lc %}
+    <p class="text-sm text-zinc-500 text-center py-6 px-2">
+      External channels are not configured yet.
+      {% if current_user.is_authenticated %}Use <strong class="text-zinc-300">Live chat</strong> above.{% endif %}
+    </p>
+    {% endif %}
+  </section>
+
+  {# Tips #}
+  <section class="ct-card p-4 sm:p-5">
+    <p class="ct-kicker mb-3" style="letter-spacing:.16em">Before you write</p>
+    <ul class="space-y-2.5 text-sm text-zinc-400">
+      <li class="flex gap-2.5">
+        <span class="text-emerald-400/90 mt-0.5"><i class="fa-solid fa-check text-xs"></i></span>
+        <span>Include your <strong class="text-zinc-200">username</strong> and what you need (deposit, withdraw, set 2, combo).</span>
+      </li>
+      <li class="flex gap-2.5">
+        <span class="text-emerald-400/90 mt-0.5"><i class="fa-solid fa-check text-xs"></i></span>
+        <span>For deposits, attach the <strong class="text-zinc-200">transaction proof</strong> and amount.</span>
+      </li>
+      <li class="flex gap-2.5">
+        <span class="text-emerald-400/90 mt-0.5"><i class="fa-solid fa-check text-xs"></i></span>
+        <span>Combo hold? Deposit until balance is ≥ 0, then open <strong class="text-zinc-200">Tasks</strong> and submit.</span>
+      </li>
+    </ul>
+  </section>
+
+  {# Footer links #}
+  <div class="flex flex-wrap items-center justify-center gap-4 pt-1">
+    <a href="{{ url_for('dashboard.faq') }}" class="ct-link">FAQs</a>
+    <span class="text-zinc-700">·</span>
+    <a href="{{ url_for('dashboard.about') }}" class="ct-link">About</a>
+    <span class="text-zinc-700">·</span>
+    <a href="{{ url_for('dashboard.index') }}" class="ct-link">Home</a>
   </div>
 </div>
 {% endblock %}
