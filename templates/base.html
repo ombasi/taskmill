@@ -174,6 +174,72 @@ card:"#18181b"
   .mobile-bottom-nav a.active, .mobile-bottom-nav a:hover {
     color: #e0f2fe !important;
   }
+
+  /* ===== Responsive mobile layouts ===== */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (max-width: 1023px) {
+    main.max-w-7xl {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+      padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    header nav > div.tm-nav-shell,
+    header nav > div.backdrop-blur-xl {
+      padding-left: 0.75rem !important;
+      padding-right: 0.75rem !important;
+      padding-top: 0.55rem !important;
+      padding-bottom: 0.55rem !important;
+      border-radius: 1rem !important;
+    }
+    /* Hide long desktop nav links on small screens (drawer + bottom nav) */
+    .tm-nav-link { display: none !important; }
+    header .tm-logout-btn { display: none !important; }
+  }
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .mobile-bottom-nav a {
+    min-height: 3rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* Readable forms on mobile */
+  @media (max-width: 767px) {
+    input, select, textarea, button {
+      font-size: 16px !important; /* prevents iOS zoom on focus */
+    }
+    button, a.w-cta, a.dx-btn, .pf-btn, .s1-btn, .ct-channel {
+      min-height: 2.75rem;
+    }
+    img, video {
+      max-width: 100%;
+      height: auto;
+    }
+    table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+  /* Page shells already centered — ensure they don't overflow */
+  .w-page, .pf, .ct-page, .dx-page, .wh, .s1, .sp {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  @media (min-width: 1024px) {
+    body { padding-bottom: 0 !important; }
+  }
+
   footer.site-footer {
     border-top-color: rgba(255,255,255,.1) !important;
     background: linear-gradient(180deg, transparent, rgba(8,12,22,.6));
@@ -280,7 +346,7 @@ card:"#18181b"
 </style>
 </head>
 
-<body id="tm-body" class="theme-dark" class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-24 lg:pb-0">
+<body id="tm-body" class="theme-dark" class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
 
 <!-- Background -->
 
@@ -445,7 +511,7 @@ Logout
 
 <!-- Main -->
 
-<main class="max-w-7xl mx-auto pt-2 pb-20 md:pt-6 md:pb-10 px-3 md:px-6">
+<main class="max-w-7xl mx-auto pt-2 pb-4 md:pt-6 md:pb-10 px-3 md:px-6 w-full">
     <!-- Flash Messages -->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -513,7 +579,7 @@ Logout
 
 
 {# Language switcher — compact icon only #}
-<div class="fixed bottom-[5.25rem] lg:bottom-5 left-2.5 z-[55]">
+<div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-5 left-2.5 z-[55]">
   <details class="group relative">
     <summary class="list-none cursor-pointer w-8 h-8 rounded-full
                     bg-zinc-950/85 border border-white/12 shadow-lg backdrop-blur
