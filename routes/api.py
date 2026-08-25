@@ -282,3 +282,73 @@ def dismiss_popup(nid):
     n.is_read = True
     db.session.commit()
     return jsonify({"ok": True})
+
+
+@api_bp.route("/push/vapid-public-key")
+def push_vapid_public_key():
+    try:
+        from utils.webpush_util import get_vapid_public_key
+        return jsonify({"publicKey": get_vapid_public_key() or ""})
+    except Exception as e:
+        return jsonify({"publicKey": "", "error": str(e)}), 200
+
+
+@api_bp.route("/push/subscribe", methods=["POST"])
+@login_required
+def push_subscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    keys = data.get("keys") or {}
+    p256dh = (keys.get("p256dh") or "").strip()
+    auth = (keys.get("auth") or "").strip()
+    if not endpoint or not p256dh or not auth:
+        return jsonify({"ok": False, "error": "invalid subscription"}), 400
+    try:
+        from models.push_subscription import PushSubscription
+        from extensions import db
+        sub = PushSubscription.query.filter_by(endpoint=endpoint).first()
+        if sub:
+            sub.user_id = current_user.id
+            sub.p256dh = p256dh
+            sub.auth = auth
+            sub.user_agent = (request.headers.get("User-Agent") or "")[:250]
+        else:
+            sub = PushSubscription(
+                user_id=current_user.id,
+                endpoint=endpoint,
+                p256dh=p256dh,
+                auth=auth,
+                user_agent=(request.headers.get("User-Agent") or "")[:250],
+            )
+            db.session.add(sub)
+        db.session.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@api_bp.route("/push/unsubscribe", methods=["POST"])
+@login_required
+def push_unsubscribe():
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get("endpoint") or "").strip()
+    try:
+        from models.push_subscription import PushSubscription
+        from extensions import db
+        q = PushSubscription.query.filter_by(user_id=current_user.id)
+        if endpoint:
+            q = q.filter_by(endpoint=endpoint)
+        for row in q.all():
+            db.session.delete(row)
+        db.session.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return jsonify({"ok": False, "error": str(e)}), 500

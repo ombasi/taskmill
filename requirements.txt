@@ -11,3 +11,5 @@ pg8000==1.31.2
 pyotp==2.9.0
 qrcode==7.4.2
 requests>=2.31.0
+pywebpush>=1.14.0
+cryptography>=42.0.0
