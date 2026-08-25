@@ -9,179 +9,168 @@
 
 <style>
   .w-page {
-    max-width: 26rem;
-    margin: 0 auto;
+    max-width: 26rem; margin: 0 auto;
     padding: 0.65rem 0.85rem calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
   @media (min-width: 768px) {
-    .w-page { max-width: 36rem; padding-top: 1rem; }
+    .w-page { max-width: 38rem; padding-top: 1rem; padding-bottom: 2.5rem; }
   }
-  .w-card {
-    border-radius: 1.35rem;
-    border: 1px solid rgba(255,255,255,.12);
-    background: linear-gradient(165deg, rgba(30,41,59,.97), rgba(8,12,22,.99));
-    box-shadow: 0 20px 48px -28px rgba(0,0,0,.9);
+  .w-hero {
+    position: relative; overflow: hidden;
+    border-radius: 1.75rem; padding: 1.4rem 1.25rem 1.3rem;
+    border: 1px solid rgba(255,255,255,.14);
+    background:
+      radial-gradient(ellipse 90% 70% at 0% 0%, rgba(52,211,153,.22), transparent 50%),
+      radial-gradient(ellipse 70% 50% at 100% 10%, rgba(56,189,248,.16), transparent 45%),
+      linear-gradient(160deg, rgba(24,32,48,.98), rgba(6,10,18,.99));
+    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 40px -16px rgba(52,211,153,.2);
   }
-  .w-title {
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 45%, #bae6fd);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+  .w-hero::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(167,243,208,.22) 40%, rgba(255,255,255,.05));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .w-kicker {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(167,243,208,.85);
   }
   .w-bal {
-    background: linear-gradient(120deg, #fff, #e2e8f0 45%, #86efac);
+    font-size: 1.85rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.15;
+    background: linear-gradient(120deg, #fff, #e2e8f0 40%, #86efac);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .w-bal.neg {
-    background: linear-gradient(120deg, #fecdd3, #fda4af);
+    background: linear-gradient(120deg, #fecdd3, #fb7185);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  .w-card {
+    border-radius: 1.35rem; border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(8,12,20,.99));
+    box-shadow: 0 18px 44px -26px rgba(0,0,0,.9);
+  }
   .w-chip {
-    flex: 1;
-    min-width: 0;
-    border-radius: 0.9rem;
-    border: 1px solid rgba(255,255,255,.08);
-    background: rgba(255,255,255,.04);
-    padding: 0.7rem 0.75rem;
+    border-radius: 1rem; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04); padding: 0.75rem 0.85rem;
   }
   .w-cta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    min-height: 3rem;
-    border-radius: 1rem;
-    font-weight: 900;
-    font-size: 0.9rem;
-    text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    min-height: 3.15rem; border-radius: 1.05rem; font-weight: 900; font-size: 0.9rem;
+    text-decoration: none; transition: transform .12s, filter .12s;
   }
+  .w-cta:hover { transform: translateY(-1px); filter: brightness(1.05); }
   .w-cta-in {
     color: #052e16;
-    background: linear-gradient(145deg, #ecfdf5, #a7f3d0 50%, #fff);
+    background: linear-gradient(145deg, #ecfdf5, #6ee7b7 45%, #a7f3d0);
+    box-shadow: 0 12px 28px -12px rgba(52,211,153,.55);
   }
   .w-cta-out {
     color: #4c0519;
-    background: linear-gradient(145deg, #fff1f2, #fecdd3 55%, #fff);
+    background: linear-gradient(145deg, #fff1f2, #fda4af 50%, #fecdd3);
+    box-shadow: 0 12px 28px -12px rgba(251,113,133,.4);
   }
   .w-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-height: 3.25rem;
-    padding: 0.7rem 0.9rem;
+    display: flex; align-items: center; gap: 0.8rem;
+    min-height: 3.35rem; padding: 0.75rem 1rem;
     border-bottom: 1px solid rgba(255,255,255,.06);
-    text-decoration: none;
-    color: inherit;
+    text-decoration: none; color: inherit;
   }
   .w-row:last-child { border-bottom: 0; }
-  .w-row:active { background: rgba(255,255,255,.04); }
+  .w-row:hover { background: rgba(255,255,255,.03); }
   .w-ico {
-    width: 2.35rem; height: 2.35rem; border-radius: 0.75rem;
+    width: 2.45rem; height: 2.45rem; border-radius: 0.85rem;
     display: grid; place-items: center; flex-shrink: 0;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
   }
   .w-tx {
     display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid rgba(255,255,255,.05);
+    padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.05);
   }
   .w-tx:last-child { border-bottom: 0; }
 </style>
 
-<div class="w-page space-y-3">
+<div class="w-page space-y-4">
 
-  {# Balance hero #}
-  <section class="w-card p-4">
-    <div class="flex items-center justify-between">
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-zinc-500">Wallet</p>
-      {% if bal < 0 %}
-      <span class="text-[10px] font-bold text-rose-300 bg-rose-500/10 border border-rose-400/20 rounded-full px-2 py-0.5">On hold</span>
-      {% endif %}
+  <section class="w-hero relative z-[1]">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="w-kicker">Available balance</p>
+        <p class="w-bal mt-2 {% if bal < 0 %}neg{% endif %}">{{ money(current_user, bal) }}</p>
+        <p class="text-[11px] text-zinc-500 mt-2">Pending {{ money(current_user, pending) }}
+          {% if combo %} · Hold {{ money(current_user, combo) }}{% endif %}
+        </p>
+      </div>
+      <span class="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-400/25 grid place-items-center text-emerald-300">
+        <i class="fa-solid fa-wallet"></i>
+      </span>
     </div>
-    <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-3">Available</p>
-    <p class="text-[2rem] leading-tight font-black mt-0.5 {% if bal < 0 %}w-bal neg{% else %}w-bal{% endif %}">
-      {{ money(current_user, bal) }}
-    </p>
-    {% if bal < 0 %}
-    <p class="text-[11px] text-rose-300/90 mt-1.5">Deposit to clear combo hold, then submit the product.</p>
-    {% endif %}
-
-    <div class="flex gap-2 mt-3.5">
+    <div class="grid grid-cols-2 gap-2 mt-4">
       <div class="w-chip">
-        <p class="text-[10px] text-zinc-500 font-bold uppercase">Pending</p>
-        <p class="text-sm font-black text-amber-200 mt-0.5 truncate">{{ money(current_user, pending) }}</p>
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Earned</p>
+        <p class="text-sm font-black text-emerald-300 mt-0.5">{{ money(current_user, earned) }}</p>
       </div>
       <div class="w-chip">
-        <p class="text-[10px] text-zinc-500 font-bold uppercase">Hold</p>
-        <p class="text-sm font-black {% if bal < 0 %}text-rose-300{% else %}text-zinc-200{% endif %} mt-0.5 truncate">{{ money(current_user, combo) }}</p>
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Withdrawn</p>
+        <p class="text-sm font-black text-sky-200 mt-0.5">{{ money(current_user, withdrawn) }}</p>
       </div>
     </div>
   </section>
 
-  {# Primary actions — large touch targets #}
   <div class="grid grid-cols-2 gap-2.5">
     <a href="{{ url_for('wallet.deposit') }}" class="w-cta w-cta-in" aria-label="Deposit funds">
-      <i class="fa-solid fa-plus"></i> Deposit
+      <i class="fa-solid fa-arrow-down"></i> Deposit
     </a>
     <a href="{{ url_for('wallet.withdraw') }}" class="w-cta w-cta-out" aria-label="Withdraw funds">
       <i class="fa-solid fa-arrow-up"></i> Withdraw
     </a>
   </div>
 
-  {# Lifetime snapshot #}
-  <section class="w-card px-1 py-1">
-    <div class="grid grid-cols-2">
-      <div class="px-3 py-3 border-r border-white/5">
-        <p class="text-[10px] text-zinc-500 font-bold uppercase">Earned</p>
-        <p class="text-sm font-black text-emerald-300 mt-0.5">{{ money(current_user, earned) }}</p>
-      </div>
-      <div class="px-3 py-3">
-        <p class="text-[10px] text-zinc-500 font-bold uppercase">Withdrawn</p>
-        <p class="text-sm font-black text-zinc-200 mt-0.5">{{ money(current_user, withdrawn) }}</p>
-      </div>
-    </div>
-  </section>
-
-  {# Links #}
   <section class="w-card overflow-hidden">
+    <p class="px-4 pt-3.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Shortcuts</p>
     <a href="{{ url_for('wallet.money_history') }}" class="w-row" aria-label="Wallet history">
-      <span class="w-ico text-sky-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
-      <span class="flex-1 min-w-0">
+      <span class="w-ico text-emerald-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
+      <span class="min-w-0 flex-1">
         <span class="block text-sm font-bold">Wallet history</span>
         <span class="block text-[11px] text-zinc-500">Deposits &amp; withdrawals</span>
       </span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     <a href="{{ url_for('profile.index') }}" class="w-row" aria-label="Payout and withdraw PIN">
-      <span class="w-ico text-violet-300"><i class="fa-solid fa-user"></i></span>
-      <span class="flex-1 min-w-0">
+      <span class="w-ico text-violet-300"><i class="fa-solid fa-building-columns"></i></span>
+      <span class="min-w-0 flex-1">
         <span class="block text-sm font-bold">Payout &amp; PIN</span>
-        <span class="block text-[11px] text-zinc-500">Method and withdraw security</span>
+        <span class="block text-[11px] text-zinc-500">Method and security</span>
       </span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
     <a href="{{ url_for('dashboard.contact') }}" class="w-row" aria-label="Support">
-      <span class="w-ico text-amber-200"><i class="fa-solid fa-headset"></i></span>
-      <span class="flex-1 min-w-0">
+      <span class="w-ico text-sky-300"><i class="fa-solid fa-headset"></i></span>
+      <span class="min-w-0 flex-1">
         <span class="block text-sm font-bold">Support</span>
-        <span class="block text-[11px] text-zinc-500">Deposit or withdraw help</span>
+        <span class="block text-[11px] text-zinc-500">Deposit or payout help</span>
       </span>
       <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
     </a>
   </section>
 
-  {# Recent activity #}
   {% if recent_transactions is defined and recent_transactions %}
-  <section class="w-card p-4">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-1">Recent</p>
+  <section class="w-card overflow-hidden">
+    <div class="flex items-center justify-between px-4 pt-3.5">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Recent activity</p>
+      <a href="{{ url_for('wallet.money_history') }}" class="text-[11px] font-bold text-sky-300/90">All →</a>
+    </div>
     {% for tx in recent_transactions[:6] %}
     <div class="w-tx">
       <div class="min-w-0">
         <p class="text-sm font-semibold truncate">{{ tx.description or tx.transaction_type or 'Transaction' }}</p>
-        <p class="text-[11px] text-zinc-500 mt-0.5">
-          {% if tx.created_at %}{{ tx.created_at|localtime('%d %b · %H:%M') if localtime is defined else tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}
+        <p class="text-[11px] text-zinc-500">
+          {% if tx.created_at %}{{ tx.created_at.strftime('%d %b · %H:%M') }}{% endif %}
         </p>
       </div>
-      <p class="text-sm font-black shrink-0 {% if (tx.amount or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
-        {{ money(current_user, tx.amount) }}
+      {% set amt = (tx.amount or 0)|float %}
+      <p class="text-sm font-black tabular-nums shrink-0 {% if amt >= 0 %}text-emerald-300{% else %}text-rose-300{% endif %}">
+        {% if amt >= 0 %}+{% endif %}{{ money(current_user, amt) }}
       </p>
     </div>
     {% endfor %}
