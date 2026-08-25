@@ -31,6 +31,9 @@
 {% set commission = task.commission or 0 %}
 {% set is_combo = (task.task_set == 99) or is_combo|default(false) %}
 <style>
+  /* diamond-task */
+  body { background: #050810 !important; }
+
   .tk-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
   .tk-card {
     background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(10,14,24,.98));

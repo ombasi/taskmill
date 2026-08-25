@@ -2,165 +2,81 @@
 {% block title %}Login · Taskmill{% endblock %}
 {% block meta_description %}Sign in to Taskmill to complete product review tasks, manage your wallet, and track earnings.{% endblock %}
 {% block meta_robots %}noindex,follow{% endblock %}
-{% block og_title %}Taskmill — Sign in{% endblock %}
-{% block og_description %}Sign in to Taskmill to manage tasks, wallet, and memberships.{% endblock %}
-{% block og_url %}{{ url_for('auth.login', _external=True) }}{% endblock %}
-{% block canonical_url %}{{ url_for('auth.login', _external=True) }}{% endblock %}
 {% block content %}
 <style>
-  /* —— Custom platinum palette —— */
-  :root {
-    --pt-1: #f8fafc;
-    --pt-2: #e2e8f0;
-    --pt-3: #cbd5e1;
-    --pt-4: #94a3b8;
-    --pt-5: #64748b;
-    --pt-glow: rgba(226, 232, 240, 0.22);
-    --pt-edge: linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(203,213,225,.25) 35%, rgba(100,116,139,.2) 70%, rgba(255,255,255,.35) 100%);
-    --pt-fill: linear-gradient(145deg, #ffffff 0%, #f1f5f9 20%, #e2e8f0 40%, #bae6fd 58%, #cbd5e1 78%, #ffffff 100%);
-    --pt-text: linear-gradient(120deg, #ffffff 0%, #e0f2fe 28%, #e2e8f0 55%, #f8fafc 80%, #bae6fd 100%);
-    --pt-deep: linear-gradient(165deg, rgba(30,41,59,.96) 0%, rgba(15,23,42,.94) 45%, rgba(9,12,20,.98) 100%);
-  }
-
-  .login-wrap {
-    min-height: calc(100dvh - 6rem);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.25rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .login-wrap::before {
-    content: "";
-    position: absolute;
-    inset: -20%;
+  .auth-page { max-width: 26rem; margin: 0 auto; padding: 1.25rem 0.9rem 5.5rem; }
+  @media (min-width: 768px) { .auth-page { padding-top: 2.5rem; padding-bottom: 3rem; } }
+  .auth-card {
+    position: relative; overflow: hidden;
+    border-radius: 1.75rem; padding: 1.75rem 1.35rem 1.5rem;
+    border: 1px solid rgba(255,255,255,.14);
     background:
-      radial-gradient(ellipse 50% 40% at 18% 12%, rgba(248,250,252,.16), transparent 55%),
-      radial-gradient(ellipse 45% 35% at 88% 18%, rgba(148,163,184,.14), transparent 50%),
-      radial-gradient(ellipse 40% 30% at 50% 95%, rgba(100,116,139,.12), transparent 55%),
-      radial-gradient(ellipse 30% 25% at 70% 60%, rgba(99,102,241,.08), transparent 60%);
-    animation: pt-drift 14s ease-in-out infinite alternate;
-    pointer-events: none;
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(56,189,248,.16), transparent 55%),
+      radial-gradient(ellipse 60% 50% at 100% 20%, rgba(99,102,241,.14), transparent 50%),
+      linear-gradient(165deg, rgba(28,36,52,.98), rgba(8,10,18,.99));
+    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 40px -16px rgba(186,230,253,.2);
   }
-  @keyframes pt-drift {
-    from { transform: translate3d(0,0,0) scale(1); }
-    to   { transform: translate3d(-2%, 1.5%, 0) scale(1.04); }
-  }
-
-  .login-card {
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    background: var(--pt-deep);
-    border-radius: 1.75rem;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.06) inset,
-      0 28px 70px -32px rgba(0,0,0,.85),
-      0 0 80px -24px var(--pt-glow);
-  }
-  .login-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: var(--pt-edge);
+  .auth-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(186,230,253,.22) 40%, rgba(255,255,255,.06));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+    -webkit-mask-composite: xor; mask-composite: exclude;
   }
-
-  .pt-text {
-    background: var(--pt-text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .auth-title {
+    background: linear-gradient(120deg, #fff, #e0f2fe 40%, #bae6fd);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .pt-badge {
-    background: var(--pt-fill);
-    box-shadow:
-      0 10px 28px -10px rgba(226,232,240,.45),
-      0 0 0 1px rgba(255,255,255,.35) inset;
+  .auth-input {
+    width: 100%; border-radius: 1rem; padding: 0.85rem 1rem;
+    background: rgba(2,6,14,.92); border: 1px solid rgba(255,255,255,.12);
+    color: #f8fafc; font-weight: 600; font-size: 0.95rem;
   }
-  .pt-btn {
-    background: var(--pt-fill);
-    color: #0f172a;
-    font-weight: 800;
-    box-shadow: 0 14px 32px -14px rgba(226,232,240,.55);
-    transition: filter .15s ease, transform .15s ease;
-  }
-  .pt-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
-  .pt-btn:active { transform: translateY(0); }
-
-  .pt-input {
-    background: linear-gradient(180deg, rgba(0,0,0,.5), rgba(15,23,42,.65));
-    border: 1px solid rgba(203,213,225,.14);
-  }
-  .pt-input:focus {
-    outline: none;
-    border-color: rgba(226,232,240,.4);
-    box-shadow: 0 0 0 3px rgba(148,163,184,.18);
-  }
-
-  .pt-divider {
-    background: linear-gradient(90deg, transparent, rgba(203,213,225,.25), transparent);
-    height: 1px;
-    border: 0;
+  .auth-input:focus { outline: none; border-color: rgba(186,230,253,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
+  .auth-btn {
+    width: 100%; border-radius: 1rem; padding: 0.9rem;
+    font-weight: 900; font-size: 0.95rem; color: #0f172a; border: none; cursor: pointer;
+    background: linear-gradient(145deg, #fff, #e2e8f0 40%, #bae6fd);
+    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
   }
 </style>
-
-<div class="login-wrap">
-  <div class="login-card p-6 sm:p-8">
-    <div class="text-center mb-7">
-      <div class="pt-badge mx-auto w-14 h-14 rounded-2xl flex items-center justify-center">
-        <i class="fa-solid fa-cube text-zinc-900 text-xl"></i>
+<div class="auth-page">
+  <div class="auth-card relative z-[1]">
+    <div class="text-center mb-6">
+      <div class="mx-auto w-12 h-12 rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-lg mb-3">
+        <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" alt="" class="w-full h-full object-cover">
       </div>
-      <h1 class="mt-5 text-3xl font-black pt-text tracking-tight">{{ t('welcome_back') if t is defined else 'Welcome back' }}</h1>
-      <p class="text-zinc-400 mt-2 text-sm">{{ t('sign_in_subtitle') if t is defined else 'Sign in to your Taskmill account' }}</p>
+      <h1 class="text-2xl font-black auth-title">Welcome back</h1>
+      <p class="text-sm text-zinc-500 mt-1.5">Sign in to continue earning</p>
     </div>
-
     <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
       <div>
-        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">{{ t('username_or_email') if t is defined else 'Username or email' }}</label>
-        <input type="text" name="username" required autocomplete="username" placeholder="your username"
-               class="pt-input w-full rounded-2xl px-4 py-3.5 text-sm text-white placeholder:text-zinc-600">
+        <label class="block text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Username or email</label>
+        <input type="text" name="username" required autocomplete="username" class="auth-input" placeholder="your username">
       </div>
-
       <div>
-        <label class="block text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">{{ t('password') if t is defined else 'Password' }}</label>
+        <label class="block text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Password</label>
         <div class="relative">
-          <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
-                 class="pt-input w-full rounded-2xl px-4 py-3.5 pr-12 text-sm text-white placeholder:text-zinc-600">
+          <input id="password" type="password" name="password" required autocomplete="current-password" class="auth-input pr-12" placeholder="••••••••">
           <button type="button" onclick="var p=document.getElementById('password');p.type=p.type==='password'?'text':'password'"
-                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-sm" aria-label="Show password">
             <i class="fa-solid fa-eye"></i>
           </button>
         </div>
       </div>
-
-      <div class="flex items-center justify-between text-xs pt-0.5">
+      <div class="flex items-center justify-between text-xs">
         <label class="flex items-center gap-2 text-zinc-400 cursor-pointer">
-          <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900 text-slate-300 focus:ring-slate-400/40">
-          {{ t('remember_me') if t is defined else 'Remember me' }}
+          <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900 text-sky-400">
+          Remember me
         </label>
-        <a href="{{ url_for('auth.forgot_password') }}" class="text-slate-300 hover:text-white font-medium transition">{{ t('forgot_password') if t is defined else 'Forgot password?' }}</a>
+        <a href="{{ url_for('auth.forgot_password') }}" class="text-sky-300/90 hover:text-white font-semibold">Forgot password?</a>
       </div>
-
-      <button type="submit" class="pt-btn w-full rounded-2xl py-3.5 text-sm mt-1">
-        Sign in
-      </button>
+      <button type="submit" class="auth-btn">Sign in</button>
     </form>
-
-    <hr class="pt-divider my-6">
-
-    <p class="text-center text-xs text-zinc-500">
-      {{ t('no_account') if t is defined else 'No account?' }}
-      <a href="{{ url_for('auth.register') }}" class="text-slate-200 font-semibold hover:text-white">{{ t('create_one') if t is defined else 'Create one' }}</a>
+    <p class="text-center text-sm text-zinc-500 mt-5">
+      New here?
+      <a href="{{ url_for('auth.register') }}" class="text-sky-300 font-bold hover:text-white">Create account</a>
     </p>
   </div>
 </div>

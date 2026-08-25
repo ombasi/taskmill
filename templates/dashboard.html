@@ -11,9 +11,9 @@
 {% set mname = current_user.membership.name if current_user.membership else "Member" %}
 {% set name = current_user.full_name or current_user.username or "Member" %}
 {% set bal = current_user.available_balance or 0 %}
-{% set _xp = current_user.xp if current_user.xp is defined and current_user.xp is not none else 0 %}
-{% set _q = current_user.quality_score if current_user.quality_score is defined and current_user.quality_score is not none else 100 %}
-{% set _lvl = current_user.user_level if current_user.user_level is defined and current_user.user_level is not none else 1 %}
+{% set _xp = (current_user.xp_points or 0)|int %}
+{% set _q = (current_user.quality_score if current_user.quality_score is defined and current_user.quality_score is not none else 50)|float %}
+{% set _lvl = (current_user.user_level or 1)|int %}
 {% if p is not defined or p is none %}
   {% set p = {
     "sets_completed": current_user.daily_sets_completed or 0,
@@ -26,14 +26,14 @@
 {% set done = p.tasks_today if p.tasks_today is defined else (today_completed|default(0)) %}
 {% set goal = p.daily_goal if p.daily_goal is defined else (maximum|default(16)) %}
 {% set pct = p.percent if p.percent is defined else (upgrade_progress|default(0)) %}
+
 {% set sets_done = p.sets_completed if p.sets_completed is defined else (current_user.daily_sets_completed or 0) %}
 {% set sets_max = p.daily_sets if p.daily_sets is defined else 2 %}
 {% set st = streak|default(current_user.streak_days or 0) %}
 {% set ref_n = referral_count|default(0)|int %}
 
 <style>
-
-  .dx-page {
+    .dx-page {
     max-width: 72rem;
     margin: 0 auto;
     padding: 0.5rem 0.7rem 1rem;
@@ -264,6 +264,15 @@
     background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(148,163,184,.08));
     border: 1px solid rgba(255,255,255,.12); color: #e2e8f0;
   }
+
+  /* Let global soft-neu handle elevation */
+  .dx-card, .dx-action, .dx-tile {
+    border-color: rgba(255,255,255,.06) !important;
+  }
+  .dx-action:hover {
+    transform: none;
+  }
+  /* neu-note */
 </style>
 
 <div class="dx-page space-y-4">
@@ -382,7 +391,7 @@
   </section>
   {% endif %}
 
-  {# TODAY PROGRESS #}
+{# TODAY PROGRESS #}
   
   
   {# Progress + Snapshot side by side #}
