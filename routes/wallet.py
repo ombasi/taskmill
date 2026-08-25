@@ -83,6 +83,53 @@ from werkzeug.utils import secure_filename
 from models.deposit import Deposit
 
 
+
+
+@wallet_bp.route("/history")
+@login_required
+def money_history():
+    """Deposits + withdrawals only (not task history)."""
+    from models.deposit import Deposit
+    from models.withdraw import Withdrawal
+    deposits = (
+        Deposit.query.filter_by(user_id=current_user.id)
+        .order_by(Deposit.created_at.desc())
+        .limit(80)
+        .all()
+    )
+    withdrawals = (
+        Withdrawal.query.filter_by(user_id=current_user.id)
+        .order_by(Withdrawal.created_at.desc())
+        .limit(80)
+        .all()
+    )
+    rows = []
+    for d in deposits:
+        rows.append({
+            "kind": "deposit",
+            "id": d.id,
+            "amount": float(d.amount or 0),
+            "status": d.status or "—",
+            "method": getattr(d, "payment_method", None) or "—",
+            "at": d.created_at,
+        })
+    for w in withdrawals:
+        rows.append({
+            "kind": "withdraw",
+            "id": w.id,
+            "amount": float(w.amount or 0),
+            "status": w.status or "—",
+            "method": getattr(w, "payment_method", None) or getattr(w, "method", None) or "—",
+            "at": w.created_at,
+        })
+    rows.sort(key=lambda r: r["at"] or __import__("datetime").datetime.min, reverse=True)
+    return render_template(
+        "wallet/history.html",
+        rows=rows,
+        deposits=deposits,
+        withdrawals=withdrawals,
+    )
+
 @wallet_bp.route("/deposit", methods=["GET", "POST"])
 @login_required
 @csrf_protect

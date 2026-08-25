@@ -2,205 +2,52 @@
 {% block title %}Set 1 complete{% endblock %}
 {% block content %}
 <style>
-  .s1-wrap { max-width: 28rem; margin: 0 auto; padding: 0.75rem 0.85rem 5.5rem; }
-  @media (min-width: 768px) { .s1-wrap { max-width: 40rem; padding-top: 1.25rem; } }
-  .dx {
-    border-radius: 1.85rem;
-    border: 1px solid rgba(255,255,255,.14);
+  .s1 { max-width: 22rem; margin: 0 auto; padding: 1.25rem 0.9rem 6rem; }
+  .s1-card {
+    border-radius: 1.6rem; border: 1px solid rgba(255,255,255,.12);
     background:
-      radial-gradient(ellipse at 20% 0%, rgba(186,230,253,.16), transparent 45%),
-      radial-gradient(ellipse at 80% 10%, rgba(167,139,250,.12), transparent 40%),
-      linear-gradient(165deg, rgba(36,42,58,.98), rgba(8,10,18,.99));
-    box-shadow:
-      0 28px 70px -32px rgba(0,0,0,.95),
-      0 0 60px -20px rgba(186,230,253,.22),
-      inset 0 1px 0 rgba(255,255,255,.12);
-    position: relative; overflow: hidden;
-  }
-  .dx::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(186,230,253,.2) 40%, rgba(255,255,255,.06));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
-  }
-  .dx > * { position: relative; z-index: 1; }
-  .title-dx {
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #f8fafc 55%, #c4b5fd 80%, #fff 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .badge-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    padding: 0.35rem 0.7rem; border-radius: 999px;
-    font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-    border: 1px solid rgba(255,255,255,.18);
-    background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
-  }
-  .xp-bar {
-    height: 0.55rem; border-radius: 999px;
-    background: rgba(0,0,0,.45); overflow: hidden;
-    border: 1px solid rgba(255,255,255,.08);
-  }
-  .xp-fill {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, #bae6fd, #c4b5fd 50%, #fde68a);
-    box-shadow: 0 0 12px rgba(186,230,253,.5);
-    width: 50%;
-  }
-  .s1-btn {
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-    width: 100%; border-radius: 1.1rem; padding: 0.95rem 1rem;
-    font-weight: 800; font-size: 0.92rem; text-decoration: none;
-  }
-  .s1-btn-primary {
-    color: #0f172a;
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 25%, #e2e8f0 50%, #bae6fd 78%, #fff 100%);
-    box-shadow: 0 14px 28px -12px rgba(186,230,253,.45);
-  }
-  .s1-btn-wa { color: #fff; background: linear-gradient(145deg, #25d366, #128c7e); }
-  .s1-btn-tg { color: #fff; background: linear-gradient(145deg, #38bdf8, #0284c7); }
-  .s1-btn-ghost {
-    color: #e2e8f0; background: rgba(255,255,255,.05);
-    border: 1px solid rgba(255,255,255,.12);
-  }
-  .stat {
-    border-radius: 1.1rem; padding: 0.85rem;
-    border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(160deg, rgba(255,255,255,.07), rgba(0,0,0,.25));
+      radial-gradient(ellipse at 40% 0%, rgba(52,211,153,.2), transparent 55%),
+      linear-gradient(165deg, rgba(24,32,48,.98), rgba(8,10,18,.99));
+    box-shadow: 0 24px 50px -28px rgba(0,0,0,.92);
+    padding: 1.75rem 1.25rem;
     text-align: center;
   }
-  .pulse-ring {
-    animation: pulseRing 2s ease-out infinite;
+  .s1-title {
+    background: linear-gradient(120deg, #fff, #a7f3d0 50%, #e0f2fe);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  @keyframes pulseRing {
-    0% { box-shadow: 0 0 0 0 rgba(186,230,253,.45); }
-    70% { box-shadow: 0 0 0 14px rgba(186,230,253,0); }
-    100% { box-shadow: 0 0 0 0 rgba(186,230,253,0); }
+  .s1-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+    width: 100%; padding: 0.85rem 1rem; border-radius: 0.95rem;
+    font-size: 0.875rem; font-weight: 800; text-decoration: none;
+  }
+  .s1-primary {
+    color: #04110a;
+    background: linear-gradient(135deg, #6ee7b7, #34d399);
+    box-shadow: 0 10px 24px -10px rgba(52,211,153,.5);
+  }
+  .s1-ghost {
+    color: #e2e8f0; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.04);
   }
 </style>
 
-{% set xp = (current_user.xp_points or 0) %}
-{% set lvl = (current_user.user_level or 1) %}
-{% set sets = (current_user.daily_sets_completed or 1) %}
-{% set tasks_today = (current_user.tasks_completed_today or 0) %}
-
-<div class="s1-wrap space-y-4">
-  {# Celebration card #}
-  <div class="dx">
-    <div class="pt-8 pb-5 px-5 text-center">
-      <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center pulse-ring
-                  bg-gradient-to-br from-white via-sky-100 to-violet-200 text-slate-900 text-2xl mb-4">
-        <i class="fa-solid fa-trophy"></i>
-      </div>
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.28em] text-sky-200/90">Level up moment</p>
-      <h1 class="text-3xl font-black title-dx mt-1">Set 1 complete</h1>
-      <p class="text-sm text-zinc-400 mt-2 max-w-sm mx-auto leading-relaxed">
-        First set locked in. You’re halfway through today’s run — Support unlocks Set 2 so you can finish and stay on track.
-      </p>
-      <div class="flex flex-wrap justify-center gap-2 mt-4">
-        <span class="badge-chip text-amber-100"><i class="fa-solid fa-medal text-amber-300"></i> First set</span>
-        <span class="badge-chip text-sky-100"><i class="fa-solid fa-bolt text-sky-300"></i> +XP progress</span>
-        <span class="badge-chip text-violet-100"><i class="fa-solid fa-star text-violet-300"></i> Day streak ready</span>
-      </div>
+<div class="s1">
+  <div class="s1-card">
+    <div class="mx-auto w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/25 grid place-items-center text-emerald-300 text-xl mb-3">
+      <i class="fa-solid fa-check"></i>
     </div>
-
-    {# Stats #}
-    <div class="grid grid-cols-3 gap-2 px-5 pb-4">
-      <div class="stat">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Level</p>
-        <p class="text-lg font-black text-white mt-0.5">{{ lvl }}</p>
-      </div>
-      <div class="stat">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">XP</p>
-        <p class="text-lg font-black text-sky-200 mt-0.5">{{ xp }}</p>
-      </div>
-      <div class="stat">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Tasks today</p>
-        <p class="text-lg font-black text-emerald-200 mt-0.5">{{ tasks_today }}</p>
-      </div>
-    </div>
-
-    {# XP bar toward set 2 #}
-    <div class="px-5 pb-5">
-      <div class="flex justify-between text-[11px] font-bold mb-1.5">
-        <span class="text-zinc-400">Today’s sets</span>
-        <span class="text-sky-200">{{ sets }}/2</span>
-      </div>
-      <div class="xp-bar"><div class="xp-fill" style="width: 50%"></div></div>
-      <p class="text-[11px] text-zinc-500 mt-2 text-center">50% of daily sets done · Unlock Set 2 to reach 100%</p>
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-200/80">Set 1 done</p>
+    <h1 class="text-xl font-black s1-title mt-1.5">Nice work</h1>
+    <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
+      To unlock <strong class="text-zinc-200">Set 2</strong>, message support once. They reset your second set so you can continue earning today.
+    </p>
+    <div class="mt-5 space-y-2">
+      <a href="{{ url_for('dashboard.contact') }}" class="s1-btn s1-primary" aria-label="Contact support for Set 2">
+        <i class="fa-solid fa-headset"></i> Contact support
+      </a>
+      <a href="{{ url_for('dashboard.index') }}" class="s1-btn s1-ghost" aria-label="Back to home">Home</a>
     </div>
   </div>
-
-  {# Platinum support notice #}
-  <div class="dx">
-    <div class="p-5">
-      <div class="flex items-start gap-3">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
-                    bg-gradient-to-br from-white/20 to-sky-300/20 border border-white/15 text-sky-100">
-          <i class="fa-solid fa-headset"></i>
-        </div>
-        <div class="min-w-0">
-          <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-sky-200/90">Diamond notice</p>
-          <h2 class="text-lg font-black title-dx mt-0.5">Contact Support to unlock Set 2</h2>
-          <p class="text-sm text-zinc-400 mt-1.5 leading-relaxed">
-            This is normal for every member. Send a short message — Support unlocks Set 2, then you continue tasks and stay eligible for withdrawal rules.
-          </p>
-        </div>
-      </div>
-
-      <div class="mt-4 space-y-2 rounded-xl border border-white/10 bg-black/25 p-3.5 text-xs text-zinc-300">
-        <p class="font-bold text-zinc-200">Copy &amp; send:</p>
-        <p class="font-mono text-[12px] text-sky-100/90 leading-relaxed">
-          Hi Support, username {{ current_user.username }}. I finished Set 1 — please unlock Set 2. Thanks!
-        </p>
-      </div>
-
-      <div class="mt-4 space-y-2.5">
-        <a href="{{ url_for('chat.inbox') }}" class="s1-btn s1-btn-primary">
-          <i class="fa-solid fa-comments"></i> Open live chat
-        </a>
-        {% if support %}
-          {% if support.whatsapp1_enabled and support.whatsapp1 %}
-          <a href="https://wa.me/{{ support.whatsapp1|replace('+','')|replace(' ','') }}?text={{ ('Hi Support, username ' ~ current_user.username ~ '. I finished Set 1 — please unlock Set 2. Thanks!')|urlencode }}"
-             target="_blank" rel="noopener" class="s1-btn s1-btn-wa">
-            <i class="fa-brands fa-whatsapp"></i> WhatsApp Support
-          </a>
-          {% endif %}
-          {% if support.telegram1_enabled and support.telegram1 %}
-          <a href="{{ support.telegram1 if support.telegram1.startswith('http') else 'https://t.me/' ~ support.telegram1|replace('@','') }}"
-             target="_blank" rel="noopener" class="s1-btn s1-btn-tg">
-            <i class="fa-brands fa-telegram"></i> Telegram Support
-          </a>
-          {% endif %}
-        {% endif %}
-        <a href="{{ url_for('dashboard.contact') }}" class="s1-btn s1-btn-ghost">
-          <i class="fa-solid fa-life-ring"></i> All support channels
-        </a>
-      </div>
-    </div>
-  </div>
-
-  {# Micro quests #}
-  <div class="dx p-5">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-violet-200/90">Next quests</p>
-    <ul class="mt-3 space-y-2.5 text-sm">
-      <li class="flex gap-2.5 items-start">
-        <span class="text-emerald-400 mt-0.5"><i class="fa-solid fa-circle-check"></i></span>
-        <span class="text-zinc-300"><strong class="text-white">Done:</strong> Complete Set 1</span>
-      </li>
-      <li class="flex gap-2.5 items-start">
-        <span class="text-sky-300 mt-0.5"><i class="fa-solid fa-lock-open"></i></span>
-        <span class="text-zinc-300"><strong class="text-white">Now:</strong> Message Support → unlock Set 2</span>
-      </li>
-      <li class="flex gap-2.5 items-start">
-        <span class="text-zinc-500 mt-0.5"><i class="fa-regular fa-circle"></i></span>
-        <span class="text-zinc-400"><strong class="text-zinc-300">Next:</strong> Finish Set 2 · keep reserve · withdraw if eligible</span>
-      </li>
-    </ul>
-  </div>
-
-  <p class="text-center text-[11px] text-zinc-600">
-    <a href="{{ url_for('dashboard.index') }}" class="text-zinc-400 hover:text-white">← Dashboard</a>
-  </p>
 </div>
 {% endblock %}

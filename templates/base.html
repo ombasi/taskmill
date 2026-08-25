@@ -512,16 +512,16 @@ Logout
 <!-- Footer -->
 
 
-{# Language switcher #}
-<div class="fixed bottom-24 lg:bottom-6 left-3 z-[60]">
-  <details class="group">
-    <summary class="list-none cursor-pointer rounded-full px-3 py-2 text-xs font-semibold
-                    bg-zinc-900/90 border border-white/15 shadow-xl backdrop-blur
-                    flex items-center gap-2 hover:border-sky-300/40">
-      <i class="fa-solid fa-language text-sky-200"></i>
-      <span>{{ lang_name|default(lang|default('EN')|upper) }}</span>
+{# Language switcher — compact icon only #}
+<div class="fixed bottom-[5.25rem] lg:bottom-5 left-2.5 z-[55]">
+  <details class="group relative">
+    <summary class="list-none cursor-pointer w-8 h-8 rounded-full
+                    bg-zinc-950/85 border border-white/12 shadow-lg backdrop-blur
+                    flex items-center justify-center hover:border-sky-300/35
+                    text-sky-200/90" title="Language" aria-label="Change language">
+      <i class="fa-solid fa-language text-[11px]"></i>
     </summary>
-    <div class="mt-2 w-52 max-h-64 overflow-y-auto rounded-2xl border border-white/12 bg-zinc-950/95 shadow-2xl p-2 space-y-0.5">
+    <div class="absolute bottom-10 left-0 w-40 max-h-56 overflow-y-auto rounded-xl border border-white/12 bg-zinc-950/95 shadow-2xl p-1.5 space-y-0.5">
       <a href="{{ url_for('set_language', code='auto') }}" class="block rounded-xl px-3 py-2 text-xs text-zinc-400 hover:bg-white/5">{{ t('auto_language') if t is defined else 'Auto (from location)' }}</a>
       {% for L in languages|default([]) %}
       <a href="{{ url_for('set_language', code=L.code) }}"
