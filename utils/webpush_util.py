@@ -22,7 +22,7 @@ def _instance_path() -> Path:
 
 
 def ensure_vapid_keys():
-    """Return (public_key_urlsafe, private_key_urlsafe_or_pem)."""
+    """Return (public_key_urlsafe, private_key_urlsafe)."""
     global _keys_cache
     if _keys_cache:
         return _keys_cache
@@ -67,7 +67,23 @@ def get_vapid_public_key() -> str:
     return pub or ""
 
 
+def ensure_push_table():
+    """Create push_subscriptions if missing (safe to call often)."""
+    try:
+        from extensions import db
+        from models.push_subscription import PushSubscription  # noqa: F401
+        db.create_all()
+    except Exception as e:
+        print("ensure_push_table:", e)
+        try:
+            from extensions import db
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 def send_web_push_to_user(user_id: int, title: str, body: str, url: str = "/profile/notifications") -> int:
+    """Never raise into the caller — always rollback on DB errors."""
     try:
         from pywebpush import webpush
     except ImportError:
@@ -81,11 +97,37 @@ def send_web_push_to_user(user_id: int, title: str, body: str, url: str = "/prof
     try:
         from models.push_subscription import PushSubscription
         from extensions import db
+        from sqlalchemy import inspect as sa_inspect
     except Exception as e:
         print("push import:", e)
         return 0
 
-    subs = PushSubscription.query.filter_by(user_id=user_id).all()
+    # Avoid poisoning the main transaction if table is missing
+    try:
+        insp = sa_inspect(db.engine)
+        if "push_subscriptions" not in insp.get_table_names():
+            ensure_push_table()
+            insp = sa_inspect(db.engine)
+            if "push_subscriptions" not in insp.get_table_names():
+                return 0
+    except Exception as e:
+        print("push table check:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return 0
+
+    try:
+        subs = PushSubscription.query.filter_by(user_id=user_id).all()
+    except Exception as e:
+        print("web push query:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return 0
+
     if not subs:
         return 0
 

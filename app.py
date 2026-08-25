@@ -117,6 +117,12 @@ def _ensure_schema_columns():
         # engagement tables
         try:
             db.create_all()
+            try:
+                import models.push_subscription  # noqa: F401
+                db.create_all()
+            except Exception as _pe:
+                print("push_subscriptions ensure:", _pe)
+
         except Exception as e:
             print("create_all in ensure:", e)
             try:
@@ -388,6 +394,7 @@ def create_app():
             import models.audit_log  # noqa: F401
             import models.user_note  # noqa: F401
             import models.promo  # noqa: F401
+            import models.push_subscription  # noqa: F401
         except Exception as e:
             print("model import:", e)
         try:

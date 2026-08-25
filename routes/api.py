@@ -287,7 +287,8 @@ def dismiss_popup(nid):
 @api_bp.route("/push/vapid-public-key")
 def push_vapid_public_key():
     try:
-        from utils.webpush_util import get_vapid_public_key
+        from utils.webpush_util import get_vapid_public_key, ensure_push_table
+        ensure_push_table()
         return jsonify({"publicKey": get_vapid_public_key() or ""})
     except Exception as e:
         return jsonify({"publicKey": "", "error": str(e)}), 200
@@ -296,6 +297,11 @@ def push_vapid_public_key():
 @api_bp.route("/push/subscribe", methods=["POST"])
 @login_required
 def push_subscribe():
+    try:
+        from utils.webpush_util import ensure_push_table
+        ensure_push_table()
+    except Exception:
+        pass
     data = request.get_json(silent=True) or {}
     endpoint = (data.get("endpoint") or "").strip()
     keys = data.get("keys") or {}

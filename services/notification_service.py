@@ -6,7 +6,7 @@ class NotificationService:
 
     @staticmethod
     def send(user, title, message, url="/profile/notifications"):
-        """In-app notification + browser/phone tray push when subscribed."""
+        """In-app notification; web push is best-effort and never aborts the session."""
         notification = Notification(
             user_id=user.id,
             title=title,
@@ -22,6 +22,10 @@ class NotificationService:
             send_web_push_to_user(uid, title, message, url=url)
         except Exception as e:
             print("web push:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
         return notification
 
@@ -56,14 +60,20 @@ class NotificationService:
             ))
             count += 1
         db.session.commit()
-        # push separately so one commit is enough
         try:
             from utils.webpush_util import send_web_push_to_user
             for user in users:
                 try:
                     send_web_push_to_user(user.id, title, message, url="/")
                 except Exception:
-                    pass
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
         except Exception as e:
             print("broadcast push:", e)
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
         return count
