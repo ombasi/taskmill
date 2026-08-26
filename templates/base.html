@@ -516,12 +516,12 @@ Earn • Review • Grow
 
 <a href="{{ url_for('wallet.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_wallet') if t is defined else 'Wallet' }}</a>
 
-<a href="{{ url_for('task.history') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_history') if t is defined else 'History' }}</a>
+<a href="{{ url_for('task.history') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_history') if t is defined else 'Task history' }}</a>
+
+<a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">{{ t('support') if t is defined else 'Support' }}</a>
 
 <a href="{{ url_for('dashboard.membership') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_membership') if t is defined else 'Membership' }}</a>
 <a href="{{ url_for('spin.index') }}" class="tm-nav-link hover:text-indigo-300">Spin</a>
-
-<a href="{{ url_for('dashboard.contact') }}" class="tm-nav-link hover:text-indigo-300">{{ t('support') if t is defined else 'Support' }}</a>
 
 <a href="{{ url_for('profile.index') }}" class="tm-nav-link hover:text-indigo-300">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
@@ -595,12 +595,12 @@ class="hidden mx-5 mt-4 backdrop-blur-xl bg-zinc-900/90 border border-white/10 r
 
 <a href="{{ url_for('wallet.index') }}">{{ t('nav_wallet') if t is defined else 'Wallet' }}</a>
 
-<a href="{{ url_for('task.history') }}">{{ t('nav_history') if t is defined else 'History' }}</a>
+<a href="{{ url_for('task.history') }}">{{ t('nav_history') if t is defined else 'Task history' }}</a>
+
+<a href="{{ url_for('dashboard.contact') }}">{{ t('support') if t is defined else 'Support' }}</a>
 
 <a href="{{ url_for('dashboard.membership') }}">{{ t('nav_membership') if t is defined else 'Membership' }}</a>
 <a href="{{ url_for('spin.index') }}">Lucky Spin</a>
-
-<a href="{{ url_for('dashboard.contact') }}">{{ t('support') if t is defined else 'Support' }}</a>
 
 <a href="{{ url_for('profile.index') }}">{{ t('nav_profile') if t is defined else 'Profile' }}</a>
 
@@ -849,7 +849,7 @@ mobile.classList.toggle("hidden");
 {% if current_user.is_authenticated and not current_user.is_admin %}
 <!-- Mobile bottom navigation -->
 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-white/10 bg-zinc-950/95 backdrop-blur-xl safe-bottom">
-  <div class="grid grid-cols-5 max-w-lg mx-auto">
+  <div class="grid grid-cols-6 max-w-lg mx-auto">
     <a href="{{ url_for('dashboard.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint == 'dashboard.index' %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Home">
       <i class="fa-solid fa-house text-lg"></i>
       <span>Home</span>
@@ -861,6 +861,10 @@ mobile.classList.toggle("hidden");
     <a href="{{ url_for('wallet.index') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint and request.endpoint.startswith('wallet.') %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Wallet">
       <i class="fa-solid fa-wallet text-lg"></i>
       <span>Wallet</span>
+    </a>
+    <a href="{{ url_for('task.history') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint == 'task.history' %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Task history">
+      <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+      <span>History</span>
     </a>
     <a href="{{ url_for('dashboard.contact') }}" class="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold {% if request.endpoint in ('dashboard.contact','chat.inbox','chat.thread') %}text-sky-300{% else %}text-zinc-400{% endif %}" aria-label="Support">
       <span class="relative inline-block"><i class="fa-solid fa-headset text-lg"></i><span data-badge="chat" class="absolute -top-1 -right-2 min-w-[1rem] h-4 px-0.5 rounded-full bg-red-600 text-[9px] flex items-center justify-center font-bold hidden"></span></span>
