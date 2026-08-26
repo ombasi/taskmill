@@ -152,6 +152,26 @@ def format_user(dt, user=None, fmt: str = "%d %b %Y · %H:%M") -> str:
             return "—"
 
 
+def to_gmt(dt: datetime) -> datetime | None:
+    """GMT is equivalent to UTC for display purposes."""
+    if not dt:
+        return None
+    return _as_utc(dt)
+
+
+def format_gmt(dt, fmt: str = "%d %b %Y · %H:%M") -> str:
+    """Format datetime in GMT (UTC) for admin last-seen and global logs."""
+    if not dt:
+        return "—"
+    try:
+        return to_gmt(dt).strftime(fmt) + " GMT"
+    except Exception:
+        try:
+            return dt.strftime(fmt) + " GMT"
+        except Exception:
+            return "—"
+
+
 def format_eat(dt, fmt: str = "%d %b %Y · %H:%M") -> str:
     if not dt:
         return "—"

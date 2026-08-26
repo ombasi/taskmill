@@ -13,7 +13,7 @@
   <span class="inline-flex items-center gap-1.5 text-zinc-400 font-semibold"><span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline</span>
   {% endif %}
   <span class="text-zinc-500">Last seen:
-    {% if ls %}{% if localtime is defined %}{{ ls|localtime('%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }}{% endif %}{% else %}Never{% endif %}
+    {% if ls %}{% if format_gmt is defined %}{{ format_gmt(ls, '%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }} GMT{% endif %}{% else %}Never{% endif %}
   </span>
 </div>
 

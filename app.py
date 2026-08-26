@@ -285,7 +285,7 @@ def create_app():
     
     # Timezone display: users local, admin EAT
     try:
-        from utils.timeutil import format_user, format_eat, format_smart, to_user_tz, to_eat
+        from utils.timeutil import format_user, format_eat, format_smart, to_user_tz, to_eat, format_gmt
 
         @app.template_filter("localtime")
         def _filter_localtime(dt, fmt="%d %b %Y · %H:%M"):
@@ -314,6 +314,14 @@ def create_app():
             return format_user(dt, user, fmt)
 
         app.jinja_env.globals["format_eat"] = format_eat
+            app.jinja_env.globals["format_gmt"] = format_gmt
+
+            @app.template_filter("gmt")
+            def _filter_gmt(dt, fmt="%d %b %Y · %H:%M"):
+                try:
+                    return format_gmt(dt, fmt)
+                except Exception:
+                    return "—"
         app.jinja_env.globals["format_user"] = format_user
     except Exception as _tz_e:
         print("timezone filters:", _tz_e)

@@ -97,9 +97,7 @@
             </span>
             {% endif %}
             <p class="text-[11px] text-zinc-500 mt-1">
-              {% if ls %}
-                {% if localtime is defined %}{{ ls|localtime('%d %b %H:%M') }}{% else %}{{ ls.strftime('%d %b %H:%M') }}{% endif %}
-              {% else %}Never{% endif %}
+              {% if ls %}{{ format_gmt(ls, '%d %b %H:%M') if format_gmt is defined else (ls.strftime('%d %b %H:%M') ~ ' GMT') }}{% else %}Never{% endif %}
             </p>
           </td>
           <td class="p-5 text-right">
