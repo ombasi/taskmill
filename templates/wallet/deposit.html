@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Deposit · Taskmill{% endblock %}
 {% block content %}
+<div class="dx-shell" style="max-width:48rem">
 
 <div class="mb-3 rounded-xl border border-sky-400/20 bg-sky-950/40 px-3 py-2.5 text-xs text-sky-100/90">
   <strong class="font-bold">After you submit:</strong> we review your payment proof. Balance updates automatically when approved — usually during support hours.
@@ -12,9 +13,9 @@
 {% set cur = current_user.currency or 'UGX' %}
 
 <style>
-  .dx-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
+  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
   @media (min-width: 1024px) {
-    .dx-page { max-width: 56rem; padding: 1rem 1.5rem 3rem; }
+    .dx-page { max-width: 64rem; padding: 1rem 1.5rem 3rem; }
     .dx-page.dx-wide-split {
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
@@ -453,4 +454,5 @@
   sync();
 })();
 </script>
+</div>
 {% endblock %}

@@ -1,316 +1,114 @@
 {% extends "base.html" %}
 {% block title %}Review Product · Taskmill{% endblock %}
 {% block content %}
-
-<style>
-  .tm-sticky-submit {
-    position: sticky; bottom: 0; z-index: 30;
-    padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(180deg, transparent, rgba(9,9,11,.95) 28%);
-  }
-  .tm-comm-preview {
-    border-radius: 1rem; border: 1px solid rgba(52,211,153,.25);
-    background: rgba(16,185,129,.08); padding: 0.75rem 1rem;
-    font-size: 0.875rem; color: #6ee7b7; font-weight: 700;
-  }
-</style>
-
-
-{# Sticky progress bar #}
 {% set _prog = progress if progress is mapping else {} %}
 {% set _done = _prog.get('completed_today', _prog.get('tasks_today', current_user.tasks_completed_today or 0)) %}
 {% set _goal = _prog.get('mandatory', _prog.get('daily_goal', _prog.get('tasks_per_set', 16))) %}
 {% set _pct = [((_done / _goal * 100) if _goal else 0)|int, 100]|min %}
-<div class="sticky top-0 z-30 -mx-1 mb-3 px-3 py-2.5 rounded-xl border border-white/10 bg-zinc-950/90 backdrop-blur-xl flex items-center justify-between gap-2 shadow-lg">
-  <div class="min-w-0">
-    <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Balance</p>
-    <p class="text-sm font-black text-emerald-300 truncate">{{ money(current_user, current_user.available_balance or 0) }}</p>
-  </div>
-  <div class="flex-1 max-w-[9rem]">
-    <div class="flex justify-between text-[10px] text-zinc-500 font-bold mb-0.5">
-      <span>Today</span><span>{{ _done }}/{{ _goal }}</span>
-    </div>
-    <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
-      <div class="h-full rounded-full bg-gradient-to-r from-sky-300 to-violet-400 transition-all duration-500" style="width:{{ _pct }}%"></div>
-    </div>
-  </div>
-  <div class="text-right shrink-0">
-    <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Set</p>
-    <p class="text-sm font-black text-white">{{ _prog.get('sets_completed', current_user.daily_sets_completed or 0) }}/{{ _prog.get('daily_sets', 2) }}</p>
-  </div>
-</div>
-
 {% set bal = current_user.available_balance or 0 %}
 {% set price = task.product_price or 0 %}
-{% set commission = task.commission or 0 %}
+{% set commission = commission if commission is defined else (task.commission or 0) %}
 {% set is_combo = (task.task_set == 99) or is_combo|default(false) %}
 <style>
-  /* diamond-task */
-  body { background: #050810 !important; }
-
-  .tk-page { max-width: 34rem; margin: 0 auto; padding: 0.35rem 0.75rem 6.5rem; }
-  .tk-card {
-    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(10,14,24,.98));
-    border: 1px solid rgba(255,255,255,.12);
-    border-radius: 1.65rem;
-    box-shadow: 0 28px 70px -34px rgba(0,0,0,.9), 0 0 56px -22px rgba(186,230,253,.14);
-    position: relative; overflow: hidden;
+  .tk-sticky { position: sticky; top: 0; z-index: 30; backdrop-filter: blur(16px); }
+  .tk-img {
+    width: 100%; aspect-ratio: 1; max-height: 22rem; object-fit: cover;
+    border-radius: 1.25rem; border: 1px solid rgba(255,255,255,.1); background: #0a0f18;
   }
-  .tk-card::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, rgba(186,230,253,.2) 40%, rgba(255,255,255,.1) 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  .tk-actions {
+    position: sticky; bottom: 0; z-index: 25;
+    padding: 0.85rem 0 calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, transparent, rgba(5,8,16,.97) 30%);
   }
-  .tk-title {
-    background: linear-gradient(120deg, #fff 0%, #e0f2fe 30%, #f1f5f9 60%, #bae6fd 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+  .tk-stars { display: flex; gap: 0.45rem; justify-content: center; flex-wrap: wrap; }
+  .tk-star {
+    width: 2.75rem; height: 2.75rem; border-radius: 0.85rem; position: relative;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #64748b; transition: all .15s ease;
   }
-  .tk-metal {
-    background: linear-gradient(135deg, #fff 0%, #e2e8f0 40%, #94a3b8 70%, #f8fafc 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .tk-btn {
-    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 22%, #e2e8f0 48%, #bae6fd 72%, #ffffff 100%);
-    color: #0f172a; font-weight: 800;
-    box-shadow: 0 14px 32px -12px rgba(186,230,253,.5);
-  }
-  .tk-btn:hover { filter: brightness(1.05); }
-
-  /* Diamond star rating */
-  .dm-stars {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-    gap: 0.45rem;
-  }
-  .dm-stars input { position: absolute; opacity: 0; pointer-events: none; }
-  .dm-stars label {
-    cursor: pointer;
-    width: 2.55rem;
-    height: 2.55rem;
-    display: grid;
-    place-items: center;
-    border-radius: 0.85rem;
-    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(15,23,42,.5));
-    border: 1px solid rgba(255,255,255,.1);
-    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
-    position: relative;
-  }
-  .dm-stars label::before {
-    content: "★";
-    font-size: 1.35rem;
-    line-height: 1;
-    background: linear-gradient(180deg, #64748b, #334155);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 1px 0 rgba(0,0,0,.35));
-    transition: transform .18s ease, filter .18s ease;
-  }
-  .dm-stars label:hover,
-  .dm-stars label:hover ~ label,
-  .dm-stars input:checked ~ label {
-    border-color: rgba(255,255,255,.45);
-    background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(186,230,253,.12) 40%, rgba(148,163,184,.15));
-    box-shadow: 0 0 22px -6px rgba(255,255,255,.45), inset 0 1px 0 rgba(255,255,255,.25);
-    transform: translateY(-2px);
-  }
-  .dm-stars label:hover::before,
-  .dm-stars label:hover ~ label::before,
-  .dm-stars input:checked ~ label::before {
-    background: linear-gradient(140deg, #ffffff 0%, #e0f2fe 25%, #f8fafc 50%, #bae6fd 75%, #ffffff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 0 8px rgba(186,230,253,.75));
-    transform: scale(1.08);
-  }
-  .dm-stars label:active { transform: scale(0.96); }
-  .dm-rating-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.65rem;
-  }
-  .dm-rating-pill {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: #e2e8f0;
-    background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(186,230,253,.08));
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 999px;
-    padding: 0.3rem 0.7rem;
-  }
-
-  .tk-sticky {
-    position: sticky; bottom: 4.5rem; z-index: 30;
-    display: flex; gap: 0.5rem;
-    padding: 0.65rem 0.25rem 0.25rem;
-    background: linear-gradient(180deg, transparent, rgba(7,10,18,.92) 30%);
-  }
-  @media (min-width: 1024px) { .tk-sticky { bottom: 1rem; } }
+  .tk-star.on, .tk-star:hover { color: #fbbf24; border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.1); }
+  .tk-star input { position: absolute; opacity: 0; pointer-events: none; }
 </style>
 
-<div class="tk-page space-y-3.5">
-
-  <div class="flex items-center justify-between text-sm">
-    <a href="{{ url_for('task.history') }}" class="text-zinc-400 hover:text-white">← History</a>
-    {% if progress %}
-    <span class="text-[11px] text-zinc-500 font-medium">
-      Today {{ progress.get('completed_today', 0) }}/{{ progress.get('mandatory', '—') }}
-    </span>
-    {% endif %}
-  </div>
-
-  {# Live balance #}
-  <div class="tk-card px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-    <div>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-semibold">{{ t('available_balance') if t is defined else 'Your balance' }}</p>
-      <p class="text-xl font-black {% if bal|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
-        {{ money(current_user, bal) }}
-      </p>
+<div class="dx-shell">
+  <div class="tk-sticky mb-4 dx-surface px-4 py-3 flex items-center justify-between gap-3">
+    <div class="min-w-0">
+      <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Balance</p>
+      <p class="text-sm font-black {% if bal|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %} truncate">{{ money(current_user, bal) }}</p>
     </div>
-    <div class="flex flex-wrap gap-1.5 text-[11px]">
-      <span class="rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-zinc-300">
-        {{ t('price') if t is defined else 'Price' }} {{ money(current_user, price) }}
-      </span>
-      <span class="rounded-full bg-emerald-500/10 border border-emerald-400/25 px-2.5 py-1 text-emerald-300 font-semibold">
-        +{{ money(current_user, commission) }}
-      </span>
-    </div>
-  </div>
-
-  {% if bal|float < 0 %}
-  <div class="rounded-2xl border border-rose-400/35 bg-gradient-to-r from-rose-600/25 to-transparent p-4 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <p class="font-bold text-rose-100">Escrow hold active</p>
-      <p class="text-sm text-rose-100/75">Deposit to release, then submit this product.</p>
-    </div>
-    <a href="{{ url_for('wallet.deposit') }}" class="rounded-xl bg-white text-rose-700 font-bold text-sm px-4 py-2.5 shrink-0">Deposit</a>
-  </div>
-  {% endif %}
-
-  {# Product #}
-  <article class="tk-card">
-    <div class="p-5 sm:p-6">
-      <div class="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-        <div class="relative shrink-0">
-          <div class="absolute -inset-3 rounded-[1.75rem] bg-sky-300/10 blur-2xl"></div>
-          <img src="{{ media(task.product_image) }}" alt=""
-               class="relative w-36 h-36 sm:w-40 sm:h-40 rounded-3xl object-cover bg-zinc-800 ring-1 ring-white/20 shadow-2xl"
-               onerror="this.src='https://ui-avatars.com/api/?name=Product&background=0f172a&color=e2e8f0&size=200'">
-        </div>
-        <div class="flex-1 min-w-0 text-center sm:text-left">
-          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-            <p class="text-[11px] uppercase tracking-[0.22em] text-sky-200/80 font-semibold">
-              {% if is_combo %}Combo review{% else %}{{ t('product_review') if t is defined else 'Product review' }}{% endif %}
-            </p>
-            {% if is_combo %}
-            <span class="rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[10px] font-bold px-2 py-0.5">COMBO</span>
-            {% endif %}
-          </div>
-          <h1 class="text-xl sm:text-2xl font-black tk-title mt-1.5 leading-snug">{{ task.product_name }}</h1>
-          {% if task.product_description %}
-          <p class="text-sm text-zinc-400 mt-2 leading-relaxed line-clamp-3">{{ task.product_description }}</p>
-          {% endif %}
-          <div class="grid grid-cols-2 gap-2 mt-4">
-            <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
-              <p class="text-[10px] uppercase tracking-wider text-zinc-500">{{ t('price') if t is defined else 'Price' }}</p>
-              <p class="text-lg font-black tk-metal mt-0.5">{{ money(current_user, price) }}</p>
-            </div>
-            <div class="rounded-2xl bg-black/35 border border-white/10 p-3">
-              <p class="text-[10px] uppercase tracking-wider text-zinc-500">You earn</p>
-              <p class="text-lg font-black text-emerald-300 mt-0.5">{{ money(current_user, commission) }}</p>
-            </div>
-          </div>
-        </div>
+    <div class="flex-1 max-w-[10rem]">
+      <div class="flex justify-between text-[10px] text-zinc-500 font-bold mb-0.5"><span>Today</span><span>{{ _done }}/{{ _goal }}</span></div>
+      <div class="h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div class="h-full rounded-full bg-gradient-to-r from-sky-300 to-violet-400" style="width:{{ _pct }}%"></div>
       </div>
     </div>
+    <div class="text-right shrink-0">
+      <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Set</p>
+      <p class="text-sm font-black">{{ _prog.get('sets_completed', current_user.daily_sets_completed or 0) }}/{{ _prog.get('daily_sets', 2) }}</p>
+    </div>
+  </div>
 
-    <div class="border-t border-white/10 bg-black/25 p-5 sm:p-6">
-      <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4" id="task-submit-form"
-            onsubmit="var b=this.querySelector('[type=submit]'); if(b.dataset.busy) return false; b.dataset.busy='1'; b.textContent='Submitting…'; b.disabled=true; return true;">
+  <div class="dx-split">
+    <section class="dx-surface p-4 sm:p-5 mb-4 lg:mb-0">
+      {% if is_combo %}<span class="dx-chip-base dx-chip-bad mb-3">Combo product</span>{% endif %}
+      <h1 class="dx-metal-title text-xl sm:text-2xl mb-3">{{ task.product_name or 'Product review' }}</h1>
+      {% if task.product_image %}
+      <img class="tk-img mb-4" src="{{ media(task.product_image) if media is defined else task.product_image }}" alt="{{ task.product_name or 'Product' }}" onerror="this.style.display='none'">
+      {% endif %}
+      {% if task.product_description %}
+      <p class="text-sm text-zinc-400 leading-relaxed mb-4">{{ task.product_description }}</p>
+      {% endif %}
+      <div class="dx-grid-2">
+        <div class="dx-inset">
+          <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Price</p>
+          <p class="text-lg font-black mt-1">{{ money(current_user, price) }}</p>
+        </div>
+        <div class="dx-inset">
+          <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Commission</p>
+          <p class="text-lg font-black mt-1 text-emerald-300">+{{ money(current_user, commission) }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dx-surface p-4 sm:p-5">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">Your review</p>
+      <form method="POST" action="{{ url_for('task.submit', id=task.id) }}" class="space-y-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-
         <div>
-          <div class="flex items-center justify-between gap-2">
-            <label class="text-xs text-zinc-400 font-semibold tracking-wide uppercase">Your rating</label>
-            <span class="text-[10px] text-zinc-500">Tap a diamond star</span>
-          </div>
-          <div class="dm-stars mt-3" id="dm-stars" role="radiogroup" aria-label="Product rating">
-            {# reverse order so CSS ~ sibling fill works left-to-right #}
-            {% for i in range(5, 0, -1) %}
-            <input type="radio" name="rating" id="rate-{{ i }}" value="{{ i }}" {% if i == 5 %}checked{% endif %}>
-            <label for="rate-{{ i }}" title="{{ i }} star{{ 's' if i != 1 else '' }}"></label>
+          <p class="text-xs text-zinc-400 mb-2 text-center">Rating</p>
+          <div class="tk-stars" id="tk-stars">
+            {% for n in range(1, 6) %}
+            <label class="tk-star" data-n="{{ n }}">
+              <input type="radio" name="rating" value="{{ n }}" {% if n == 5 %}checked{% endif %}>
+              <i class="fa-solid fa-star"></i>
+            </label>
             {% endfor %}
           </div>
-          <div class="dm-rating-meta">
-            <span class="dm-rating-pill" id="dm-rating-label">Excellent · 5</span>
-            <span class="text-[11px] text-zinc-500">Required to submit</span>
-          </div>
         </div>
-        <script>
-        (function(){
-          var labels = {1:'Poor',2:'Fair',3:'Good',4:'Very good',5:'Excellent'};
-          var box = document.getElementById('dm-stars');
-          var out = document.getElementById('dm-rating-label');
-          if(!box||!out) return;
-          function sync(){
-            var c = box.querySelector('input[name="rating"]:checked');
-            var v = c ? parseInt(c.value,10) : 5;
-            out.textContent = (labels[v]||'') + ' · ' + v;
-          }
-          box.querySelectorAll('input[name="rating"]').forEach(function(r){
-            r.addEventListener('change', sync);
-          });
-          sync();
-        })();
-        </script>
-
         <div>
-          <label class="text-xs text-zinc-400 font-semibold">Short review <span class="text-zinc-600 font-normal">(optional)</span></label>
-          <textarea name="review" rows="3" placeholder="What did you think of this product?"
-                    class="w-full mt-1.5 rounded-2xl bg-zinc-950/90 border border-white/10 px-4 py-3 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-sky-300/25 focus:border-sky-300/30 resize-none"></textarea>
+          <label class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Comment (optional)</label>
+          <textarea name="comment" rows="3" class="dx-input-metal mt-1.5" placeholder="Short note about the product…"></textarea>
         </div>
-
-        <div class="tk-actions sticky bottom-20 lg:bottom-4 z-20 flex flex-col sm:flex-row gap-2 pt-2 pb-1 bg-gradient-to-t from-[#070a12] via-[#070a12]/95 to-transparent">
-          <button type="submit" aria-label="Submit product review" class="w-full mt-4 py-4 rounded-2xl text-base font-black text-slate-900 bg-gradient-to-r from-white via-sky-50 to-sky-200 shadow-xl shadow-sky-500/25 hover:brightness-105 active:scale-[0.99] transition tk-btn flex-1 rounded-2xl py-3.5 text-sm font-bold">
-            {{ t('submit_review') if t is defined else 'Submit review' }}
-          </button>
-          <a href="{{ url_for('task.history') }}"
-             class="sm:w-36 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 text-center font-bold py-3.5 text-sm transition flex items-center justify-center">
-            {{ t('cancel') if t is defined else 'Cancel' }}
-          </a>
+        <div class="dx-inset" style="border-color: rgba(52,211,153,.25); color: #a7f3d0;">
+          You'll earn about <strong>{{ money(current_user, commission) }}</strong> on this review
         </div>
-        <p class="text-[11px] text-zinc-500 text-center sm:text-left">
-          {{ t('commission') if t is defined else 'Commission' }} credits on submit · next task unlocks after this one is done
-        </p>
+        <div class="tk-actions flex flex-col sm:flex-row gap-2">
+          <button type="submit" class="dx-btn-metal flex-1" aria-label="Submit review"><i class="fa-solid fa-check"></i> Submit review</button>
+          <a href="{{ url_for('task.index') }}" class="dx-btn-ghost flex-1" aria-label="Cancel">Cancel</a>
+        </div>
       </form>
-
-      {% if current_user.membership and 'vip' in (current_user.membership.name or '')|lower %}
-      <form method="POST" action="{{ url_for('extras.skip_task', task_id=task.id) }}" class="mt-3 text-center"
-            onsubmit="return confirm('Skip this product?');">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-        <button class="text-xs text-amber-400/90 hover:underline">VIP: skip this product</button>
-      </form>
-      {% endif %}
-    </div>
-  </article>
-
-</div>
-{% endblock %}
-
-{% if request.args.get('earned') %}
-<div id="tm-earn-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[80] px-4 py-3 rounded-2xl border border-emerald-400/30 bg-emerald-950/95 text-emerald-100 text-sm font-bold shadow-2xl">
-  + Commission credited · Keep going
+    </section>
+  </div>
 </div>
 <script>
-setTimeout(function(){ var e=document.getElementById('tm-earn-toast'); if(e) e.remove(); }, 2800);
+(function(){
+  var wrap = document.getElementById('tk-stars');
+  if(!wrap) return;
+  var labels = wrap.querySelectorAll('.tk-star');
+  function paint(n){ labels.forEach(function(l){ l.classList.toggle('on', parseInt(l.getAttribute('data-n'),10) <= n); }); }
+  labels.forEach(function(l){ l.addEventListener('click', function(){ paint(parseInt(l.getAttribute('data-n'),10)); }); });
+  paint(5);
+})();
 </script>
-{% endif %}
+{% endblock %}

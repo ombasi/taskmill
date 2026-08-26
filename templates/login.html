@@ -3,81 +3,27 @@
 {% block meta_description %}Sign in to Taskmill to complete product review tasks, manage your wallet, and track earnings.{% endblock %}
 {% block meta_robots %}noindex,follow{% endblock %}
 {% block content %}
-<style>
-  .auth-page { max-width: 26rem; margin: 0 auto; padding: 1.25rem 0.9rem 5.5rem; }
-  @media (min-width: 768px) { .auth-page { padding-top: 2.5rem; padding-bottom: 3rem; } }
-  .auth-card {
-    position: relative; overflow: hidden;
-    border-radius: 1.75rem; padding: 1.75rem 1.35rem 1.5rem;
-    border: 1px solid rgba(255,255,255,.14);
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(56,189,248,.16), transparent 55%),
-      radial-gradient(ellipse 60% 50% at 100% 20%, rgba(99,102,241,.14), transparent 50%),
-      linear-gradient(165deg, rgba(28,36,52,.98), rgba(8,10,18,.99));
-    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 40px -16px rgba(186,230,253,.2);
-  }
-  .auth-card::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(186,230,253,.22) 40%, rgba(255,255,255,.06));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  .auth-title {
-    background: linear-gradient(120deg, #fff, #e0f2fe 40%, #bae6fd);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .auth-input {
-    width: 100%; border-radius: 1rem; padding: 0.85rem 1rem;
-    background: rgba(2,6,14,.92); border: 1px solid rgba(255,255,255,.12);
-    color: #f8fafc; font-weight: 600; font-size: 0.95rem;
-  }
-  .auth-input:focus { outline: none; border-color: rgba(186,230,253,.4); box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
-  .auth-btn {
-    width: 100%; border-radius: 1rem; padding: 0.9rem;
-    font-weight: 900; font-size: 0.95rem; color: #0f172a; border: none; cursor: pointer;
-    background: linear-gradient(145deg, #fff, #e2e8f0 40%, #bae6fd);
-    box-shadow: 0 12px 28px -12px rgba(186,230,253,.45);
-  }
-</style>
-<div class="auth-page">
-  <div class="auth-card relative z-[1]">
-    <div class="text-center mb-6">
-      <div class="mx-auto w-12 h-12 rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-lg mb-3">
-        <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" alt="" class="w-full h-full object-cover">
-      </div>
-      <h1 class="text-2xl font-black auth-title">Welcome back</h1>
-      <p class="text-sm text-zinc-500 mt-1.5">Sign in to continue earning</p>
-    </div>
-    <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="dx-shell-sm">
+  <section class="dx-surface p-6 sm:p-8">
+    <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-sky-300/90">Welcome back</p>
+    <h1 class="dx-metal-title text-3xl mt-2">Sign in</h1>
+    <p class="text-sm text-zinc-400 mt-2">Access tasks, wallet, and support.</p>
+    <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6 space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
-        <label class="block text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Username or email</label>
-        <input type="text" name="username" required autocomplete="username" class="auth-input" placeholder="your username">
+        <label class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Username or phone</label>
+        <input class="dx-input-metal mt-1.5" name="username" required autocomplete="username" placeholder="Username or phone">
       </div>
       <div>
-        <label class="block text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500 mb-1.5">Password</label>
-        <div class="relative">
-          <input id="password" type="password" name="password" required autocomplete="current-password" class="auth-input pr-12" placeholder="••••••••">
-          <button type="button" onclick="var p=document.getElementById('password');p.type=p.type==='password'?'text':'password'"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-sm" aria-label="Show password">
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
+        <label class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Password</label>
+        <input class="dx-input-metal mt-1.5" type="password" name="password" required autocomplete="current-password" placeholder="Password">
       </div>
-      <div class="flex items-center justify-between text-xs">
-        <label class="flex items-center gap-2 text-zinc-400 cursor-pointer">
-          <input type="checkbox" name="remember" value="1" class="rounded border-white/20 bg-zinc-900 text-sky-400">
-          Remember me
-        </label>
-        <a href="{{ url_for('auth.forgot_password') }}" class="text-sky-300/90 hover:text-white font-semibold">Forgot password?</a>
-      </div>
-      <button type="submit" class="auth-btn">Sign in</button>
+      <button type="submit" class="dx-btn-metal w-full mt-2">Sign in</button>
     </form>
-    <p class="text-center text-sm text-zinc-500 mt-5">
-      New here?
-      <a href="{{ url_for('auth.register') }}" class="text-sky-300 font-bold hover:text-white">Create account</a>
-    </p>
-  </div>
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm">
+      <a href="{{ url_for('auth.register') }}" class="font-semibold text-sky-300 hover:text-sky-200">Create account</a>
+      <a href="{{ url_for('dashboard.contact') }}" class="text-zinc-500 hover:text-zinc-300">Forgot password? Contact support</a>
+    </div>
+  </section>
 </div>
 {% endblock %}

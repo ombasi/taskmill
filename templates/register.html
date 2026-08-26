@@ -41,8 +41,8 @@
     box-shadow: 0 12px 28px -12px rgba(167,139,250,.4);
   }
 </style>
-<div class="auth-page">
-  <div class="auth-card relative z-[1]">
+<div class="dx-shell-sm">
+  <div class="dx-surface p-6 sm:p-7 relative z-[1]">
     <div class="text-center mb-5">
       <h1 class="text-2xl font-black auth-title">Create account</h1>
       <p class="text-sm text-zinc-500 mt-1.5">Referral code required</p>
@@ -56,7 +56,7 @@
         <label class="pt-label text-sky-200/90">{{ t('referral_code') if t is defined else 'Referral code' }} <span class="req">*</span></label>
         <input type="text" name="referral_code" required
                value="{{ request.args.get('ref','') or request.form.get('referral_code','') }}"
-               class="pt-input font-mono tracking-wide" placeholder="Enter inviter code"
+               class="dx-input-metal font-mono tracking-wide" placeholder="Enter inviter code"
                autocomplete="off">
         <p class="text-[11px] text-zinc-500 mt-2">You cannot register without a valid code from a Taskmill member.</p>
       </div>
@@ -64,27 +64,27 @@
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="pt-label">Full name <span class="req">*</span></label>
-          <input type="text" name="full_name" required class="pt-input" placeholder="Your full name" value="{{ request.form.full_name or '' }}">
+          <input type="text" name="full_name" required class="dx-input-metal" placeholder="Your full name" value="{{ request.form.full_name or '' }}">
         </div>
         <div>
           <label class="pt-label">Username <span class="req">*</span></label>
-          <input type="text" name="username" required class="pt-input" placeholder="Choose a username" value="{{ request.form.username or '' }}">
+          <input type="text" name="username" required class="dx-input-metal" placeholder="Choose a username" value="{{ request.form.username or '' }}">
         </div>
       </div>
 
       <div>
         <label class="pt-label">Email <span class="req">*</span></label>
-        <input type="email" name="email" required class="pt-input" placeholder="you@email.com" value="{{ request.form.email or '' }}">
+        <input type="email" name="email" required class="dx-input-metal" placeholder="you@email.com" value="{{ request.form.email or '' }}">
       </div>
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="pt-label">Phone</label>
-          <input type="text" name="phone" class="pt-input" placeholder="07XXXXXXXX" value="{{ request.form.phone or '' }}">
+          <input type="text" name="phone" class="dx-input-metal" placeholder="07XXXXXXXX" value="{{ request.form.phone or '' }}">
         </div>
         <div>
           <label class="pt-label">Country <span class="req">*</span></label>
-          <select name="country" required class="pt-input">
+          <select name="country" required class="dx-input-metal">
             <option value="" disabled {% if not request.form.country %}selected{% endif %}>Select country</option>
             {% for c in world_countries|default([]) %}
             <option value="{{ c }}" {% if request.form.country == c %}selected{% endif %}>{{ c }}</option>
@@ -105,18 +105,18 @@
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="pt-label">Password <span class="req">*</span></label>
-          <input type="password" name="password" required minlength="6" class="pt-input" placeholder="Min 6 characters">
+          <input type="password" name="password" required minlength="6" class="dx-input-metal" placeholder="Min 6 characters">
         </div>
         <div>
           <label class="pt-label">Confirm password <span class="req">*</span></label>
-          <input type="password" name="confirm_password" required minlength="6" class="pt-input" placeholder="Repeat password">
+          <input type="password" name="confirm_password" required minlength="6" class="dx-input-metal" placeholder="Repeat password">
         </div>
       </div>
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="pt-label">Sex <span class="req">*</span></label>
-          <select name="sex" required class="pt-input">
+          <select name="sex" required class="dx-input-metal">
             <option value="" disabled selected>Select</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -125,7 +125,7 @@
         </div>
         <div>
           <label class="pt-label">Date of birth <span class="req">*</span></label>
-          <input type="date" name="date_of_birth" required class="pt-input" {% if max_dob %}max="{{ max_dob }}"{% endif %}>
+          <input type="date" name="date_of_birth" required class="dx-input-metal" {% if max_dob %}max="{{ max_dob }}"{% endif %}>
         </div>
       </div>
 
@@ -139,7 +139,7 @@
         </span>
       </label>
 
-      <button type="submit" class="pt-btn w-full rounded-2xl py-3.5 text-sm mt-2">
+      <button type="submit" class="dx-btn-metal w-full mt-2">
         Create My Account
       </button>
     

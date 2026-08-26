@@ -4,9 +4,9 @@
 {% set bal = current_user.available_balance or 0 %}
 {% set items = history|default([]) %}
 <style>
-  .dx-page { max-width: 48rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
+  .dx-page { max-width: 72rem; margin: 0 auto; padding: 0.5rem 0.85rem 6.75rem; }
   @media (min-width: 1024px) {
-    .dx-page { max-width: 64rem; padding: 1rem 1.5rem 3rem; }
+    .dx-page { max-width: 72rem; padding: 1rem 1.5rem 3rem; }
   }
   .dx-card {
     background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(10,14,24,.99));
@@ -135,9 +135,9 @@
             <p class="text-[11px] text-zinc-500 mt-0.5">
               {% if is_combo %}<span class="text-rose-300 font-semibold">Combo</span> · {% endif %}
               {% if task.completed_at %}
-                {{ task.completed_at.strftime('%d %b %Y') }}
+                {{ task.completed_at|localtime('%d %b %Y') }}
               {% elif task.created_at %}
-                {{ task.created_at.strftime('%d %b %Y') }}
+                {{ task.created_at|localtime('%d %b %Y') }}
               {% else %}
                 —
               {% endif %}
@@ -151,12 +151,12 @@
           </div>
           <div class="text-right shrink-0">
             {% if is_pending %}
-            <span class="dx-chip text-amber-200 border-amber-400/30 text-[10px]">
+            <span class="dx-chip-base dx-chip-warn">
               {% if st == 'frozen' %}Frozen{% else %}Pending{% endif %}
             </span>
             <p class="text-[10px] text-sky-200/80 mt-1 font-semibold">Tap to submit →</p>
             {% else %}
-            <span class="dx-chip text-emerald-200 border-emerald-400/25 text-[10px]">Done</span>
+            <span class="dx-chip-base dx-chip-ok">Done</span>
             {% endif %}
           </div>
         {% if is_pending %}</a>{% else %}</div>{% endif %}
