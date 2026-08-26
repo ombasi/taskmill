@@ -3469,11 +3469,7 @@ def referral_leaderboard():
     return render_template("admin/leaderboard.html", leaders=leaders)
 
 
-@admin_bp.route("/stuck-users")
-@login_required
-@admin_required
-
-@admin_bp.route("/users/<int:user_id>/unlock-pin", methods=["POST"])
+@admin_bp.route("/users/<int:user_id>/unlock-pin", methods=["POST"], endpoint="unlock_withdraw_pin")
 @login_required
 @admin_required
 def unlock_withdraw_pin(user_id):
@@ -3487,7 +3483,6 @@ def unlock_withdraw_pin(user_id):
     except Exception as e:
         flash(str(e), "danger")
     return redirect(url_for("admin.view_user", user_id=user.id))
-
 
 
 @admin_bp.route("/proofs", methods=["GET", "POST"])
@@ -3527,6 +3522,9 @@ def delete_proof(proof_id):
     return redirect(url_for("admin.manage_proofs"))
 
 
+@admin_bp.route("/stuck-users")
+@login_required
+@admin_required
 def stuck_users():
     """Users who need attention: negative, idle, pending deposit, set2 locked."""
     from datetime import datetime, timedelta
