@@ -4,108 +4,202 @@
 {% set bal = (current_user.available_balance or 0)|float %}
 {% set pending = (current_user.pending_balance or 0)|float %}
 {% set combo = (current_user.combo_balance or 0)|float %}
-{% set earned = current_user.total_earned or 0 %}
-{% set withdrawn = current_user.total_withdrawn or 0 %}
+{% set earned = (current_user.total_earned or 0)|float %}
+{% set withdrawn = (current_user.total_withdrawn or 0)|float %}
 <style>
-  .w-page { max-width: 26rem; margin: 0 auto; padding: 0.65rem 0.85rem 5.5rem; }
-  @media (min-width: 768px) { .w-page { max-width: 38rem; padding-top: 1rem; padding-bottom: 2.5rem; } }
-  .w-hero {
-    position: relative; overflow: hidden; border-radius: 1.75rem; padding: 1.4rem 1.25rem;
+  .wx { max-width: 72rem; margin: 0 auto; padding: 0.85rem 1rem 6rem; }
+  @media (min-width: 1024px) { .wx { padding: 1.5rem 1.5rem 3rem; } }
+
+  .wx-hero {
+    position: relative; overflow: hidden;
+    border-radius: 1.75rem; padding: 1.5rem 1.35rem;
     border: 1px solid rgba(255,255,255,.14);
     background:
-      radial-gradient(ellipse 90% 70% at 0% 0%, rgba(52,211,153,.2), transparent 50%),
-      radial-gradient(ellipse 70% 50% at 100% 10%, rgba(56,189,248,.14), transparent 45%),
-      linear-gradient(160deg, rgba(24,32,48,.98), rgba(6,10,18,.99));
-    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 40px -16px rgba(52,211,153,.18);
+      radial-gradient(ellipse 70% 90% at 0% 0%, rgba(52,211,153,.22), transparent 55%),
+      radial-gradient(ellipse 55% 70% at 100% 0%, rgba(56,189,248,.16), transparent 50%),
+      radial-gradient(ellipse 40% 50% at 50% 100%, rgba(167,139,250,.1), transparent 55%),
+      linear-gradient(155deg, rgba(22,30,46,.98), rgba(6,10,18,.99));
+    box-shadow: 0 32px 70px -36px rgba(0,0,0,.95), 0 0 48px -18px rgba(52,211,153,.2);
   }
-  .w-hero::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(167,243,208,.2) 40%, rgba(255,255,255,.05));
+  .wx-hero::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 1;
+    background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(167,243,208,.25) 45%, rgba(255,255,255,.06));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .w-bal {
-    font-size: 1.85rem; font-weight: 900; letter-spacing: -0.03em;
-    background: linear-gradient(120deg, #fff, #e2e8f0 40%, #86efac);
+  .wx-hero > * { position: relative; z-index: 2; }
+  .wx-bal {
+    font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1.05;
+    background: linear-gradient(115deg, #fff 10%, #e2e8f0 35%, #6ee7b7 70%, #fff 95%);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: wx-shine 6s ease-in-out infinite;
+  }
+  .wx-bal.neg {
+    background: linear-gradient(115deg, #fecdd3, #fb7185, #fda4af);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .w-bal.neg {
-    background: linear-gradient(120deg, #fecdd3, #fb7185);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+  @keyframes wx-shine {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
   }
-  .w-card {
+
+  .wx-grid { display: grid; gap: 0.85rem; }
+  @media (min-width: 640px) { .wx-grid-2 { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) {
+    .wx-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .wx-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .wx-main { grid-template-columns: 1.4fr 1fr; align-items: start; }
+  }
+
+  .wx-card {
     border-radius: 1.35rem; border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(8,12,20,.99));
-    box-shadow: 0 18px 44px -26px rgba(0,0,0,.9);
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(8,12,20,.99));
+    box-shadow: 0 20px 48px -28px rgba(0,0,0,.9);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
   }
-  .w-chip {
-    border-radius: 1rem; border: 1px solid rgba(255,255,255,.08);
-    background: rgba(255,255,255,.04); padding: 0.75rem 0.85rem;
+  .wx-card:hover {
+    border-color: rgba(186,230,253,.22);
+    box-shadow: 0 24px 56px -24px rgba(0,0,0,.95), 0 0 24px -12px rgba(56,189,248,.15);
   }
-  .w-cta {
-    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-    min-height: 3.15rem; border-radius: 1.05rem; font-weight: 900; font-size: 0.9rem; text-decoration: none;
+
+  .wx-stat {
+    border-radius: 1.15rem; padding: 1rem 1.05rem;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.035);
+    transition: background .2s ease, transform .2s ease;
   }
-  .w-cta-in {
-    color: #052e16;
-    background: linear-gradient(145deg, #ecfdf5, #6ee7b7 45%, #a7f3d0);
+  .wx-stat:hover { background: rgba(255,255,255,.06); transform: translateY(-2px); }
+
+  .wx-cta {
+    display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+    min-height: 3.35rem; border-radius: 1.1rem; font-weight: 900; font-size: 0.95rem;
+    text-decoration: none; transition: transform .15s ease, filter .15s ease, box-shadow .2s ease;
+  }
+  .wx-cta:active { transform: scale(0.98); }
+  .wx-cta-in {
+    color: #052e1c;
+    background: linear-gradient(145deg, #ecfdf5, #6ee7b7 45%, #34d399);
     box-shadow: 0 12px 28px -12px rgba(52,211,153,.55);
   }
-  .w-cta-out {
-    color: #4c0519;
-    background: linear-gradient(145deg, #fff1f2, #fda4af 50%, #fecdd3);
-    box-shadow: 0 12px 28px -12px rgba(251,113,133,.4);
+  .wx-cta-in:hover { filter: brightness(1.06); box-shadow: 0 16px 32px -10px rgba(52,211,153,.65); }
+  .wx-cta-out {
+    color: #fff;
+    background: linear-gradient(145deg, rgba(251,113,133,.25), rgba(244,63,94,.45));
+    border: 1px solid rgba(251,113,133,.35);
   }
-  .w-row {
-    display: flex; align-items: center; gap: 0.8rem;
-    min-height: 3.35rem; padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(255,255,255,.06); text-decoration: none; color: inherit;
+  .wx-cta-out:hover { background: linear-gradient(145deg, rgba(251,113,133,.35), rgba(244,63,94,.55)); }
+
+  .wx-link {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
+    text-decoration: none; color: inherit; border-radius: 1.15rem;
+    border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03);
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
   }
-  .w-row:last-child { border-bottom: 0; }
-  .w-ico {
-    width: 2.45rem; height: 2.45rem; border-radius: 0.85rem;
-    display: grid; place-items: center; flex-shrink: 0;
-    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
+  .wx-link:hover {
+    background: rgba(255,255,255,.07); border-color: rgba(186,230,253,.2);
+    transform: translateY(-1px);
+  }
+  .wx-ico {
+    width: 2.65rem; height: 2.65rem; border-radius: 0.9rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
   }
 </style>
-<div class="w-page space-y-4">
-  <section class="w-hero relative z-[1]">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-emerald-200/80">Available balance</p>
-    <p class="w-bal mt-2 {% if bal < 0 %}neg{% endif %}">{{ money(current_user, bal) }}</p>
-    <p class="text-[11px] text-zinc-500 mt-2">Pending {{ money(current_user, pending) }}{% if combo %} · Hold {{ money(current_user, combo) }}{% endif %}</p>
-    <div class="grid grid-cols-2 gap-2 mt-4">
-      <div class="w-chip">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Earned</p>
-        <p class="text-sm font-black text-emerald-300 mt-0.5">{{ money(current_user, earned) }}</p>
+
+<div class="wx">
+  {# —— Hero balance —— #}
+  <section class="wx-hero mb-5">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-emerald-300/90 mb-2">Available balance</p>
+        <p class="wx-bal {% if bal < 0 %}neg{% endif %}">{{ money(current_user, bal) if money is defined else bal }}</p>
+        <p class="text-sm text-zinc-400 mt-2">
+          {% if bal < 0 %}
+            Negative hold — deposit to clear, then continue tasks.
+          {% else %}
+            Ready for tasks and withdrawals when eligible.
+          {% endif %}
+        </p>
       </div>
-      <div class="w-chip">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Withdrawn</p>
-        <p class="text-sm font-black text-sky-200 mt-0.5">{{ money(current_user, withdrawn) }}</p>
+      <div class="flex flex-col gap-2 sm:items-end">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold text-zinc-300">
+          <span class="w-1.5 h-1.5 rounded-full {% if bal >= 0 %}bg-emerald-400{% else %}bg-rose-400{% endif %}"></span>
+          {{ current_user.currency or 'UGX' }}
+        </span>
+        {% if current_user.membership %}
+        <span class="text-[11px] font-semibold text-sky-200/90">{{ current_user.membership.name }}</span>
+        {% endif %}
       </div>
     </div>
+
+    <div class="wx-grid wx-grid-2 mt-5">
+      <a href="{{ url_for('wallet.deposit') }}" class="wx-cta wx-cta-in" aria-label="Deposit">
+        <i class="fa-solid fa-arrow-down"></i> Deposit
+      </a>
+      <a href="{{ url_for('wallet.withdraw') }}" class="wx-cta wx-cta-out" aria-label="Withdraw">
+        <i class="fa-solid fa-arrow-up"></i> Withdraw
+      </a>
+    </div>
   </section>
-  <div class="grid grid-cols-2 gap-2.5">
-    <a href="{{ url_for('wallet.deposit') }}" class="w-cta w-cta-in" aria-label="Deposit funds"><i class="fa-solid fa-arrow-down"></i> Deposit</a>
-    <a href="{{ url_for('wallet.withdraw') }}" class="w-cta w-cta-out" aria-label="Withdraw funds"><i class="fa-solid fa-arrow-up"></i> Withdraw</a>
+
+  {# —— Stats —— #}
+  <div class="wx-grid wx-grid-4 mb-5">
+    <div class="wx-stat">
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Pending</p>
+      <p class="text-lg font-black mt-1 {% if pending %}text-amber-300{% else %}text-white{% endif %}">{{ money(current_user, pending) if money is defined else pending }}</p>
+    </div>
+    <div class="wx-stat">
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Combo hold</p>
+      <p class="text-lg font-black mt-1 {% if combo %}text-violet-300{% else %}text-white{% endif %}">{{ money(current_user, combo) if money is defined else combo }}</p>
+    </div>
+    <div class="wx-stat">
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Total earned</p>
+      <p class="text-lg font-black mt-1 text-emerald-300">{{ money(current_user, earned) if money is defined else earned }}</p>
+    </div>
+    <div class="wx-stat">
+      <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Withdrawn</p>
+      <p class="text-lg font-black mt-1 text-sky-200">{{ money(current_user, withdrawn) if money is defined else withdrawn }}</p>
+    </div>
   </div>
-  <section class="w-card overflow-hidden">
-    <p class="px-4 pt-3.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Shortcuts</p>
-    <a href="{{ url_for('wallet.money_history') }}" class="w-row" aria-label="Wallet history">
-      <span class="w-ico text-emerald-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Wallet history</span><span class="block text-[11px] text-zinc-500">Deposits &amp; withdrawals</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a href="{{ url_for('profile.index') }}" class="w-row" aria-label="Payout and PIN">
-      <span class="w-ico text-violet-300"><i class="fa-solid fa-building-columns"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Payout &amp; PIN</span><span class="block text-[11px] text-zinc-500">Method and security</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a href="{{ url_for('dashboard.contact') }}" class="w-row" aria-label="Support">
-      <span class="w-ico text-sky-300"><i class="fa-solid fa-headset"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Support</span><span class="block text-[11px] text-zinc-500">Deposit or payout help</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-  </section>
+
+  <div class="wx-grid wx-main gap-5">
+    {# —— Quick links —— #}
+    <section class="wx-card p-4 sm:p-5">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">Quick actions</p>
+      <div class="wx-grid wx-grid-2">
+        <a class="wx-link" href="{{ url_for('wallet.history') }}">
+          <span class="wx-ico text-sky-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="min-w-0"><span class="block text-sm font-bold">Wallet history</span><span class="block text-[11px] text-zinc-500">Deposits & withdrawals</span></span>
+        </a>
+        <a class="wx-link" href="{{ url_for('task.history') }}">
+          <span class="wx-ico text-violet-300"><i class="fa-solid fa-list-check"></i></span>
+          <span class="min-w-0"><span class="block text-sm font-bold">Task history</span><span class="block text-[11px] text-zinc-500">Reviews & commissions</span></span>
+        </a>
+        <a class="wx-link" href="{{ url_for('profile.set_withdraw_pin') if 'profile.set_withdraw_pin' else url_for('profile.index') }}">
+          <span class="wx-ico text-amber-300"><i class="fa-solid fa-key"></i></span>
+          <span class="min-w-0"><span class="block text-sm font-bold">Withdraw PIN</span><span class="block text-[11px] text-zinc-500">Secure cash-outs</span></span>
+        </a>
+        <a class="wx-link" href="{{ url_for('dashboard.contact') }}">
+          <span class="wx-ico text-emerald-300"><i class="fa-solid fa-headset"></i></span>
+          <span class="min-w-0"><span class="block text-sm font-bold">Support</span><span class="block text-[11px] text-zinc-500">Payout & deposit help</span></span>
+        </a>
+      </div>
+    </section>
+
+    {# —— Side tip —— #}
+    <section class="wx-card p-4 sm:p-5">
+      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">How it works</p>
+      <ul class="space-y-3 text-sm text-zinc-300">
+        <li class="flex gap-2"><span class="text-emerald-400 font-bold">1.</span> Deposit via an active payment method and wait for approval.</li>
+        <li class="flex gap-2"><span class="text-sky-400 font-bold">2.</span> Complete tasks — price is held then refunded with commission.</li>
+        <li class="flex gap-2"><span class="text-violet-400 font-bold">3.</span> Withdraw when sets are done and balance rules allow.</li>
+      </ul>
+      {% if bal < 0 %}
+      <a href="{{ url_for('wallet.deposit') }}" class="mt-4 inline-flex text-sm font-bold text-rose-300 hover:text-rose-200">Clear negative balance →</a>
+      {% endif %}
+    </section>
+  </div>
 </div>
 {% endblock %}

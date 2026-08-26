@@ -4,122 +4,251 @@
 {% set mname = current_user.membership.name if current_user.membership else 'Member' %}
 {% set left = phone_changes_left|default(0) %}
 {% set bal = (current_user.available_balance or 0)|float %}
+{% set uname = current_user.full_name or current_user.username %}
 <style>
-  .pf { max-width: 26rem; margin: 0 auto; padding: 0.65rem 0.85rem 5.5rem; }
-  @media (min-width: 768px) { .pf { max-width: 36rem; padding-top: 1rem; padding-bottom: 2.5rem; } }
-  .pf-hero {
-    position: relative; overflow: hidden; text-align: center;
-    border-radius: 1.75rem; padding: 1.5rem 1.25rem;
+  .px { max-width: 72rem; margin: 0 auto; padding: 0.85rem 1rem 6rem; }
+  @media (min-width: 1024px) { .px { padding: 1.5rem 1.5rem 3rem; } }
+
+  .px-hero {
+    position: relative; overflow: hidden;
+    border-radius: 1.75rem; padding: 1.5rem 1.35rem;
     border: 1px solid rgba(255,255,255,.14);
     background:
-      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,.28), transparent 55%),
-      linear-gradient(165deg, rgba(28,36,52,.98), rgba(8,10,18,.99));
-    box-shadow: 0 28px 60px -32px rgba(0,0,0,.95), 0 0 36px -14px rgba(99,102,241,.3);
+      radial-gradient(ellipse 80% 70% at 15% 0%, rgba(99,102,241,.32), transparent 55%),
+      radial-gradient(ellipse 50% 60% at 100% 20%, rgba(14,165,233,.18), transparent 50%),
+      linear-gradient(160deg, rgba(26,32,52,.98), rgba(8,10,18,.99));
+    box-shadow: 0 32px 70px -36px rgba(0,0,0,.95), 0 0 48px -16px rgba(99,102,241,.28);
   }
-  .pf-hero::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(196,181,253,.25) 40%, rgba(255,255,255,.06));
+  .px-hero::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 1;
+    background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(196,181,253,.28) 40%, rgba(255,255,255,.06));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .pf-av {
-    width: 4.5rem; height: 4.5rem; border-radius: 1.35rem; margin: 0 auto 0.85rem;
-    overflow: hidden; border: 2px solid rgba(255,255,255,.2);
-    background: linear-gradient(145deg, rgba(99,102,241,.35), rgba(14,165,233,.2));
+  .px-hero > * { position: relative; z-index: 2; }
+
+  .px-av {
+    width: 5rem; height: 5rem; border-radius: 1.4rem; overflow: hidden; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,.22);
+    background: linear-gradient(145deg, rgba(99,102,241,.4), rgba(14,165,233,.25));
+    box-shadow: 0 12px 28px -10px rgba(99,102,241,.45);
   }
-  .pf-title {
-    background: linear-gradient(120deg, #fff, #e0f2fe 40%, #c4b5fd);
+  @media (min-width: 768px) { .px-av { width: 5.75rem; height: 5.75rem; } }
+
+  .px-title {
+    font-size: clamp(1.35rem, 3vw, 1.85rem); font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(115deg, #fff, #e0f2fe 40%, #c4b5fd);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .pf-pill {
-    display: inline-flex; padding: 0.3rem 0.65rem; border-radius: 999px;
-    font-size: 11px; font-weight: 700; border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.05); color: #cbd5e1;
+
+  .px-grid { display: grid; gap: 0.85rem; }
+  @media (min-width: 640px) { .px-grid-2 { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) {
+    .px-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .px-layout { grid-template-columns: 1.15fr 0.85fr; align-items: start; }
   }
-  .pf-card {
+
+  .px-card {
     border-radius: 1.4rem; border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(165deg, rgba(30,41,59,.95), rgba(8,12,20,.99));
-    box-shadow: 0 18px 44px -26px rgba(0,0,0,.9); overflow: hidden;
+    background: linear-gradient(165deg, rgba(30,41,59,.96), rgba(8,12,20,.99));
+    box-shadow: 0 20px 48px -28px rgba(0,0,0,.9);
+    overflow: hidden;
+    transition: border-color .2s ease, box-shadow .2s ease;
   }
-  .pf-row {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1rem;
+  .px-card:hover {
+    border-color: rgba(196,181,253,.18);
+    box-shadow: 0 24px 56px -24px rgba(0,0,0,.95), 0 0 20px -10px rgba(129,140,248,.12);
+  }
+
+  .px-row {
+    display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.1rem;
     border-bottom: 1px solid rgba(255,255,255,.06); text-decoration: none; color: inherit;
+    transition: background .15s ease;
   }
-  .pf-row:last-child { border-bottom: 0; }
-  .pf-ico {
-    width: 2.4rem; height: 2.4rem; border-radius: 0.85rem; display: grid; place-items: center;
-    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); flex-shrink: 0;
+  .px-row:last-child { border-bottom: 0; }
+  .px-row:hover { background: rgba(255,255,255,.05); }
+  .px-row:active { background: rgba(255,255,255,.08); }
+
+  .px-ico {
+    width: 2.55rem; height: 2.55rem; border-radius: 0.85rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
   }
-  .pf-input {
-    width: 100%; border-radius: 0.95rem; background: rgba(2,6,14,.92);
-    border: 1px solid rgba(255,255,255,.12); padding: 0.8rem 0.95rem; color: #f8fafc; font-weight: 600;
+
+  .px-pill {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.35rem 0.7rem; border-radius: 999px; font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: #e2e8f0;
   }
-  .pf-btn {
-    width: 100%; border-radius: 0.95rem; padding: 0.85rem; font-weight: 900; color: #0f172a; border: none; cursor: pointer;
-    background: linear-gradient(145deg, #fff, #e2e8f0 45%, #c4b5fd);
+
+  .px-input {
+    width: 100%; border-radius: 0.95rem; border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.35); color: #fff; padding: 0.85rem 1rem; font-size: 0.95rem;
+    outline: none; transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .pf-btn:disabled { opacity: 0.45; }
+  .px-input:focus {
+    border-color: rgba(129,140,248,.45);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  }
+  .px-input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .px-btn {
+    width: 100%; min-height: 2.85rem; border-radius: 0.95rem; font-weight: 900; font-size: 0.9rem;
+    border: none; cursor: pointer; color: #0f172a;
+    background: linear-gradient(145deg, #fff, #e2e8f0 40%, #c4b5fd);
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .px-btn:hover { filter: brightness(1.05); }
+  .px-btn:active { transform: scale(0.98); }
+  .px-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .px-meta {
+    border-radius: 1rem; padding: 0.85rem 1rem;
+    border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.03);
+  }
 </style>
-<div class="pf space-y-4">
-  <section class="pf-hero relative z-[1]">
-    <div class="pf-av">
-      {% if current_user.profile_image %}
-      <img src="{{ url_for('static', filename='uploads/avatars/' ~ current_user.profile_image) }}" class="w-full h-full object-cover" alt="">
-      {% else %}
-      <div class="w-full h-full flex items-center justify-center text-2xl font-black text-white">{{ (current_user.username or 'U')[0]|upper }}</div>
-      {% endif %}
+
+<div class="px">
+  {# —— Hero —— #}
+  <section class="px-hero mb-5">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+      <div class="px-av">
+        {% if current_user.profile_image %}
+        <img src="{{ url_for('static', filename=current_user.profile_image) if not current_user.profile_image.startswith('http') else current_user.profile_image }}" alt="" class="w-full h-full object-cover">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center text-2xl font-black text-white/90">
+          {{ (uname[:1] or 'U')|upper }}
+        </div>
+        {% endif %}
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-indigo-200/80 mb-1">Your profile</p>
+        <h1 class="px-title truncate">{{ uname }}</h1>
+        <p class="text-sm text-zinc-400 mt-1">@{{ current_user.username }}</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="px-pill"><i class="fa-solid fa-crown text-amber-300 text-[10px]"></i> {{ mname }}</span>
+          <span class="px-pill">{{ current_user.country or '—' }} · {{ current_user.currency or 'UGX' }}</span>
+          <span class="px-pill {% if bal < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
+            {{ money(current_user, bal) if money is defined else bal }}
+          </span>
+        </div>
+      </div>
     </div>
-    <h1 class="text-xl font-black pf-title">{{ current_user.username }}</h1>
-    <div class="flex flex-wrap justify-center gap-1.5 mt-2.5">
-      <span class="pf-pill">{{ mname }}</span>
-      <span class="pf-pill">{{ money(current_user, bal) }}</span>
+  </section>
+
+  <div class="px-grid px-layout gap-5">
+    {# —— Left: shortcuts —— #}
+    <div class="space-y-4">
+      <section class="px-card">
+        <div class="px-3 pt-3 pb-1">
+          <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 px-1">Account</p>
+        </div>
+        <a class="px-row" href="{{ url_for('profile.change_password') }}">
+          <span class="px-ico text-indigo-300"><i class="fa-solid fa-lock"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Password</span>
+            <span class="block text-[11px] text-zinc-500">Change login password</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        <a class="px-row" href="{{ url_for('profile.set_withdraw_pin') if 'profile.set_withdraw_pin' else url_for('profile.index') }}">
+          <span class="px-ico text-amber-300"><i class="fa-solid fa-key"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Withdraw PIN</span>
+            <span class="block text-[11px] text-zinc-500">Required for cash outs</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        <a class="px-row" href="{{ url_for('wallet.index') }}">
+          <span class="px-ico text-emerald-300"><i class="fa-solid fa-wallet"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Wallet</span>
+            <span class="block text-[11px] text-zinc-500">Balance, deposit, withdraw</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        <a class="px-row" href="{{ url_for('task.history') }}">
+          <span class="px-ico text-violet-300"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Task history</span>
+            <span class="block text-[11px] text-zinc-500">Completed reviews</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        <a class="px-row" href="{{ url_for('dashboard.contact') }}">
+          <span class="px-ico text-sky-300"><i class="fa-solid fa-headset"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Support</span>
+            <span class="block text-[11px] text-zinc-500">Chat and help</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        {% if 'profile.sessions' %}
+        <a class="px-row" href="{{ url_for('profile.sessions') }}">
+          <span class="px-ico text-zinc-300"><i class="fa-solid fa-mobile-screen"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold">Sessions</span>
+            <span class="block text-[11px] text-zinc-500">Devices & logins</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
+        </a>
+        {% endif %}
+      </section>
+
+      <section class="px-card p-4">
+        <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">Locked details</p>
+        <div class="px-grid px-grid-2 gap-2">
+          <div class="px-meta">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase">Username</p>
+            <p class="text-sm font-semibold mt-0.5 truncate">{{ current_user.username }}</p>
+          </div>
+          <div class="px-meta">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase">Full name</p>
+            <p class="text-sm font-semibold mt-0.5 truncate">{{ current_user.full_name or '—' }}</p>
+          </div>
+          <div class="px-meta">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase">Membership</p>
+            <p class="text-sm font-semibold mt-0.5">{{ mname }}</p>
+          </div>
+          <div class="px-meta">
+            <p class="text-[10px] text-zinc-500 font-bold uppercase">Referral code</p>
+            <p class="text-sm font-semibold mt-0.5 font-mono">{{ current_user.referral_code or '—' }}</p>
+          </div>
+        </div>
+        <p class="text-[11px] text-zinc-600 mt-3">Username, name, and membership are managed by admin.</p>
+      </section>
     </div>
-  </section>
-  <section class="pf-card">
-    <p class="px-4 pt-3.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-sky-200/80">Account</p>
-    <a class="pf-row" href="{{ url_for('profile.change_password') }}">
-      <span class="pf-ico text-amber-200"><i class="fa-solid fa-key"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Password</span><span class="block text-[11px] text-zinc-500">Change login password</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a class="pf-row" href="{{ url_for('profile.set_withdraw_pin') }}">
-      <span class="pf-ico text-rose-200"><i class="fa-solid fa-lock"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Withdraw PIN</span><span class="block text-[11px] text-zinc-500">Required for cash outs</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a class="pf-row" href="{{ url_for('wallet.index') }}">
-      <span class="pf-ico text-emerald-300"><i class="fa-solid fa-wallet"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Wallet</span><span class="block text-[11px] text-zinc-500">Balance, deposit, withdraw</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-    <a class="pf-row" href="{{ url_for('dashboard.contact') }}">
-      <span class="pf-ico text-sky-300"><i class="fa-solid fa-headset"></i></span>
-      <span class="min-w-0 flex-1"><span class="block text-sm font-bold">Support</span><span class="block text-[11px] text-zinc-500">Chat and help</span></span>
-      <i class="fa-solid fa-chevron-right text-zinc-600 text-xs"></i>
-    </a>
-  </section>
-  <section class="pf-card p-4">
-    <div class="flex items-center justify-between mb-3">
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Phone</p>
-      <span class="text-[11px] text-zinc-500">{{ left }} left this month</span>
+
+    {# —— Right: editable —— #}
+    <div class="space-y-4">
+      <section class="px-card p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500">Phone number</p>
+          <span class="text-[11px] font-semibold {% if left > 0 %}text-sky-300{% else %}text-zinc-500{% endif %}">{{ left }} left this month</span>
+        </div>
+        <form method="POST" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <input type="hidden" name="action" value="phone">
+          <input class="px-input" name="phone" value="{{ current_user.phone or '' }}" placeholder="Phone number" {% if left <= 0 %}disabled{% endif %} autocomplete="tel">
+          <button type="submit" class="px-btn" {% if left <= 0 %}disabled{% endif %}>Update phone</button>
+        </form>
+      </section>
+
+      <section class="px-card p-4 sm:p-5">
+        <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">Profile photo</p>
+        <form method="POST" enctype="multipart/form-data" class="space-y-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <input type="hidden" name="action" value="avatar">
+          <label class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-6 cursor-pointer hover:bg-white/[0.06] transition">
+            <i class="fa-solid fa-camera text-xl text-zinc-400"></i>
+            <span class="text-xs text-zinc-400">Tap to choose image</span>
+            <input type="file" name="avatar" accept="image/*" class="text-xs text-zinc-400 w-full max-w-xs">
+          </label>
+          <button type="submit" class="px-btn">Upload photo</button>
+        </form>
+      </section>
     </div>
-    <form method="POST" class="space-y-2.5">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input type="hidden" name="action" value="phone">
-      <input class="pf-input" name="phone" value="{{ current_user.phone or '' }}" placeholder="Phone number" {% if left <= 0 %}disabled{% endif %}>
-      <button type="submit" class="pf-btn" {% if left <= 0 %}disabled{% endif %}>Update phone</button>
-    </form>
-  </section>
-  <section class="pf-card p-4">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-zinc-500 mb-3">Photo</p>
-    <form method="POST" enctype="multipart/form-data" class="space-y-2.5">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <input type="hidden" name="action" value="avatar">
-      <input type="file" name="avatar" accept="image/*" class="text-xs text-zinc-400 w-full">
-      <button type="submit" class="pf-btn">Upload photo</button>
-    </form>
-  </section>
-  <p class="text-center text-[11px] text-zinc-600">Username, name, and membership are managed by admin.</p>
+  </div>
 </div>
 {% endblock %}
