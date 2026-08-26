@@ -559,7 +559,7 @@ card:"#18181b"
 </style>
 </head>
 
-<body id="tm-body" class="theme-dark" class="bg-zinc-950 text-white font-[Inter] overflow-x-hidden pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+<body id="tm-body" class="theme-dark bg-zinc-950 text-white font-[Inter] overflow-x-hidden {% if current_user.is_authenticated %}pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0{% else %}pb-8{% endif %}">
 
 <!-- Background -->
 

@@ -3,27 +3,107 @@
 {% block meta_description %}Sign in to Taskmill to complete product review tasks, manage your wallet, and track earnings.{% endblock %}
 {% block meta_robots %}noindex,follow{% endblock %}
 {% block content %}
-<div class="dx-shell-sm">
-  <section class="dx-surface p-6 sm:p-8">
-    <p class="text-[10px] font-extrabold uppercase tracking-[0.22em] text-sky-300/90">Welcome back</p>
-    <h1 class="dx-metal-title text-3xl mt-2">Sign in</h1>
-    <p class="text-sm text-zinc-400 mt-2">Access tasks, wallet, and support.</p>
-    <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6 space-y-3">
+<style>
+  .login-wrap {
+    min-height: calc(100vh - 8rem);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.25rem 1rem 2.5rem;
+  }
+  .login-card {
+    width: 100%; max-width: 24rem;
+    position: relative; overflow: hidden;
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255,255,255,.12);
+    background:
+      radial-gradient(ellipse 90% 60% at 15% -10%, rgba(56,189,248,.18), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 100% 0%, rgba(99,102,241,.14), transparent 50%),
+      linear-gradient(165deg, rgba(24,32,48,.98), rgba(8,10,18,.99));
+    box-shadow: 0 28px 64px -28px rgba(0,0,0,.9), 0 0 40px -16px rgba(186,230,253,.15);
+    padding: 1.75rem 1.35rem 1.5rem;
+  }
+  .login-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.45), rgba(186,230,253,.2) 45%, rgba(255,255,255,.06));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .login-card > * { position: relative; z-index: 1; }
+  .login-logo {
+    width: 3.25rem; height: 3.25rem; border-radius: 0.95rem; overflow: hidden;
+    background: linear-gradient(145deg, #e2e8f0, #94a3b8);
+    box-shadow: 0 8px 20px -10px rgba(186,230,253,.4);
+    margin: 0 auto 1rem;
+  }
+  .login-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .login-title {
+    text-align: center; font-size: 1.65rem; font-weight: 900; letter-spacing: -0.02em;
+    color: #f8fafc;
+  }
+  .login-sub { text-align: center; font-size: 0.875rem; color: #a1a1aa; margin-top: 0.35rem; }
+  .login-label {
+    display: block; font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.12em; color: #71717a; margin-bottom: 0.35rem;
+  }
+  .login-input {
+    width: 100%; min-height: 2.85rem; border-radius: 0.95rem;
+    padding: 0.7rem 0.95rem; font-size: 0.95rem; font-weight: 600;
+    color: #f8fafc; background: rgba(0,0,0,.4);
+    border: 1px solid rgba(255,255,255,.12); outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .login-input:focus {
+    border-color: rgba(125,211,252,.45);
+    box-shadow: 0 0 0 3px rgba(56,189,248,.12);
+  }
+  .login-input::placeholder { color: #71717a; font-weight: 500; }
+  .login-btn {
+    width: 100%; min-height: 3rem; margin-top: 0.35rem;
+    border: none; border-radius: 1rem; cursor: pointer;
+    font-weight: 900; font-size: 0.95rem; color: #0f172a;
+    background: linear-gradient(145deg, #fff 0%, #e2e8f0 45%, #bae6fd 100%);
+    box-shadow: 0 12px 28px -14px rgba(186,230,253,.45);
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .login-btn:hover { filter: brightness(1.05); }
+  .login-btn:active { transform: scale(0.98); }
+  .login-links {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem;
+    margin-top: 1.15rem; font-size: 0.875rem;
+  }
+  .login-links a:first-child { color: #7dd3fc; font-weight: 700; }
+  .login-links a:last-child { color: #71717a; }
+  .login-links a:hover { color: #e0f2fe; }
+</style>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="{{ url_for('static', filename='img/taskmill-logo.png') }}" alt="Taskmill">
+    </div>
+    <h1 class="login-title">Sign in</h1>
+    <p class="login-sub">Access tasks, wallet, and support</p>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6 space-y-3.5" autocomplete="on">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
       <div>
-        <label class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Username or phone</label>
-        <input class="dx-input-metal mt-1.5" name="username" required autocomplete="username" placeholder="Username or phone">
+        <label class="login-label" for="login-username">Username or email</label>
+        <input id="login-username" class="login-input" type="text" name="username" required
+               autocomplete="username" placeholder="Username or email" autofocus>
       </div>
       <div>
-        <label class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Password</label>
-        <input class="dx-input-metal mt-1.5" type="password" name="password" required autocomplete="current-password" placeholder="Password">
+        <label class="login-label" for="login-password">Password</label>
+        <input id="login-password" class="login-input" type="password" name="password" required
+               autocomplete="current-password" placeholder="Your password">
       </div>
-      <button type="submit" class="dx-btn-metal w-full mt-2">Sign in</button>
+      <button type="submit" class="login-btn">Sign in</button>
     </form>
-    <div class="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm">
-      <a href="{{ url_for('auth.register') }}" class="font-semibold text-sky-300 hover:text-sky-200">Create account</a>
-      <a href="{{ url_for('dashboard.contact') }}" class="text-zinc-500 hover:text-zinc-300">Forgot password? Contact support</a>
+
+    <div class="login-links">
+      <a href="{{ url_for('auth.register') }}">Create account</a>
+      <a href="{{ url_for('dashboard.contact') }}">Forgot password?</a>
     </div>
-  </section>
+  </div>
 </div>
 {% endblock %}
