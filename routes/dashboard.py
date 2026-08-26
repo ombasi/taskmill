@@ -439,3 +439,19 @@ def system_status():
     # Platform line
     items[-1] = ("Platform", (getattr(s, "status_message", None) or "All systems normal") if s else "All systems normal")
     return render_template("status.html", items=items)
+
+
+@dashboard_bp.route("/proofs")
+def proof_wall():
+    """Public blurred paid-withdrawal wall (trust)."""
+    try:
+        from models.proof import WithdrawProof
+        rows = (
+            WithdrawProof.query.filter_by(approved=True)
+            .order_by(WithdrawProof.created_at.desc())
+            .limit(40)
+            .all()
+        )
+    except Exception:
+        rows = []
+    return render_template("proofs.html", proofs=rows)
