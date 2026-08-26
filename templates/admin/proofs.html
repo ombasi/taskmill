@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+{% block title %}Proof wall{% endblock %}
+{% block page_title %}Proof wall{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-2 gap-6">
+  <form method="POST" class="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <h3 class="font-bold">Publish blurred withdrawal</h3>
+    <div>
+      <label class="text-[10px] uppercase text-zinc-500 font-bold">Amount label</label>
+      <input name="amount_label" required placeholder="UGX ***2,500" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] uppercase text-zinc-500 font-bold">Country</label>
+        <input name="country" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase text-zinc-500 font-bold">Membership</label>
+        <input name="membership_name" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+      </div>
+    </div>
+    <div>
+      <label class="text-[10px] uppercase text-zinc-500 font-bold">Note (optional)</label>
+      <input name="note" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm">
+    </div>
+    <button class="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-bold">Publish</button>
+  </form>
+  <div class="space-y-2">
+    {% for p in proofs %}
+    <div class="rounded-xl border border-white/10 px-3 py-2 flex justify-between items-center text-sm">
+      <div>
+        <p class="font-bold">{{ p.amount_label }}</p>
+        <p class="text-xs text-zinc-500">{{ p.country or '' }} {{ p.membership_name or '' }}</p>
+      </div>
+      <form method="POST" action="{{ url_for('admin.delete_proof', proof_id=p.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+        <button class="text-rose-400 text-xs font-bold">Remove</button>
+      </form>
+    </div>
+    {% else %}
+    <p class="text-zinc-500 text-sm">None yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

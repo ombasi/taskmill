@@ -2,55 +2,49 @@
 {% block title %}Stuck users{% endblock %}
 {% block page_title %}Stuck users{% endblock %}
 {% block content %}
-{% set labels = {
-  'negative_balance': 'Negative balance',
-  'combo_hold': 'Combo / escrow hold',
-  'set2_locked': 'Set 2 locked',
-  'idle_24h': 'Idle 24h · no tasks',
-  'deposit_pending_12h': 'Deposit pending >12h',
-  'no_tasks_today': 'No tasks today'
-} %}
-<div class="space-y-5">
-  <div class="flex flex-wrap items-end justify-between gap-3">
-    <div>
-      <p class="text-[11px] uppercase tracking-[0.2em] text-amber-300/90 font-semibold">Ops queue</p>
-      <h1 class="text-2xl font-black mt-1">Stuck users</h1>
-      <p class="text-sm text-zinc-400 mt-1">Negative balance, combo hold, idle 24h, pending deposit &gt;12h, or set 2 locked.</p>
-    </div>
-    <span class="rounded-full bg-amber-500/15 border border-amber-400/25 text-amber-200 text-xs font-bold px-3 py-1">
-      {{ stuck|length }} need attention
-    </span>
-  </div>
-
-  <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-    {% for row in stuck %}
-    <article class="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 hover:border-amber-400/30 transition">
-      <div class="flex items-start justify-between gap-2">
-        <div>
-          <p class="font-bold">{{ row.user.username }}</p>
-          <p class="text-xs text-zinc-500 mt-0.5">{{ row.user.email or '—' }}</p>
-        </div>
-        <p class="text-sm font-black {% if (row.user.available_balance or 0)|float < 0 %}text-rose-300{% else %}text-white{% endif %}">
-          {{ money(current_user, row.user.available_balance) }}
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-1.5 mt-3">
-        {% for r in row.reasons %}
-        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/20">
-          {{ labels.get(r, r) }}
-        </span>
+<div class="space-y-4">
+  <p class="text-sm text-zinc-400">Users who may need help — negative balance, pending deposit, locked set, or idle.</p>
+  <div class="rounded-2xl border border-white/10 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-white/5 text-zinc-400 text-left">
+        <tr>
+          <th class="p-3">User</th>
+          <th class="p-3">Why stuck</th>
+          <th class="p-3">Balance</th>
+          <th class="p-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        {% for row in stuck %}
+        {% set u = row.user if row.user is defined else row %}
+        {% set reasons = row.reasons if row.reasons is defined else (row.reason if row.reason is defined else []) %}
+        <tr class="hover:bg-white/5">
+          <td class="p-3">
+            <a href="{{ url_for('admin.view_user', user_id=u.id) }}" class="font-bold text-sky-300 hover:underline">{{ u.username }}</a>
+            <p class="text-xs text-zinc-500">{{ u.full_name or '' }}</p>
+          </td>
+          <td class="p-3 text-xs text-amber-200/90">
+            {% if reasons is string %}{{ reasons }}
+            {% elif reasons %}{{ reasons|join(' · ') }}
+            {% else %}Needs review{% endif %}
+          </td>
+          <td class="p-3 font-semibold {% if (u.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+            {{ money(current_user, u.available_balance) if money is defined else u.available_balance }}
+          </td>
+          <td class="p-3 text-right space-x-1">
+            <a href="{{ url_for('chat.admin_thread', user_id=u.id) }}"
+               class="inline-block rounded-lg bg-sky-600/80 hover:bg-sky-500 px-2.5 py-1 text-xs font-bold">Chat</a>
+            <a href="{{ url_for('admin.deposits', status='Pending') }}"
+               class="inline-block rounded-lg bg-amber-500/80 hover:bg-amber-400 px-2.5 py-1 text-xs font-bold text-black">Deposits</a>
+            <a href="{{ url_for('admin.view_user', user_id=u.id) }}"
+               class="inline-block rounded-lg bg-violet-600/80 hover:bg-violet-500 px-2.5 py-1 text-xs font-bold">Open</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="p-8 text-center text-zinc-500">No stuck users right now.</td></tr>
         {% endfor %}
-      </div>
-      <a href="{{ url_for('admin.view_user', user_id=row.user.id) }}"
-         class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 py-2.5 text-xs font-bold">
-        Open user →
-      </a>
-    </article>
-    {% else %}
-    <div class="sm:col-span-2 xl:col-span-3 rounded-2xl border border-white/10 bg-zinc-900/40 p-12 text-center text-zinc-500 text-sm">
-      No stuck users right now.
-    </div>
-    {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}

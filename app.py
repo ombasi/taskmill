@@ -11,6 +11,10 @@ from routes.profile import profile_bp
 from routes.task import task_bp
 from routes.wallet import wallet_bp
 from routes.admin import admin_bp
+try:
+    from models.proof import WithdrawProof  # noqa: F401
+except Exception:
+    pass
 from models.notification import Notification
 from routes.combo import combo_bp
 from routes.chat import chat_bp
@@ -99,6 +103,8 @@ def _ensure_schema_columns():
                 ("mystery_opened_today", bool_t),
                 ("last_big_withdraw_at", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
                 ("last_seen", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
+                ("withdraw_pin_fails", "INTEGER"),
+                ("withdraw_pin_locked_until", "TIMESTAMP" if dialect == "postgresql" else "DATETIME"),
             ]
             for n, typ in user_cols:
                 _add("users", n, typ)

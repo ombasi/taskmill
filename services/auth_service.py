@@ -209,6 +209,7 @@ class AuthService:
         except Exception:
             pass
 
+        prev_ip = getattr(user, "ip_address", None)
         user.last_login = datetime.utcnow()
         if ip:
             user.ip_address = ip
@@ -229,16 +230,34 @@ class AuthService:
         if hasattr(entry, "login_time"):
             entry.login_time = datetime.utcnow()
 
-        # Alert on IP change
+        # Alert on IP change (in-app + Telegram)
         try:
-            prev = getattr(user, "ip_address", None)
+            prev = prev_ip
             if ip and prev and prev != ip:
+                loc = location or "unknown location"
                 from services.notification_service import NotificationService
                 NotificationService.send(
                     user,
                     "New login",
-                    f"New login from IP {ip}. If this wasn't you, change your password.",
+                    f"New login from IP {ip} ({loc}). If this wasn't you, change your password.",
                 )
+                try:
+                    from services.engagement_service import send_outbound_alert
+                    send_outbound_alert(
+                        user,
+                        "New device login",
+                        f"Login from {ip} · {loc} · {device or 'device'} / {browser or 'browser'}. Change password if this was not you.",
+                    )
+                except Exception:
+                    pass
+                try:
+                    from services.admin_alerts import notify_admin
+                    notify_admin(
+                        "New device login",
+                        f"{user.username} from {ip} ({loc})",
+                    )
+                except Exception:
+                    pass
         except Exception:
             pass
 

@@ -350,9 +350,20 @@ def withdraw():
         if not current_user.has_withdraw_pin():
             flash("Set a withdraw PIN in Profile before withdrawing.", "warning")
             return redirect(url_for("profile.set_withdraw_pin"))
-        if not current_user.check_withdraw_pin(pin):
-            flash("Incorrect withdraw PIN.", "danger")
+        if getattr(current_user, "pin_is_locked", lambda: False)():
+            flash("Withdraw PIN locked after too many attempts. Wait 15 minutes or ask admin to unlock.", "danger")
             return redirect(url_for("wallet.withdraw"))
+        if not current_user.check_withdraw_pin(pin):
+            try:
+                current_user.record_pin_fail()
+            except Exception:
+                pass
+            flash("Incorrect withdraw PIN. After 3 failures the PIN locks for 15 minutes.", "danger")
+            return redirect(url_for("wallet.withdraw"))
+        try:
+            current_user.clear_pin_fails()
+        except Exception:
+            pass
 
         if not (getattr(current_user, "payout_method", None) and getattr(current_user, "payout_account_number", None)):
             flash("Add a payout method first.", "warning")
@@ -629,3 +640,27 @@ def my_withdrawals():
         .all()
     )
     return render_template("wallet/my_withdrawals.html", withdrawals=rows)
+
+
+@wallet_bp.route("/history")
+@login_required
+def history():
+    """Deposits + withdrawals only (not task commissions)."""
+    from models.deposit import Deposit
+    from models.withdraw import Withdrawal
+    deps = (
+        Deposit.query.filter_by(user_id=current_user.id)
+        .order_by(Deposit.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    try:
+        wds = (
+            Withdrawal.query.filter_by(user_id=current_user.id)
+            .order_by(Withdrawal.created_at.desc())
+            .limit(50)
+            .all()
+        )
+    except Exception:
+        wds = []
+    return render_template("wallet/history.html", deposits=deps, withdrawals=wds)

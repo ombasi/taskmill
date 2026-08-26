@@ -420,8 +420,46 @@ class User(db.Model, UserMixin):
             return False
         return check_password_hash(self.withdraw_pin_hash, str(pin))
 
+    withdraw_pin_fails = db.Column(db.Integer, default=0)
+    withdraw_pin_locked_until = db.Column(db.DateTime, nullable=True)
+
     def has_withdraw_pin(self):
         return bool(self.withdraw_pin_hash)
+
+    def pin_is_locked(self):
+        from datetime import datetime
+        until = getattr(self, "withdraw_pin_locked_until", None)
+        if not until:
+            return False
+        try:
+            return until > datetime.utcnow()
+        except Exception:
+            return False
+
+    def record_pin_fail(self):
+        from datetime import datetime, timedelta
+        from extensions import db
+        fails = int(getattr(self, "withdraw_pin_fails", 0) or 0) + 1
+        self.withdraw_pin_fails = fails
+        if fails >= 3:
+            self.withdraw_pin_locked_until = datetime.utcnow() + timedelta(minutes=15)
+            self.withdraw_pin_fails = 0
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    def clear_pin_fails(self):
+        from extensions import db
+        self.withdraw_pin_fails = 0
+        self.withdraw_pin_locked_until = None
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    def unlock_withdraw_pin(self):
+        self.clear_pin_fails()
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

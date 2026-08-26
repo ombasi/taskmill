@@ -651,36 +651,53 @@ class TaskService:
         has_payout = bool(getattr(user, "payout_method", None) and getattr(user, "payout_account_number", None))
         payout_ok = has_payout and bool(getattr(user, "payout_confirmed", False))
 
+        def _url(endpoint, **kw):
+            try:
+                from flask import url_for
+                return url_for(endpoint, **kw)
+            except Exception:
+                return None
+
         items = [
             {
                 "key": "balance",
                 "label": "Balance is not negative",
                 "ok": bal >= 0,
                 "detail": f"Current: {_m(bal)}",
+                "action_label": "Clear combo / deposit" if bal < 0 else None,
+                "href": _url("task.combo_guide") if bal < 0 else None,
             },
             {
                 "key": "negative_day",
                 "label": "No combo negative hold today",
                 "ok": not bool(getattr(user, "negative_today", False)),
                 "detail": "Clear combo hold first" if getattr(user, "negative_today", False) else "Clear",
+                "action_label": "Open combo guide",
+                "href": _url("task.combo_guide") if getattr(user, "negative_today", False) else None,
             },
             {
                 "key": "sets",
                 "label": f"Complete {required_sets} task set(s) today",
                 "ok": sets_done >= required_sets,
                 "detail": f"{sets_done} / {required_sets} sets done",
+                "action_label": "Go to tasks" if sets_done < required_sets else None,
+                "href": _url("task.set1_complete") if sets_done >= 1 and not getattr(user, "set2_unlocked", False) and sets_done < required_sets else (_url("task.index") if sets_done < required_sets else None),
             },
             {
                 "key": "reserve",
                 "label": f"Keep at least {_m(reserve)} after withdraw",
                 "ok": bal > reserve,
                 "detail": f"Withdrawable up to {_m(max(0, bal - reserve))}",
+                "action_label": "Deposit more" if bal <= reserve else None,
+                "href": _url("wallet.deposit") if bal <= reserve else None,
             },
             {
                 "key": "pin",
                 "label": "Withdraw PIN set",
                 "ok": has_pin,
                 "detail": "Set PIN in Profile" if not has_pin else "PIN ready",
+                "action_label": "Set PIN",
+                "href": _url("profile.set_withdraw_pin") if not has_pin else None,
             },
             {
                 "key": "payout",
@@ -688,10 +705,24 @@ class TaskService:
                 "ok": payout_ok,
                 "detail": (
                     f"{user.payout_method}: {user.payout_account_number}" if payout_ok
-                    else ("Awaiting admin confirmation" if has_payout else "Add a payout method below")
+                    else ("Awaiting admin confirmation" if has_payout else "Add a payout method")
+                ),
+                "action_label": "Add payout" if not has_payout else ("Message Support" if has_payout and not payout_ok else None),
+                "href": (
+                    _url("wallet.withdraw") if not has_payout
+                    else (_url("chat.inbox") if has_payout and not payout_ok else None)
                 ),
             },
         ]
+        # Fallback payout route names
+        for it in items:
+            if it["key"] == "payout" and not it.get("href") and not it["ok"]:
+                for ep in ("wallet.set_payout", "wallet.payout", "profile.payout", "wallet.index"):
+                    u = _url(ep)
+                    if u:
+                        it["href"] = u
+                        it["action_label"] = it.get("action_label") or "Open wallet"
+                        break
         all_ok = all(i["ok"] for i in items)
         return {"items": items, "all_ok": all_ok, "sets_done": sets_done, "required_sets": required_sets}
 

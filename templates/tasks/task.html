@@ -2,6 +2,20 @@
 {% block title %}Review Product · Taskmill{% endblock %}
 {% block content %}
 
+<style>
+  .tm-sticky-submit {
+    position: sticky; bottom: 0; z-index: 30;
+    padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, transparent, rgba(9,9,11,.95) 28%);
+  }
+  .tm-comm-preview {
+    border-radius: 1rem; border: 1px solid rgba(52,211,153,.25);
+    background: rgba(16,185,129,.08); padding: 0.75rem 1rem;
+    font-size: 0.875rem; color: #6ee7b7; font-weight: 700;
+  }
+</style>
+
+
 {# Sticky progress bar #}
 {% set _prog = progress if progress is mapping else {} %}
 {% set _done = _prog.get('completed_today', _prog.get('tasks_today', current_user.tasks_completed_today or 0)) %}

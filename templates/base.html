@@ -216,6 +216,75 @@ card:"#18181b"
     color: #a1a1aa !important;
   }
 
+
+  /* ===== Diamond sparkle animations ===== */
+  @keyframes tm-sparkle-twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+    40% { opacity: 1; transform: scale(1) rotate(15deg); }
+    70% { opacity: 0.35; transform: scale(0.7) rotate(-10deg); }
+  }
+  @keyframes tm-sparkle-drift {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    15% { opacity: 0.9; }
+    85% { opacity: 0.5; }
+    100% { transform: translateY(-28px) translateX(8px); opacity: 0; }
+  }
+  @keyframes tm-shimmer {
+    0% { background-position: -120% 0; }
+    100% { background-position: 220% 0; }
+  }
+  @keyframes tm-edge-pulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.85; }
+  }
+  .tm-sparkle-layer {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    border-radius: inherit; z-index: 2;
+  }
+  .tm-sparkle-layer span {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: radial-gradient(circle, #fff 0%, #e0f2fe 40%, transparent 70%);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    animation: tm-sparkle-twinkle 2.8s ease-in-out infinite;
+    opacity: 0;
+  }
+  .tm-sparkle-layer span:nth-child(1) { top: 12%; left: 8%; animation-delay: 0s; }
+  .tm-sparkle-layer span:nth-child(2) { top: 22%; right: 14%; animation-delay: 0.6s; width: 5px; height: 5px; }
+  .tm-sparkle-layer span:nth-child(3) { bottom: 18%; left: 18%; animation-delay: 1.2s; width: 4px; height: 4px; }
+  .tm-sparkle-layer span:nth-child(4) { bottom: 28%; right: 10%; animation-delay: 1.8s; }
+  .tm-sparkle-layer span:nth-child(5) { top: 48%; left: 42%; animation-delay: 0.9s; width: 5px; height: 5px; }
+  .tm-shimmer-text {
+    background: linear-gradient(105deg, #fff 0%, #e0f2fe 25%, #fff 45%, #bae6fd 60%, #fff 80%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: tm-shimmer 4.5s ease-in-out infinite;
+  }
+  .tm-btn-sparkle {
+    position: relative; overflow: hidden;
+  }
+  .tm-btn-sparkle::after {
+    content: "";
+    position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+    animation: tm-shimmer 3.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .dx-card, .w-hero, .pf-hero, .auth-card, .w-card, .pf-card, .login-card, .reg-card {
+    position: relative;
+  }
+  .dx-card::after, .w-hero::after, .pf-hero::after, .auth-card::after {
+    content: "";
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+    background:
+      radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,.7), transparent),
+      radial-gradient(1.5px 1.5px at 78% 22%, rgba(224,242,254,.65), transparent),
+      radial-gradient(1px 1px at 55% 72%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 88% 68%, rgba(186,230,253,.55), transparent);
+    animation: tm-edge-pulse 5s ease-in-out infinite;
+    opacity: 0.55;
+  }
+
   /* ===== Responsive mobile layouts ===== */
   html {
     -webkit-text-size-adjust: 100%;
@@ -725,6 +794,7 @@ Support
 <a href="{{ url_for('dashboard.terms') }}" class="block hover:text-sky-200">{{ t('terms') if t is defined else 'Terms &amp; Conditions' }}</a>
 <a href="{{ url_for('dashboard.public_status') }}" class="block hover:text-sky-200">System status</a>
 <a href="{{ url_for('dashboard.stories') }}" class="block hover:text-sky-200">Success stories</a>
+<a href="{{ url_for('extras.proof_wall') }}" class="block hover:text-sky-200">Paid withdrawals</a>
 <a href="{{ url_for('dashboard.daily_digest') }}" class="block hover:text-sky-200">Today's digest</a>
 </div>
 
@@ -1112,6 +1182,33 @@ function showToast(msg, type){
 })();
 </script>
 {% endif %}
+
+
+<script>
+(function(){
+  function decorate(sel){
+    document.querySelectorAll(sel).forEach(function(el){
+      if(el.querySelector('.tm-sparkle-layer')) return;
+      var layer = document.createElement('div');
+      layer.className = 'tm-sparkle-layer';
+      layer.setAttribute('aria-hidden','true');
+      for(var i=0;i<5;i++){ layer.appendChild(document.createElement('span')); }
+      el.appendChild(layer);
+    });
+  }
+  function run(){
+    decorate('.w-hero, .pf-hero, .auth-card, .dx-card.p-5, .dx-card.p-6');
+    document.querySelectorAll('.auth-btn, .w-cta, .dx-btn, .pf-btn, .pt-btn, .tm-logout-btn').forEach(function(b){
+      b.classList.add('tm-btn-sparkle');
+    });
+    document.querySelectorAll('.auth-title, .pf-title, .dx-title').forEach(function(t){
+      t.classList.add('tm-shimmer-text');
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
 
 </body>
 </html>

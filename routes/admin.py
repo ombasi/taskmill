@@ -1763,30 +1763,6 @@ def approve_deposit(deposit_id):
                 balance_after=float(ref.available_balance),
             ))
 
-    try:
-        from helpers.currency import money as _money
-        amt_txt = _money(user, amount)
-    except Exception:
-        amt_txt = f"{amount:,.0f}"
-    try:
-        from services.notification_service import NotificationService
-        NotificationService.send(
-            user,
-            "Deposit Approved",
-            f"{amt_txt} credited. Receipt in Wallet history.",
-        )
-    except Exception:
-        pass
-    try:
-        from services.engagement_service import send_outbound_alert
-        send_outbound_alert(
-            user,
-            "Deposit approved",
-            f"Your deposit of {amt_txt} has been approved and credited to your wallet.",
-        )
-    except Exception as e:
-        print("deposit approve telegram:", e)
-
     # Keep deposit row for admin history / accountability
     deposit.status = "Approved"
     try:
@@ -1798,9 +1774,54 @@ def approve_deposit(deposit_id):
         deposit.approved_at = datetime.utcnow()
     except Exception:
         pass
-    db.session.commit()
 
-    flash("Deposit approved, credited, and archived (removed from deposits list).", "success")
+    # Commit money + status first so notifications cannot poison this transaction
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Approve failed: {e}", "danger")
+        return redirect(url_for("admin.deposits"))
+
+    try:
+        from helpers.currency import money as _money
+        amt_txt = _money(user, amount)
+    except Exception:
+        amt_txt = f"{amount:,.0f}"
+
+    # Notifications after commit — never rollback the money transaction
+    try:
+        from services.notification_service import NotificationService
+        NotificationService.send(
+            user,
+            "Deposit Approved",
+            f"{amt_txt} credited. Receipt in Wallet history.",
+        )
+        db.session.commit()
+    except Exception as e:
+        print("deposit notify:", e)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+    try:
+        from services.engagement_service import send_outbound_alert
+        send_outbound_alert(
+            user,
+            "Deposit approved",
+            f"Your deposit of {amt_txt} has been approved and credited to your wallet.",
+        )
+    except Exception as e:
+        print("deposit approve telegram:", e)
+
+    try:
+        from services.admin_alerts import alert_deposit
+        alert_deposit(user, deposit)
+    except Exception:
+        pass
+
+    flash("Deposit approved and credited.", "success")
     return redirect(url_for("admin.deposits"))
 
 
@@ -1906,18 +1927,34 @@ def approve_withdrawal(withdrawal_id):
     if withdrawal.status not in ("Pending", "Processing"):
         flash("Already reviewed.", "warning")
         return redirect(url_for("admin.withdrawals"))
-    ok = WalletService.approve_withdrawal(withdrawal, current_user)
-    if ok:
-        # Keep row for admin history (status set inside WalletService or here)
+    try:
+        ok = WalletService.approve_withdrawal(withdrawal, current_user)
+        if ok:
+            try:
+                if getattr(withdrawal, "status", None) in ("Pending", "Processing"):
+                    withdrawal.status = "Approved"
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Approve failed: {e}", "danger")
+                return redirect(url_for("admin.withdrawals"))
+            try:
+                from services.engagement_service import send_outbound_alert
+                from helpers.currency import money as _money
+                u = getattr(withdrawal, "user", None) or User.query.get(withdrawal.user_id)
+                if u:
+                    send_outbound_alert(u, "Withdrawal approved", f"Your withdrawal of {_money(u, float(withdrawal.amount or 0))} was approved.")
+            except Exception as e:
+                print("withdraw approve telegram:", e)
+            flash("Withdrawal approved.", "success")
+        else:
+            flash("Could not approve withdrawal.", "danger")
+    except Exception as e:
         try:
-            if withdrawal.status == "Pending":
-                withdrawal.status = "Approved"
-            db.session.commit()
+            db.session.rollback()
         except Exception:
             pass
-        flash("Withdrawal approved. Kept in history.", "success")
-    else:
-        flash("Could not approve withdrawal.", "danger")
+        flash(f"Approve error: {e}", "danger")
     return redirect(url_for("admin.withdrawals"))
 
 
@@ -3435,6 +3472,61 @@ def referral_leaderboard():
 @admin_bp.route("/stuck-users")
 @login_required
 @admin_required
+
+@admin_bp.route("/users/<int:user_id>/unlock-pin", methods=["POST"])
+@login_required
+@admin_required
+def unlock_withdraw_pin(user_id):
+    user = User.query.get_or_404(user_id)
+    if not can_manage_user(current_user, user):
+        flash("Not allowed.", "danger")
+        return redirect(url_for("admin.users"))
+    try:
+        user.unlock_withdraw_pin()
+        flash(f"Withdraw PIN unlocked for {user.username}.", "success")
+    except Exception as e:
+        flash(str(e), "danger")
+    return redirect(url_for("admin.view_user", user_id=user.id))
+
+
+
+@admin_bp.route("/proofs", methods=["GET", "POST"])
+@login_required
+@admin_required
+def manage_proofs():
+    from models.proof import WithdrawProof
+    if request.method == "POST":
+        row = WithdrawProof(
+            amount_label=(request.form.get("amount_label") or "").strip()[:80],
+            country=(request.form.get("country") or "").strip()[:60] or None,
+            membership_name=(request.form.get("membership_name") or "").strip()[:60] or None,
+            note=(request.form.get("note") or "").strip()[:200] or None,
+            approved=True,
+            created_by=current_user.id,
+        )
+        if not row.amount_label:
+            flash("Amount label required (e.g. UGX ***2,500).", "warning")
+        else:
+            db.session.add(row)
+            db.session.commit()
+            flash("Proof published.", "success")
+        return redirect(url_for("admin.manage_proofs"))
+    rows = WithdrawProof.query.order_by(WithdrawProof.created_at.desc()).limit(50).all()
+    return render_template("admin/proofs.html", proofs=rows)
+
+
+@admin_bp.route("/proofs/<int:proof_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_proof(proof_id):
+    from models.proof import WithdrawProof
+    row = WithdrawProof.query.get_or_404(proof_id)
+    db.session.delete(row)
+    db.session.commit()
+    flash("Proof removed.", "success")
+    return redirect(url_for("admin.manage_proofs"))
+
+
 def stuck_users():
     """Users who need attention: negative, idle, pending deposit, set2 locked."""
     from datetime import datetime, timedelta

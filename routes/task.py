@@ -71,8 +71,9 @@ def index():
         return redirect(url_for("dashboard.index"))
 
     progress = TaskService.progress(current_user)
+    commission = float(getattr(task, "commission", 0) or 0)
     return render_template(
-        "tasks/task.html", task=task, progress=progress, is_combo=False
+        "tasks/task.html", task=task, progress=progress, is_combo=False, commission=commission
     )
 
 

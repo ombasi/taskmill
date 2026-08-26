@@ -1,74 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Wallet history{% endblock %}
 {% block content %}
-<style>
-  .wh { max-width: 36rem; margin: 0 auto; padding: 0.75rem 0.9rem 6.5rem; }
-  @media (min-width: 1024px) { .wh { max-width: 40rem; padding-bottom: 2.5rem; } }
-  .wh-card {
-    border-radius: 1.35rem; border: 1px solid rgba(255,255,255,.1);
-    background: linear-gradient(165deg, rgba(30,41,59,.94), rgba(10,14,22,.98));
-  }
-  .wh-row {
-    display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,.06);
-  }
-  .wh-row:last-child { border-bottom: none; }
-  .wh-ico {
-    width: 2.4rem; height: 2.4rem; border-radius: 0.85rem;
-    display: grid; place-items: center; flex-shrink: 0; font-size: 0.95rem;
-  }
-  .wh-title {
-    background: linear-gradient(120deg, #fff, #e0f2fe);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-</style>
-
-<div class="wh space-y-4">
-  <div class="flex items-end justify-between gap-3 px-0.5">
-    <div>
-      <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-sky-200/80">Money</p>
-      <h1 class="text-xl font-black wh-title mt-1">Wallet history</h1>
-      <p class="text-xs text-zinc-500 mt-1">Deposits &amp; withdrawals only</p>
-    </div>
-    <a href="{{ url_for('task.history') }}" class="text-xs font-bold text-zinc-400 hover:text-white">Task history →</a>
+<div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+  <div>
+    <h1 class="text-2xl font-black">Wallet history</h1>
+    <p class="text-sm text-zinc-400 mt-1">Deposits and withdrawals only. Task earnings are on Task History.</p>
+    <a href="{{ url_for('dashboard.history') if 'dashboard.history' else url_for('task.index') }}" class="text-xs text-sky-300 font-semibold mt-2 inline-block">Open task history →</a>
   </div>
-
-  <div class="flex gap-2">
-    <a href="{{ url_for('wallet.deposit') }}" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-400/25 text-emerald-200">Deposit</a>
-    <a href="{{ url_for('wallet.withdraw') }}" class="flex-1 text-center py-2.5 rounded-xl text-xs font-bold bg-sky-500/15 border border-sky-400/25 text-sky-200">Withdraw</a>
-  </div>
-
-  <section class="wh-card overflow-hidden">
-    {% if rows %}
-      {% for r in rows %}
-      <div class="wh-row">
-        {% if r.kind == 'deposit' %}
-        <span class="wh-ico bg-emerald-500/15 text-emerald-300"><i class="fa-solid fa-arrow-down"></i></span>
-        {% else %}
-        <span class="wh-ico bg-sky-500/15 text-sky-300"><i class="fa-solid fa-arrow-up"></i></span>
-        {% endif %}
-        <div class="min-w-0 flex-1">
-          <p class="text-sm font-bold text-white truncate">
-            {% if r.kind == 'deposit' %}Deposit{% else %}Withdrawal{% endif %}
-            <span class="text-zinc-500 font-medium text-xs">· {{ r.method }}</span>
-          </p>
-          <p class="text-[11px] text-zinc-500 mt-0.5">
-            {% if r.at %}{{ r.at.strftime('%d %b %Y · %H:%M') }}{% else %}—{% endif %}
-            · <span class="{% if r.status in ['Approved','Paid','Completed'] %}text-emerald-400{% elif r.status in ['Pending','Processing'] %}text-amber-300{% else %}text-zinc-400{% endif %}">{{ r.status }}</span>
-          </p>
-        </div>
-        <p class="text-sm font-black tabular-nums {% if r.kind == 'deposit' %}text-emerald-300{% else %}text-sky-200{% endif %}">
-          {% if r.kind == 'deposit' %}+{% else %}−{% endif %}{{ money(current_user, r.amount) }}
-        </p>
+  <section class="space-y-2">
+    <h2 class="text-xs uppercase tracking-wider text-zinc-500 font-bold">Deposits</h2>
+    {% for d in deposits %}
+    <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex justify-between text-sm">
+      <div>
+        <p class="font-bold text-emerald-300">+ {{ money(current_user, d.amount) if money is defined else d.amount }}</p>
+        <p class="text-xs text-zinc-500">{{ d.payment_method or 'Pay' }} · {{ d.status }}
+          {% if d.created_at %} · {{ d.created_at.strftime('%d %b %Y') }}{% endif %}</p>
       </div>
-      {% endfor %}
+    </div>
     {% else %}
-      <p class="text-center text-sm text-zinc-500 py-12">No deposits or withdrawals yet.</p>
-    {% endif %}
+    <p class="text-sm text-zinc-500">No deposits yet.</p>
+    {% endfor %}
   </section>
-
-  <p class="text-center text-[11px] text-zinc-600">
-    Product reviews appear under <a href="{{ url_for('task.history') }}" class="text-zinc-400 underline">Task history</a>.
-  </p>
+  <section class="space-y-2">
+    <h2 class="text-xs uppercase tracking-wider text-zinc-500 font-bold">Withdrawals</h2>
+    {% for w in withdrawals %}
+    <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex justify-between text-sm">
+      <div>
+        <p class="font-bold text-rose-300">− {{ money(current_user, w.amount) if money is defined else w.amount }}</p>
+        <p class="text-xs text-zinc-500">{{ w.status }}
+          {% if w.created_at %} · {{ w.created_at.strftime('%d %b %Y') }}{% endif %}</p>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-sm text-zinc-500">No withdrawals yet.</p>
+    {% endfor %}
+  </section>
 </div>
 {% endblock %}

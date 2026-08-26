@@ -504,5 +504,43 @@
   setInterval(tick, 6000);
 })();
 </script>
+
+<!-- Command palette Ctrl+K -->
+<div id="tm-cmd-palette" class="hidden fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm flex items-start justify-center pt-[12vh] px-4">
+  <div class="w-full max-w-lg rounded-2xl border border-white/15 bg-zinc-950 shadow-2xl overflow-hidden">
+    <input id="tm-cmd-input" type="search" placeholder="Jump to user, deposits, chat…"
+           class="w-full bg-transparent border-b border-white/10 px-4 py-3 text-sm outline-none" autocomplete="off">
+    <ul id="tm-cmd-list" class="max-h-72 overflow-y-auto text-sm">
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('admin.users') }}">Users</a></li>
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('admin.deposits') }}">Deposits</a></li>
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('admin.withdrawals') }}">Withdrawals</a></li>
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('admin.stuck_users') }}">Stuck users</a></li>
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('chat.admin_inbox') }}">Chat inbox</a></li>
+      <li><a class="block px-4 py-2.5 hover:bg-white/10" href="{{ url_for('admin.manage_proofs') }}">Proof wall</a></li>
+    </ul>
+    <p class="px-4 py-2 text-[10px] text-zinc-500 border-t border-white/10">Type a username then Enter to open Users search · Esc closes</p>
+  </div>
+</div>
+<script>
+(function(){
+  var pal = document.getElementById('tm-cmd-palette');
+  var inp = document.getElementById('tm-cmd-input');
+  if(!pal||!inp) return;
+  function open(){ pal.classList.remove('hidden'); inp.value=''; setTimeout(function(){inp.focus();},30); }
+  function close(){ pal.classList.add('hidden'); }
+  document.addEventListener('keydown', function(e){
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); open(); }
+    if(e.key==='Escape') close();
+  });
+  pal.addEventListener('click', function(e){ if(e.target===pal) close(); });
+  inp.addEventListener('keydown', function(e){
+    if(e.key==='Enter'){
+      var q = (inp.value||'').trim();
+      if(q) window.location.href = '{{ url_for("admin.users") }}?q=' + encodeURIComponent(q);
+    }
+  });
+})();
+</script>
+
 </body>
 </html>

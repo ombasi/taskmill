@@ -37,6 +37,12 @@
                class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="123456789">
       </div>
       <button class="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm font-bold">Save Telegram</button>
+
+    <form method="POST" action="{{ url_for('admin.unlock_withdraw_pin', user_id=user.id) }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+      <button type="submit" class="rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/20">Unlock withdraw PIN</button>
+    </form>
+
       {% if user.telegram_chat_id %}
       <button name="telegram_chat_id" value="" class="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-zinc-400">Clear</button>
       {% endif %}
