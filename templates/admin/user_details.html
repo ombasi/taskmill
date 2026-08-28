@@ -2,354 +2,346 @@
 {% block title %}User · {{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
-<style>
-  .ud-wrap { max-width: 72rem; margin: 0 auto; }
-  .ud-hero {
-    border-radius: 1.15rem; border: 1px solid rgba(226,232,240,.1);
-    background: linear-gradient(155deg, rgba(30,36,50,.96), rgba(10,12,18,.98));
-    padding: 1.35rem 1.5rem; box-shadow: 0 16px 40px -24px rgba(0,0,0,.75);
-  }
-  .ud-section {
-    border-radius: 1.15rem; border: 1px solid rgba(226,232,240,.09);
-    background: rgba(15,18,28,.92); padding: 1.25rem 1.35rem;
-  }
-  .ud-section h3 {
-    font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-    color: #94a3b8; margin-bottom: 1rem;
-  }
-  .ud-stat {
-    border-radius: .85rem; border: 1px solid rgba(255,255,255,.06);
-    background: rgba(0,0,0,.28); padding: .75rem .9rem;
-  }
-  .ud-stat p:first-child { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #71717a; font-weight: 700; }
-  .ud-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    border-radius: .75rem; padding: .7rem 1rem; font-size: .8125rem; font-weight: 700;
-    border: 1px solid transparent; transition: filter .15s, background .15s;
-  }
-  .ud-btn:hover { filter: brightness(1.08); }
-</style>
-<div class="ud-wrap space-y-5">
-
-
-{# Presence #}
-{% set ls = user.last_seen or user.last_login %}
-{% set online = ls and now_utc is defined and ((now_utc - ls).total_seconds() < 300) %}
-<div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
-  {% if online %}
-  <span class="inline-flex items-center gap-1.5 text-emerald-300 font-semibold"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online</span>
-  {% else %}
-  <span class="inline-flex items-center gap-1.5 text-zinc-400 font-semibold"><span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline</span>
-  {% endif %}
-  <span class="text-zinc-500">Last seen:
-    {% if ls %}{% if format_gmt is defined %}{{ format_gmt(ls, '%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }} GMT{% endif %}{% else %}Never{% endif %}
-  </span>
-</div>
-
 {% set is_full_admin = current_user.is_admin %}
 {% set is_support_agent = current_user.is_agent and not current_user.is_admin %}
-{% if is_support_agent %}
-<div class="mb-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-  <strong>Support role:</strong> you can view this member, chat, add notes, and flag deposits. Wallet, combo, membership, passwords, and blocks are main admin only.
-</div>
-{% endif %}
+{% set ls = user.last_seen or user.last_login %}
+{% set online = ls and now_utc is defined and ((now_utc - ls).total_seconds() < 300) %}
+{% set bal = user.available_balance or 0 %}
 
+<style>
+  .ud { max-width: 72rem; margin: 0 auto; }
+  .ud-hero {
+    border-radius: 1.15rem; border: 1px solid rgba(226,232,240,.1);
+    background: linear-gradient(155deg, rgba(30,36,50,.97), rgba(10,12,18,.99));
+    padding: 1.25rem 1.35rem;
+  }
+  .ud-card {
+    border-radius: 1rem; border: 1px solid rgba(226,232,240,.09);
+    background: rgba(15,18,28,.95); padding: 1.15rem 1.25rem;
+  }
+  .ud-card h3 {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: #94a3b8; margin: 0 0 .85rem;
+  }
+  .ud-stat {
+    border-radius: .75rem; background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.05);
+    padding: .65rem .8rem;
+  }
+  .ud-stat .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #71717a; }
+  .ud-stat .v { font-size: .9rem; font-weight: 700; margin-top: .2rem; }
+  .ud-act {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 2.6rem; padding: .55rem .75rem; border-radius: .7rem;
+    font-size: .78rem; font-weight: 700; border: none; cursor: pointer;
+    text-decoration: none; color: #fff; width: 100%;
+    transition: filter .15s;
+  }
+  .ud-act:hover { filter: brightness(1.08); }
+  .ud-act form { width: 100%; margin: 0; }
+  .ud-grid-acts { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+  @media (min-width: 640px) { .ud-grid-acts { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .ud-grid-acts { grid-template-columns: repeat(4, 1fr); } }
+  .ud-tabs { display: flex; flex-wrap: wrap; gap: .35rem; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: .75rem; margin-bottom: 1rem; }
+  .ud-tab {
+    font-size: .78rem; font-weight: 700; padding: .4rem .85rem; border-radius: .55rem;
+    background: rgba(255,255,255,.05); color: #a1a1aa; border: none; cursor: pointer;
+  }
+  .ud-tab.active { background: #e2e8f0; color: #0f172a; }
+  .ud-layout { display: grid; gap: 1rem; }
+  @media (min-width: 1024px) {
+    .ud-layout { grid-template-columns: 1.35fr 1fr; align-items: start; }
+  }
+</style>
 
-  <section class="adm-card p-4 mt-4">
-    <h3 class="font-bold text-sm mb-2">Telegram Chat ID</h3>
-    <p class="text-xs text-zinc-400 mb-3">User sends Chat ID via support. Paste it here to enable alerts. Bot: @taskmill_bot</p>
-    <form method="POST" action="{{ url_for('admin.set_user_telegram', user_id=user.id) }}" class="flex flex-wrap gap-2 items-end">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div class="flex-1 min-w-[12rem]">
-        <label class="text-[10px] text-zinc-500 uppercase font-bold">Chat ID</label>
-        <input name="telegram_chat_id" value="{{ user.telegram_chat_id or '' }}"
-               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-3 py-2 text-sm" placeholder="123456789">
+<div class="ud space-y-4">
+
+  {% if is_support_agent %}
+  <div class="rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-100">
+    Support mode — limited actions. Money and security controls are main admin only.
+  </div>
+  {% endif %}
+
+  {# ===== HERO ===== #}
+  <section class="ud-hero">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          {% if online %}
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online</span>
+          {% else %}
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500"><span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline</span>
+          {% endif %}
+          {% if user.is_admin %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200">Admin</span>{% endif %}
+          {% if user.is_agent %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200">Agent</span>{% endif %}
+          {% if user.is_blocked %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-200">Blocked</span>{% endif %}
+          {% if not user.is_active %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-300">Inactive</span>{% endif %}
+        </div>
+        <h2 class="text-2xl font-black tracking-tight">{{ user.full_name or user.username }}</h2>
+        <p class="text-sm text-zinc-400 mt-0.5">@{{ user.username }} · #{{ user.id }}{% if user.email %} · {{ user.email }}{% endif %}</p>
+        <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span class="text-zinc-500">Code</span>
+          <span class="font-mono font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-400/20 px-2 py-0.5 rounded-md text-xs">{{ user.referral_code or '—' }}</span>
+          {% if user.referred_by_id %}
+          <span class="text-zinc-500">· Upline</span>
+          <a href="{{ url_for('admin.view_user', user_id=user.referred_by_id) }}" class="text-sky-300 font-semibold text-xs hover:text-white">
+            {{ user.referrer.username if user.referrer else ('#' ~ user.referred_by_id) }}
+          </a>
+          {% endif %}
+          <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-zinc-400 hover:text-white">Tree →</a>
+        </div>
+        <p class="text-xs text-zinc-500 mt-2">
+          Last seen:
+          {% if ls %}{% if format_gmt is defined %}{{ format_gmt(ls, '%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }} GMT{% endif %}{% else %}Never{% endif %}
+          · IP {{ last_ip|default(user.ip_address or '—') }}
+        </p>
       </div>
-      <button class="rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-sm font-bold">Save Telegram</button>
-
-    <form method="POST" action="{{ url_for('admin.unlock_withdraw_pin', user_id=user.id) }}" class="inline">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <button type="submit" class="rounded-xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/20">Unlock withdraw PIN</button>
-    </form>
-
-      {% if user.telegram_chat_id %}
-      <button name="telegram_chat_id" value="" class="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-zinc-400">Clear</button>
-      {% endif %}
-    </form>
+      <div class="text-right shrink-0">
+        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Available</p>
+        <p class="text-3xl font-black {% if bal|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">{{ money(current_user, bal) }}</p>
+        <p class="text-xs text-zinc-500 mt-1">{{ user.membership.name if user.membership else 'No membership' }}</p>
+        <a href="{{ url_for('chat.admin_thread', user_id=user.id) }}" class="inline-flex mt-3 text-xs font-bold rounded-lg bg-sky-600/90 hover:bg-sky-500 px-3 py-1.5 text-white">Open chat</a>
+      </div>
+    </div>
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div class="ud-stat"><p class="l">Phone</p><p class="v">{{ user.phone or '—' }}</p></div>
+      <div class="ud-stat"><p class="l">Country</p><p class="v">{{ user.country or '—' }}</p></div>
+      <div class="ud-stat"><p class="l">Tasks today</p><p class="v">{{ user.tasks_completed_today or 0 }}</p></div>
+      <div class="ud-stat"><p class="l">Referrals</p><p class="v">{{ user.referral_count or 0 }}</p></div>
+    </div>
   </section>
 
-<div class="mb-3 text-xs">
-  {% if user.telegram_chat_id %}
-  <span class="rounded-full bg-emerald-500/15 border border-emerald-400/30 px-2.5 py-1 font-bold text-emerald-300">Telegram linked · {{ user.telegram_chat_id }}</span>
-  {% else %}
-  <span class="rounded-full bg-amber-500/10 border border-amber-400/25 px-2.5 py-1 font-bold text-amber-200">Telegram not linked</span>
-  {% endif %}
-</div>
-
-
-
-    {% if current_user.is_admin %}
-    <div class="flex flex-wrap gap-2 mb-4">
-      {% if user.is_agent %}
-      <form method="POST" action="{{ url_for('admin.remove_agent', user_id=user.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="rounded-xl bg-zinc-700 hover:bg-zinc-600 px-4 py-2 text-sm font-semibold">Remove team leader</button>
-      </form>
-      {% else %}
-      <form method="POST" action="{{ url_for('admin.make_agent', user_id=user.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="rounded-xl bg-teal-600 hover:bg-teal-500 px-4 py-2 text-sm font-semibold"
-                onclick="return confirm('Make this user a team leader? They will only manage users under their referral code.')">
-          Make team leader (agent)
-        </button>
-      </form>
-      {% endif %}
-      {% if user.is_agent %}
-      <span class="inline-flex items-center rounded-xl bg-teal-500/15 text-teal-300 border border-teal-500/30 px-3 py-1.5 text-xs font-bold">TEAM LEADER</span>
-      {% endif %}
-    </div>
-    {% endif %}
-
-<div class="space-y-6">
-
-  {# Profile header #}
-  <div class="adm-card p-6 md:p-8">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl font-black">
-          {{ (user.username or 'U')[0]|upper }}
+  {# ===== ACTIONS + SIDE ===== #}
+  <div class="ud-layout">
+    <div class="space-y-4">
+      <section class="ud-card" data-admin-only>
+        <h3>Wallet</h3>
+        <div class="ud-grid-acts">
+          <button type="button" onclick="openCreditModal()" class="ud-act bg-emerald-600">Credit</button>
+          <button type="button" onclick="openDeductModal()" class="ud-act bg-rose-600">Deduct</button>
+          <button type="button" onclick="openPayoutModal()" class="ud-act bg-cyan-700">Payout</button>
+          <button type="button" onclick="openSpinModal()" class="ud-act bg-amber-600">Award spin</button>
+          <a href="{{ url_for('admin.combos') }}" class="ud-act bg-violet-700">Combo manager</a>
         </div>
-        <div>
-          <h2 class="text-2xl font-black">{{ user.full_name or user.username }}</h2>
-          <p class="text-zinc-400 text-sm">@{{ user.username }} · #{{ user.id }} · {{ user.email }}</p>
-          <p class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span class="text-zinc-500">Referral code</span>
-            <span class="font-mono font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-400/25 px-2.5 py-1 rounded-lg">{{ user.referral_code or '—' }}</span>
-            {% if user.referred_by_id %}
-            <span class="text-zinc-500">· Referred by</span>
-            <a href="{{ url_for('admin.view_user', user_id=user.referred_by_id) }}" class="text-indigo-300 font-semibold hover:text-white">
-              {{ user.referrer.username if user.referrer else ('#' ~ user.referred_by_id) }}
-            </a>
-            {% endif %}
-            {% if user.is_agent or (user.referral_count or 0) > 0 %}
-            <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-sky-300 hover:text-white ml-1">View tree →</a>
-            {% endif %}
-          </p>
-          <div class="flex flex-wrap gap-2 mt-2">
-            <span class="text-[11px] rounded-full px-2.5 py-1 {% if user.is_active %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
-              {{ 'Active' if user.is_active else 'Inactive' }}
-            </span>
-            {% if user.is_blocked %}
-            <span class="text-[11px] rounded-full px-2.5 py-1 bg-rose-500/15 text-rose-300">Blocked</span>
-            {% endif %}
-            <span class="text-[11px] rounded-full px-2.5 py-1 bg-indigo-500/15 text-indigo-300">
-              {{ user.membership.name if user.membership else 'No plan' }}
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="text-right">
-        <p class="text-[10px] uppercase tracking-wider text-zinc-500">Available balance</p>
-        <p class="text-3xl font-black text-emerald-400">{{ money(current_user, user.available_balance) }}</p>
-        <p class="text-xs text-zinc-500 mt-1">IP {{ last_ip|default(user.ip_address or '—') }}</p>
-      </div>
-    </div>
-    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-        <p class="text-[10px] text-zinc-500 uppercase">Phone</p>
-        <p class="font-medium mt-1">{{ user.phone or '—' }}</p>
-      </div>
-      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-        <p class="text-[10px] text-zinc-500 uppercase">Country</p>
-        <p class="font-medium mt-1">{{ user.country or '—' }}</p>
-      </div>
-      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-        <p class="text-[10px] text-zinc-500 uppercase">Tasks today</p>
-        <p class="font-medium mt-1">{{ user.tasks_completed_today or 0 }}</p>
-      </div>
-      <div class="rounded-2xl bg-black/25 border border-white/5 p-3">
-        <p class="text-[10px] text-zinc-500 uppercase">Referrals</p>
-        <p class="font-medium mt-1">{{ user.referral_count or 0 }}</p>
-      </div>
-    </div>
-  </div>
+      </section>
 
-  
-  {# Direct referrals list #}
-  <div class="ud-section mb-0">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold">Direct referrals</h3>
-      <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-indigo-300">Full tree →</a>
+      <section class="ud-card" data-admin-only>
+        <h3>Tasks &amp; combo</h3>
+        <div class="ud-grid-acts">
+          <form method="POST" action="{{ url_for('admin.reset_tasks', user_id=user.id) }}"><button class="ud-act bg-sky-700">Reset tasks</button></form>
+          <form method="POST" action="{{ url_for('admin.unlock_set2', user_id=user.id) }}"><button class="ud-act bg-teal-700">Unlock set 2</button></form>
+          <form method="POST" action="{{ url_for('admin.remove_combo', user_id=user.id) }}"><button class="ud-act bg-yellow-800">Remove combo</button></form>
+          <form method="POST" action="{{ url_for('admin.reset_combo', user_id=user.id) }}"><button class="ud-act bg-orange-800">Reset combo</button></form>
+        </div>
+      </section>
+
+      <section class="ud-card" data-admin-only>
+        <h3>Account</h3>
+        <div class="ud-grid-acts">
+          <button type="button" onclick="openMembershipModal()" class="ud-act bg-indigo-700">Membership</button>
+          <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}"><button class="ud-act bg-pink-800" onclick="return confirm('Reset password to 12345678?')">Reset password</button></form>
+          <form method="POST" action="{{ url_for('admin.reset_withdraw_pin', user_id=user.id) }}"><button class="ud-act bg-amber-900" onclick="return confirm('Reset PIN to 1234?')">Reset PIN</button></form>
+          <form method="GET" action="{{ url_for('admin.toggle_block', user_id=user.id) }}"><button class="ud-act bg-zinc-600">{{ 'Unblock' if user.is_blocked else 'Block' }}</button></form>
+          <form method="GET" action="{{ url_for('admin.toggle_active', user_id=user.id) }}"><button class="ud-act bg-zinc-700">{{ 'Deactivate' if user.is_active else 'Activate' }}</button></form>
+          <button type="button" onclick="openNotificationModal()" class="ud-act bg-blue-800">Notify</button>
+          {% if is_full_admin %}
+          <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"><button class="ud-act bg-red-950" onclick="return confirm('Delete permanently?')">Delete</button></form>
+          {% endif %}
+        </div>
+      </section>
     </div>
-    {% if referrals %}
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="text-left text-zinc-500 text-xs uppercase">
-          <tr><th class="pb-2">User</th><th class="pb-2">Code</th><th class="pb-2">Balance</th><th class="pb-2">Joined</th></tr>
-        </thead>
-        <tbody class="divide-y divide-white/5">
+
+    <div class="space-y-4">
+      <section class="ud-card">
+        <h3>Payout</h3>
+        {% if user.payout_confirmed and user.payout_method %}
+        <p class="text-sm"><strong class="text-emerald-300">{{ user.payout_method }}</strong>
+          <span class="text-zinc-400">· {{ user.payout_account_number }}</span></p>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-bold">Confirmed</span>
+        {% elif user.payout_method %}
+        <p class="text-sm"><strong class="text-amber-300">{{ user.payout_method }}</strong>
+          <span class="text-zinc-400">· {{ user.payout_account_number }}</span></p>
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200 font-bold">Pending</span>
+        {% else %}
+        <p class="text-sm text-zinc-500">Not set</p>
+        {% endif %}
+        <button type="button" onclick="openPayoutModal()" class="ud-act bg-cyan-700 mt-3 max-w-[10rem]">Edit payout</button>
+      </section>
+
+      <section class="ud-card">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="!mb-0">Direct referrals</h3>
+          <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-[11px] font-bold text-zinc-400 hover:text-white">Full tree →</a>
+        </div>
+        {% if referrals %}
+        <div class="max-h-48 overflow-y-auto space-y-1.5">
           {% for r in referrals %}
-          <tr>
-            <td class="py-2"><a class="text-indigo-300 font-semibold" href="{{ url_for('admin.view_user', user_id=r.id) }}">@{{ r.username }}</a></td>
-            <td class="py-2 font-mono text-emerald-300/90">{{ r.referral_code or '—' }}</td>
-            <td class="py-2">{{ money(current_user, r.available_balance or 0) }}</td>
-            <td class="py-2 text-xs text-zinc-500">{% if r.created_at %}{{ r.created_at.strftime('%d %b %Y') }}{% endif %}</td>
-          </tr>
+          <a href="{{ url_for('admin.view_user', user_id=r.id) }}" class="flex justify-between gap-2 text-sm py-1.5 border-b border-white/5 hover:text-sky-200">
+            <span class="font-semibold">@{{ r.username }}</span>
+            <span class="text-xs text-zinc-500 font-mono">{{ r.referral_code or '' }}</span>
+          </a>
           {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <p class="text-sm text-zinc-500">No direct referrals yet.</p>
-    {% endif %}
-  </div>
+        </div>
+        {% else %}
+        <p class="text-sm text-zinc-500">None yet</p>
+        {% endif %}
+      </section>
 
-  {# Actions organized #}
-
-  <div class="ud-section space-y-5">
-    <h3 class="text-lg font-bold">Quick actions</h3>
-
-    <div>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Wallet</p>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <button type="button" onclick="openCreditModal()" class="rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 py-3 px-4 text-sm font-semibold transition">Credit</button>
-        <button type="button" onclick="openDeductModal()" class="rounded-2xl bg-rose-600/90 hover:bg-rose-500 py-3 px-4 text-sm font-semibold transition">Deduct</button>
-        <a href="{{ url_for('admin.combos') }}" class="rounded-2xl bg-violet-600/90 hover:bg-violet-500 py-3 px-4 text-sm font-semibold text-center transition">Combo manager</a>
-        <button type="button" onclick="openSpinModal()" class="rounded-2xl bg-amber-600/90 hover:bg-amber-500 py-3 px-4 text-sm font-semibold transition">Award spin</button>
-        <button type="button" onclick="openPayoutModal()" class="rounded-2xl bg-cyan-600/90 hover:bg-cyan-500 py-3 px-4 text-sm font-semibold transition">Payout method</button>
-      </div>
-    </div>
-
-    <div>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Tasks</p>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <form method="POST" action="{{ url_for('admin.reset_tasks', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-sky-600/80 hover:bg-sky-500 py-3 text-sm font-semibold">Reset tasks</button>
+      <section class="ud-card">
+        <h3>Staff notes</h3>
+        <form method="POST" action="{{ url_for('admin.add_user_note', user_id=user.id) }}" class="space-y-2 mb-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+          <textarea name="note" rows="2" required placeholder="Add a note…" class="w-full rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm"></textarea>
+          <button type="submit" class="ud-act bg-zinc-600 max-w-[8rem]">Save note</button>
         </form>
-        <form method="POST" action="{{ url_for('admin.unlock_set2', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-teal-600/80 hover:bg-teal-500 py-3 text-sm font-semibold">Unlock set 2</button>
-        </form>
-        <form method="POST" action="{{ url_for('admin.remove_combo', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-yellow-700/80 hover:bg-yellow-600 py-3 text-sm font-semibold">Remove combo</button>
-        </form>
-        <form method="POST" action="{{ url_for('admin.reset_combo', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-orange-700/80 hover:bg-orange-600 py-3 text-sm font-semibold">Reset combo</button>
-        </form>
-      </div>
-    </div>
-
-    <div>
-      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500 mb-3">Account</p>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <button type="button" onclick="openMembershipModal()" class="rounded-2xl bg-indigo-600/80 hover:bg-indigo-500 py-3 text-sm font-semibold">Membership</button>
-        <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-pink-700/80 hover:bg-pink-600 py-3 text-sm font-semibold" onclick="return confirm('Reset password to 12345678?')">Reset password</button>
-        </form>
-        <form method="POST" action="{{ url_for('admin.reset_withdraw_pin', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-amber-800/80 hover:bg-amber-700 py-3 text-sm font-semibold" onclick="return confirm('Reset PIN to 1234?')">Reset PIN</button>
-        </form>
-        <form method="GET" action="{{ url_for('admin.toggle_block', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-zinc-600 hover:bg-zinc-500 py-3 text-sm font-semibold">{{ 'Unblock' if user.is_blocked else 'Block' }}</button>
-        </form>
-        <form method="GET" action="{{ url_for('admin.toggle_active', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-zinc-700 hover:bg-zinc-600 py-3 text-sm font-semibold">{{ 'Deactivate' if user.is_active else 'Activate' }}</button>
-        </form>
-        <button type="button" onclick="openNotificationModal()" class="rounded-2xl bg-blue-700/80 hover:bg-blue-600 py-3 text-sm font-semibold">Notify</button>
-        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
-          <button class="w-full rounded-2xl bg-red-900/80 hover:bg-red-800 py-3 text-sm font-semibold" onclick="return confirm('Delete permanently?')">Delete</button>
-        </form>
-      </div>
+        <div class="max-h-40 overflow-y-auto space-y-2 text-sm">
+          {% for n in user_notes|default([]) %}
+          <div class="border-b border-white/5 pb-2">
+            <p class="text-zinc-300">{{ n.body or n.note or n.content or '' }}</p>
+            <p class="text-[10px] text-zinc-600 mt-0.5">{{ n.author.username if n.author else n.author_id }} · {% if n.created_at %}{{ n.created_at.strftime('%d %b %H:%M') }}{% endif %}</p>
+          </div>
+          {% else %}
+          <p class="text-zinc-500 text-xs">No notes</p>
+          {% endfor %}
+        </div>
+      </section>
     </div>
   </div>
 
-  {# Simple data tabs #}
-  <div class="ud-section">
-    <div class="flex flex-wrap gap-2 border-b border-white/10 pb-3 mb-4">
-      <button type="button" class="tab-btn active text-sm px-3 py-1.5 rounded-lg bg-indigo-600" data-tab="tab-wallet">Wallet</button>
-      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-tasks">Tasks</button>
-      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-deps">Deposits</button>
-      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-wds">Withdrawals</button>
-      <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-login">Login history</button>
+  {# ===== ACTIVITY TABS ===== #}
+  <section class="ud-card">
+    <div class="ud-tabs">
+      <button type="button" class="ud-tab active" data-tab="tab-wallet">Wallet</button>
+      <button type="button" class="ud-tab" data-tab="tab-tasks">Tasks</button>
+      <button type="button" class="ud-tab" data-tab="tab-deps">Deposits</button>
+      <button type="button" class="ud-tab" data-tab="tab-wd">Withdrawals</button>
+      <button type="button" class="ud-tab" data-tab="tab-login">Logins</button>
     </div>
 
-    <div id="tab-wallet" class="tab-content space-y-2 max-h-80 overflow-y-auto">
-      {% for t in wallet_transactions|default([]) %}
-      <div class="flex justify-between text-sm border-b border-white/5 py-2">
-        <span class="text-zinc-400">{{ t.description or t.transaction_type }}</span>
-        <span class="font-semibold {% if (t.amount or 0)|float >= 0 %}text-emerald-400{% else %}text-rose-400{% endif %}">{{ money(current_user, t.amount) }}</span>
+    <div id="tab-wallet" class="tab-content">
+      {% for tx in wallet_transactions|default([]) %}
+      <div class="flex justify-between text-sm border-b border-white/5 py-2 gap-2">
+        <span class="text-zinc-400 truncate">{{ tx.description or tx.type or 'Tx' }}</span>
+        <span class="font-semibold shrink-0 {% if (tx.amount or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">{{ money(current_user, tx.amount or 0) }}</span>
       </div>
-      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No transactions</p>{% endfor %}
+      {% else %}<p class="text-zinc-500 text-sm py-8 text-center">No wallet transactions</p>{% endfor %}
     </div>
-    <div id="tab-tasks" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+
+    <div id="tab-tasks" class="tab-content hidden">
       {% for t in tasks|default([]) %}
-      <div class="flex justify-between text-sm border-b border-white/5 py-2">
-        <span>{{ t.product_name }} · {{ t.status }}</span>
-        <span class="text-zinc-500">{{ money(current_user, t.commission) }}</span>
+      <div class="flex justify-between text-sm border-b border-white/5 py-2 gap-2">
+        <span class="truncate">{{ t.product_name or 'Task' }} · {{ t.status }}</span>
+        <span class="text-xs text-zinc-500 shrink-0">{% if t.commission %}+{{ money(current_user, t.commission) }}{% endif %}</span>
       </div>
-      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No tasks</p>{% endfor %}
+      {% else %}<p class="text-zinc-500 text-sm py-8 text-center">No tasks</p>{% endfor %}
     </div>
-    <div id="tab-deps" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+
+    <div id="tab-deps" class="tab-content hidden">
       {% for d in deposits|default([]) %}
       <div class="flex justify-between text-sm border-b border-white/5 py-2">
-        <span>{{ d.status }} · {{ d.payment_method }}</span>
-        <span>{{ money(current_user, d.amount) }}</span>
+        <span>{{ d.status }} · {{ d.payment_method or '' }}</span>
+        <span class="font-semibold text-emerald-300">{{ money(current_user, d.amount) }}</span>
       </div>
-      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No deposits</p>{% endfor %}
+      {% else %}<p class="text-zinc-500 text-sm py-8 text-center">No deposits</p>{% endfor %}
     </div>
-    <div id="tab-wds" class="tab-content hidden space-y-2 max-h-80 overflow-y-auto">
+
+    <div id="tab-wd" class="tab-content hidden">
       {% for w in withdrawals|default([]) %}
       <div class="flex justify-between text-sm border-b border-white/5 py-2">
-        <span>{{ w.status }} · {{ w.payment_method }}</span>
-        <span>{{ money(current_user, w.amount) }}</span>
+        <span>{{ w.status }} · {{ w.payment_method or '' }}</span>
+        <span class="font-semibold text-rose-300">{{ money(current_user, w.amount) }}</span>
       </div>
-      {% else %}<p class="text-zinc-500 text-sm py-6 text-center">No withdrawals</p>{% endfor %}
+      {% else %}<p class="text-zinc-500 text-sm py-8 text-center">No withdrawals</p>{% endfor %}
     </div>
 
     <div id="tab-login" class="tab-content hidden">
       <div class="overflow-x-auto max-h-96">
-        <table class="w-full text-sm">
-          <thead class="text-left text-zinc-500 text-xs uppercase tracking-wider">
+        <table class="adm-table text-sm">
+          <thead>
             <tr>
-              <th class="py-2 pr-3">When</th>
-              <th class="py-2 pr-3">IP</th>
-              <th class="py-2 pr-3">Location</th>
-              <th class="py-2 pr-3">Device</th>
-              <th class="py-2 pr-3">OS</th>
-              <th class="py-2 pr-3">Browser</th>
-              <th class="py-2">Status</th>
+              <th>When</th><th>IP</th><th>Location</th><th>Device</th><th>OS</th><th>Browser</th><th>Status</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/5">
+          <tbody>
             {% for row in login_history|default([]) %}
-            <tr class="hover:bg-white/[0.03]">
-              <td class="py-2.5 pr-3 text-zinc-300 whitespace-nowrap">
-                {% if row.login_time %}{{ row.login_time|localtime('%d %b %Y · %H:%M') }}{% else %}—{% endif %}
-              </td>
-              <td class="py-2.5 pr-3 font-mono text-xs">{{ row.ip_address or '—' }}</td>
-              <td class="py-2.5 pr-3">{{ row.location or '—' }}</td>
-              <td class="py-2.5 pr-3">{{ row.device or '—' }}</td>
-              <td class="py-2.5 pr-3">{{ row.operating_system or '—' }}</td>
-              <td class="py-2.5 pr-3 max-w-[140px] truncate" title="{{ row.browser or '' }}">{{ row.browser or '—' }}</td>
-              <td class="py-2.5">
-                <span class="text-[11px] rounded-full px-2 py-0.5 {% if row.status == 'Online' %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
-                  {{ row.status or '—' }}
-                </span>
-              </td>
+            <tr>
+              <td class="whitespace-nowrap text-zinc-400">{% if row.login_time %}{{ row.login_time.strftime('%d %b %Y %H:%M') }}{% else %}—{% endif %}</td>
+              <td class="font-mono text-xs">{{ row.ip_address or '—' }}</td>
+              <td>{{ row.location or '—' }}</td>
+              <td>{{ row.device or '—' }}</td>
+              <td>{{ row.operating_system or '—' }}</td>
+              <td class="max-w-[120px] truncate">{{ row.browser or '—' }}</td>
+              <td><span class="text-[10px] rounded-full px-2 py-0.5 {% if row.status == 'Online' %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">{{ row.status or '—' }}</span></td>
             </tr>
             {% else %}
-            <tr><td colspan="7" class="py-10 text-center text-zinc-500">No login history yet</td></tr>
+            <tr><td colspan="7" class="py-10 text-center text-zinc-500">No login history</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
-
-  </div>
+  </section>
 </div>
 
-{# Spin modal #}
+{# ===== MODALS ===== #}
+<div id="creditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Credit wallet</h3>
+    <form method="POST" action="{{ url_for('admin.credit_wallet', user_id=user.id) }}" class="space-y-3">
+      <input type="number" name="amount" id="creditAmount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
+      <p id="creditShadow" class="text-xs text-emerald-400/90"></p>
+      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('creditModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-emerald-600 py-2.5 font-semibold">Credit</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="deductModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Deduct wallet</h3>
+    <form method="POST" action="{{ url_for('admin.deduct_wallet', user_id=user.id) }}" class="space-y-3">
+      <input type="number" name="amount" id="deductAmount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
+      <p id="deductShadow" class="text-xs text-rose-400/90"></p>
+      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('deductModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-rose-600 py-2.5 font-semibold">Deduct</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="membershipModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Change membership</h3>
+    <form method="POST" action="{{ url_for('admin.change_membership', user_id=user.id) }}" class="space-y-3">
+      <select name="membership_id" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+        {% for m in memberships|default([]) %}
+        <option value="{{ m.id }}" {% if user.membership_id == m.id %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('membershipModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-indigo-600 py-2.5 font-semibold">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="notificationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <h3 class="font-bold text-lg mb-3">Send notification</h3>
+    <form method="POST" action="{{ url_for('admin.send_notification', user_id=user.id) }}" class="space-y-3">
+      <input name="title" required placeholder="Title" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
+      <textarea name="message" required rows="3" placeholder="Message" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3"></textarea>
+      <div class="flex gap-2">
+        <button type="button" onclick="document.getElementById('notificationModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
+        <button class="flex-1 rounded-xl bg-blue-600 py-2.5 font-semibold">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div id="spinModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
+  <div class="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6">
     <h3 class="text-xl font-bold mb-4">Award Lucky Spin</h3>
     <form method="POST" action="{{ url_for('admin.grant_spin', user_id=user.id) }}" class="space-y-3">
       <input type="number" name="spins" value="1" min="1" max="20" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
@@ -366,154 +358,16 @@
     </form>
   </div>
 </div>
-
-{# Minimal stubs for credit/deduct/membership/notification if scripts exist in base pages #}
-<div id="creditModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
-    <h3 class="font-bold text-lg mb-3">Credit wallet</h3>
-    <form method="POST" action="{{ url_for('admin.credit_wallet', user_id=user.id) }}" class="space-y-3">
-      <input type="number" name="amount" id="creditAmount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
-        <p id="creditShadow" class="text-xs text-emerald-400/90 mt-1"></p>
-      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
-      <div class="flex gap-2">
-        <button type="button" onclick="document.getElementById('creditModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
-        <button class="flex-1 rounded-xl bg-emerald-600 py-2.5 font-semibold">Credit</button>
-      </div>
-    </form>
-  </div>
-</div>
-<div id="deductModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
-    <h3 class="font-bold text-lg mb-3">Deduct wallet</h3>
-    <form method="POST" action="{{ url_for('admin.deduct_wallet', user_id=user.id) }}" class="space-y-3">
-      <input type="number" name="amount" step="100" required class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Amount">
-      <input type="text" name="note" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3" placeholder="Note">
-      <div class="flex gap-2">
-        <button type="button" onclick="document.getElementById('deductModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
-        <button class="flex-1 rounded-xl bg-rose-600 py-2.5 font-semibold">Deduct</button>
-      </div>
-    </form>
-  </div>
-</div>
-<div id="membershipModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
-    <h3 class="font-bold text-lg mb-3">Change membership</h3>
-    <form method="POST" action="{{ url_for('admin.change_membership', user_id=user.id) }}" class="space-y-3">
-      <select name="membership_id" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
-        {% for m in memberships|default([]) %}
-        <option value="{{ m.id }}" {% if user.membership_id == m.id %}selected{% endif %}>{{ m.name }}</option>
-        {% endfor %}
-      </select>
-      <div class="flex gap-2">
-        <button type="button" onclick="document.getElementById('membershipModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
-        <button class="flex-1 rounded-xl bg-indigo-600 py-2.5 font-semibold">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-<div id="notificationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-  <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6">
-    <h3 class="font-bold text-lg mb-3">Send notification</h3>
-    <form method="POST" action="{{ url_for('admin.send_notification', user_id=user.id) }}" class="space-y-3">
-      <input name="title" required placeholder="Title" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3">
-      <textarea name="message" required rows="3" placeholder="Message" class="w-full rounded-xl bg-slate-950 border border-white/10 p-3"></textarea>
-      <div class="flex gap-2">
-        <button type="button" onclick="document.getElementById('notificationModal').classList.add('hidden')" class="flex-1 rounded-xl bg-zinc-700 py-2.5">Cancel</button>
-        <button class="flex-1 rounded-xl bg-blue-600 py-2.5 font-semibold">Send</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function openCreditModal(){ document.getElementById('creditModal').classList.remove('hidden'); }
-function shadowBalance(inputId, outId, sign){
-  var el = document.getElementById(inputId);
-  var out = document.getElementById(outId);
-  if(!el||!out) return;
-  var base = {{ (user.available_balance or 0)|float }};
-  function upd(){ var a=parseFloat(el.value)||0; out.textContent = 'Balance after: ' + (base + sign*a).toLocaleString(); }
-  el.addEventListener('input', upd); upd();
-}
-document.addEventListener('DOMContentLoaded', function(){
-  shadowBalance('creditAmount','creditShadow',1);
-  shadowBalance('deductAmount','deductShadow',-1);
-});
-function openDeductModal(){ document.getElementById('deductModal').classList.remove('hidden'); }
-function openMembershipModal(){ document.getElementById('membershipModal').classList.remove('hidden'); }
-function openNotificationModal(){ document.getElementById('notificationModal').classList.remove('hidden'); }
-function openSpinModal(){ document.getElementById('spinModal').classList.remove('hidden'); }
-document.querySelectorAll('.tab-btn').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active','bg-indigo-600'); b.classList.add('bg-white/5'); });
-    btn.classList.add('active','bg-indigo-600'); btn.classList.remove('bg-white/5');
-    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.add('hidden'); });
-    var p = document.getElementById(btn.getAttribute('data-tab'));
-    if(p) p.classList.remove('hidden');
-  });
-});
-</script>
-
-  {# Payout status strip #}
-  <div class="adm-card p-4 flex flex-wrap items-center justify-between gap-3">
-    <div class="text-sm">
-      <span class="text-zinc-500">Payout:</span>
-      {% if user.payout_confirmed and user.payout_method %}
-        <strong class="text-emerald-400">{{ user.payout_method }}</strong>
-        <span class="text-zinc-400">· {{ user.payout_account_number }}</span>
-        <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Confirmed</span>
-      {% elif user.payout_method %}
-        <strong class="text-amber-300">{{ user.payout_method }}</strong>
-        <span class="text-zinc-400">· {{ user.payout_account_number }}</span>
-        <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200">Pending</span>
-      {% else %}
-        <span class="text-zinc-500">Not set</span>
-      {% endif %}
-    </div>
-    <button type="button" onclick="openPayoutModal()" class="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-4 py-2 text-sm font-semibold">Edit payout</button>
-  </div>
-
-
-<div class="adm-card p-5 mt-4">
-    <h3 class="font-bold mb-3">Staff notes</h3>
-    <form method="POST" action="{{ url_for('admin.add_user_note', user_id=user.id) }}" class="space-y-2 mb-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <textarea name="body" rows="2" required placeholder="Add a note for handover..."
-                class="w-full rounded-xl bg-slate-900 border border-white/10 px-3 py-2 text-sm"></textarea>
-      <button class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold">Save note</button>
-    </form>
-    <div class="space-y-2 max-h-48 overflow-y-auto">
-      {% for n in user_notes|default([]) %}
-      <div class="rounded-xl bg-black/25 border border-white/5 p-3 text-sm">
-        <p class="text-zinc-200">{{ n.body }}</p>
-        <p class="text-[11px] text-zinc-500 mt-1">
-          {{ n.author.username if n.author else n.author_id }}
-          · {% if n.created_at %}{{ n.created_at|localtime('%d %b %Y %H:%M') }}{% endif %}
-        </p>
-      </div>
-      {% else %}
-      <p class="text-xs text-zinc-500">No notes yet</p>
-      {% endfor %}
-    </div>
-  </div>
-
-{# Payout modal #}
 <div id="payoutModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70">
-  <div class="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 space-y-4 shadow-2xl">
-    <div class="flex justify-between items-center">
+  <div class="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-6">
+    <div class="flex justify-between items-center mb-4">
       <h3 class="font-bold text-lg">Payout method</h3>
-      <button type="button" onclick="closePayoutModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
+      <button type="button" onclick="closePayoutModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
     </div>
     <form method="POST" action="{{ url_for('admin.update_user_payout', user_id=user.id) }}" class="grid sm:grid-cols-2 gap-3">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
-      <div class="sm:col-span-2">
-        <label class="text-[11px] text-zinc-500">Method</label>
-        <input name="payout_method" value="{{ user.payout_method or '' }}" list="payout-presets"
-               class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm" placeholder="MTN / Bank / USDT…">
-      </div>
       <div>
-        <label class="text-[11px] text-zinc-500">Provider</label>
-        <input name="payout_provider" value="{{ user.payout_provider or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
+        <label class="text-[11px] text-zinc-500">Method</label>
+        <input name="payout_method" list="payout-presets" value="{{ user.payout_method or '' }}" class="w-full mt-1 rounded-xl bg-zinc-950 border border-white/10 px-4 py-3 text-sm">
       </div>
       <div>
         <label class="text-[11px] text-zinc-500">Account name</label>
@@ -528,48 +382,54 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
         Confirmed for withdrawals
       </label>
       <div class="sm:col-span-2 flex flex-wrap gap-2">
-        <button type="submit" name="action" value="save" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold">Save / change</button>
+        <button type="submit" name="action" value="save" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold">Save</button>
         <button type="submit" name="action" value="confirm" class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold">Confirm</button>
         <button type="button" onclick="closePayoutModal()" class="rounded-xl bg-zinc-700 px-5 py-2.5 text-sm">Cancel</button>
       </div>
       <datalist id="payout-presets">
-        <option value="MTN Mobile Money"></option>
-        <option value="Airtel Money"></option>
-        <option value="M-Pesa"></option>
-        <option value="Bank Transfer"></option>
-        <option value="USDT (TRC20)"></option>
-        <option value="USDT (ERC20)"></option>
-        <option value="Bitcoin (BTC)"></option>
-        <option value="Ethereum (ETH)"></option>
+        <option value="MTN Mobile Money"><option value="Airtel Money"><option value="M-Pesa">
+        <option value="Bank Transfer"><option value="USDT (TRC20)"><option value="USDT (ERC20)">
       </datalist>
     </form>
   </div>
 </div>
+
 <script>
-function openPayoutModal(){
-  var m = document.getElementById('payoutModal');
-  if(m){ m.classList.remove('hidden'); }
+function openCreditModal(){ document.getElementById('creditModal').classList.remove('hidden'); }
+function openDeductModal(){ document.getElementById('deductModal').classList.remove('hidden'); }
+function openMembershipModal(){ document.getElementById('membershipModal').classList.remove('hidden'); }
+function openNotificationModal(){ document.getElementById('notificationModal').classList.remove('hidden'); }
+function openSpinModal(){ document.getElementById('spinModal').classList.remove('hidden'); }
+function openPayoutModal(){ var m=document.getElementById('payoutModal'); if(m) m.classList.remove('hidden'); }
+function closePayoutModal(){ var m=document.getElementById('payoutModal'); if(m) m.classList.add('hidden'); }
+function shadowBalance(inputId, outId, sign){
+  var el=document.getElementById(inputId), out=document.getElementById(outId);
+  if(!el||!out) return;
+  var base={{ bal|float }};
+  function upd(){ var a=parseFloat(el.value)||0; out.textContent='Balance after: '+(base+sign*a).toLocaleString(); }
+  el.addEventListener('input', upd); upd();
 }
-function closePayoutModal(){
-  var m = document.getElementById('payoutModal');
-  if(m){ m.classList.add('hidden'); }
-}
+document.addEventListener('DOMContentLoaded', function(){
+  shadowBalance('creditAmount','creditShadow',1);
+  shadowBalance('deductAmount','deductShadow',-1);
+});
+document.querySelectorAll('.ud-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.ud-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.add('hidden'); });
+    var p=document.getElementById(btn.getAttribute('data-tab'));
+    if(p) p.classList.remove('hidden');
+  });
+});
 </script>
-{% endblock %}
 
 {% if is_support_agent %}
 <style>
   [data-admin-only],
   #creditModal, #deductModal, #membershipModal, #spinModal,
   button[onclick*="openCredit"], button[onclick*="openDeduct"],
-  button[onclick*="openMembership"], button[onclick*="openSpin"],
-  a[href*="reset_password"], a[href*="reset_tasks"], a[href*="unlock_set2"],
-  form[action*="credit_wallet"], form[action*="deduct_wallet"],
-  form[action*="reset_password"], form[action*="reset_tasks"],
-  form[action*="reset_combo"], form[action*="unlock_set2"],
-  form[action*="change_membership"], form[action*="assign_combo"],
-  form[action*="trigger_combo"], form[action*="grant_spin"],
-  form[action*="toggle_block"], form[action*="freeze_wallet"],
-  form[action*="reset_withdraw_pin"] { display: none !important; }
+  button[onclick*="openMembership"], button[onclick*="openSpin"] { display: none !important; }
 </style>
 {% endif %}
+{% endblock %}
