@@ -2,6 +2,44 @@
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}Operations{% endblock %}
 {% block content %}
+<style>
+  .dash-kpi {
+    position: relative; overflow: hidden;
+    border-radius: 1.1rem; padding: 1.2rem 1.25rem;
+    border: 1px solid rgba(255,255,255,.1);
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(10,12,20,.85));
+  }
+  .dash-kpi::after {
+    content: ""; position: absolute; right: -20%; top: -30%;
+    width: 8rem; height: 8rem; border-radius: 50%; opacity: .35; filter: blur(28px);
+  }
+  .dash-kpi.k-users::after { background: #6366f1; }
+  .dash-kpi.k-dep::after { background: #f59e0b; }
+  .dash-kpi.k-wd::after { background: #f43f5e; }
+  .dash-kpi.k-task::after { background: #38bdf8; }
+  .dash-kpi .label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; position: relative; z-index: 1; }
+  .dash-kpi .value { font-size: 1.85rem; font-weight: 800; margin-top: .35rem; position: relative; z-index: 1; letter-spacing: -.02em; }
+  .dash-action {
+    display: flex; flex-direction: column; gap: .35rem;
+    border-radius: 1rem; padding: 1.1rem 1rem;
+    border: 1px solid rgba(255,255,255,.1);
+    text-decoration: none; color: inherit;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    background: linear-gradient(155deg, rgba(255,255,255,.05), rgba(15,18,28,.9));
+  }
+  .dash-action:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.2); }
+  .dash-action .ico {
+    width: 2.5rem; height: 2.5rem; border-radius: .75rem;
+    display: grid; place-items: center; font-size: 1rem; margin-bottom: .25rem;
+  }
+  .dash-action .ico.users { background: rgba(99,102,241,.2); color: #a5b4fc; }
+  .dash-action .ico.dep { background: rgba(16,185,129,.2); color: #6ee7b7; }
+  .dash-action .ico.wd { background: rgba(244,63,94,.2); color: #fda4af; }
+  .dash-action .ico.chat { background: rgba(56,189,248,.2); color: #7dd3fc; }
+  .dash-action .ico.combo { background: rgba(245,158,11,.2); color: #fcd34d; }
+  .dash-action .ico.agents { background: rgba(168,85,247,.2); color: #d8b4fe; }
+</style>
+
 <div class="space-y-6 max-w-7xl">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
@@ -16,21 +54,21 @@
   </div>
 
   <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-    <div class="adm-kpi">
+    <div class="dash-kpi k-users">
       <p class="label">Users</p>
-      <p class="value">{{ total_users|default(0) }}</p>
+      <p class="value text-indigo-200">{{ total_users|default(0) }}</p>
     </div>
-    <div class="adm-kpi">
+    <div class="dash-kpi k-dep">
       <p class="label">Pending deposits</p>
       <p class="value text-amber-300">{{ pending_deposits|default(0) }}</p>
-      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-[11px] font-semibold text-zinc-400 hover:text-white mt-2 inline-block">Review →</a>
+      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-[11px] font-semibold text-amber-200/80 hover:text-white mt-2 inline-block relative z-[1]">Review →</a>
     </div>
-    <div class="adm-kpi">
+    <div class="dash-kpi k-wd">
       <p class="label">Pending withdrawals</p>
       <p class="value text-rose-300">{{ pending_withdrawals|default(0) }}</p>
-      <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="text-[11px] font-semibold text-zinc-400 hover:text-white mt-2 inline-block">Review →</a>
+      <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="text-[11px] font-semibold text-rose-200/80 hover:text-white mt-2 inline-block relative z-[1]">Review →</a>
     </div>
-    <div class="adm-kpi">
+    <div class="dash-kpi k-task">
       <p class="label">Active tasks</p>
       <p class="value text-sky-200">{{ active_tasks|default(0) }}</p>
     </div>
@@ -40,46 +78,46 @@
     <div class="lg:col-span-2 adm-card p-5">
       <h3 class="text-sm font-bold text-zinc-300 mb-4">Primary actions</h3>
       <div class="grid sm:grid-cols-3 gap-3">
-        <a href="{{ url_for('admin.users') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-users text-zinc-300 mb-2"></i>
-          <p class="text-sm font-semibold">Users</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Search, balances, roles</p>
+        <a href="{{ url_for('admin.users') }}" class="dash-action">
+          <span class="ico users"><i class="fa-solid fa-users"></i></span>
+          <p class="text-sm font-bold">Users</p>
+          <p class="text-[11px] text-zinc-500">Search, balances, roles</p>
         </a>
-        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-arrow-down text-emerald-400/90 mb-2"></i>
-          <p class="text-sm font-semibold">Deposits</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Approve or reject</p>
+        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="dash-action">
+          <span class="ico dep"><i class="fa-solid fa-arrow-down"></i></span>
+          <p class="text-sm font-bold">Deposits</p>
+          <p class="text-[11px] text-zinc-500">Approve or reject</p>
         </a>
-        <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-arrow-up text-rose-400/90 mb-2"></i>
-          <p class="text-sm font-semibold">Withdrawals</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Process payouts</p>
+        <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="dash-action">
+          <span class="ico wd"><i class="fa-solid fa-arrow-up"></i></span>
+          <p class="text-sm font-bold">Withdrawals</p>
+          <p class="text-[11px] text-zinc-500">Process payouts</p>
         </a>
-        <a href="{{ url_for('chat.admin_inbox') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-comments text-sky-300/90 mb-2"></i>
-          <p class="text-sm font-semibold">Chat</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Support inbox</p>
+        <a href="{{ url_for('chat.admin_inbox') }}" class="dash-action">
+          <span class="ico chat"><i class="fa-solid fa-comments"></i></span>
+          <p class="text-sm font-bold">Chat</p>
+          <p class="text-[11px] text-zinc-500">Support inbox</p>
         </a>
-        <a href="{{ url_for('admin.combos') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-bolt text-amber-300/90 mb-2"></i>
-          <p class="text-sm font-semibold">Combos</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Assign high-value tasks</p>
+        <a href="{{ url_for('admin.combos') }}" class="dash-action">
+          <span class="ico combo"><i class="fa-solid fa-bolt"></i></span>
+          <p class="text-sm font-bold">Combos</p>
+          <p class="text-[11px] text-zinc-500">Assign high-value tasks</p>
         </a>
-        <a href="{{ url_for('admin.agents_hub') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
-          <i class="fa-solid fa-sitemap text-violet-300/90 mb-2"></i>
-          <p class="text-sm font-semibold">Agents</p>
-          <p class="text-[11px] text-zinc-500 mt-1">Teams &amp; referrals</p>
+        <a href="{{ url_for('admin.agents_hub') }}" class="dash-action">
+          <span class="ico agents"><i class="fa-solid fa-sitemap"></i></span>
+          <p class="text-sm font-bold">Agents</p>
+          <p class="text-[11px] text-zinc-500">Teams &amp; referrals</p>
         </a>
       </div>
     </div>
     <div class="adm-card p-5">
       <h3 class="text-sm font-bold text-zinc-300 mb-3">System</h3>
       <ul class="space-y-2 text-sm">
-        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.payment_settings') }}"><span>Payment methods</span><span>→</span></a></li>
-        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.memberships') }}"><span>Memberships</span><span>→</span></a></li>
-        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.settings') }}"><span>Settings</span><span>→</span></a></li>
-        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.products') }}"><span>Products</span><span>→</span></a></li>
-        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('auth.setup_2fa') }}"><span>2FA security</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white py-1" href="{{ url_for('admin.payment_settings') }}"><span>Payment methods</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white py-1" href="{{ url_for('admin.memberships') }}"><span>Memberships</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white py-1" href="{{ url_for('admin.settings') }}"><span>Settings</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white py-1" href="{{ url_for('admin.products') }}"><span>Products</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white py-1" href="{{ url_for('auth.setup_2fa') }}"><span>2FA security</span><span>→</span></a></li>
       </ul>
     </div>
   </div>

@@ -411,7 +411,8 @@ def users():
     if filter_membership:
         query = query.filter(User.membership_id == filter_membership)
 
-    users = query.order_by(User.created_at.desc()).paginate(
+    # Most recently active first (null last_login at the end)
+    users = query.order_by(User.last_login.desc().nullslast(), User.id.desc()).paginate(
         page=page, per_page=30, error_out=False
     )
     memberships = Membership.query.order_by(Membership.price.asc()).all()
@@ -1039,6 +1040,52 @@ def deduct_wallet(user_id):
 # COMBO MANAGER
 # ==========================================================
 from models.combo import Combo
+
+
+
+@admin_bp.route("/api/users-search")
+@login_required
+@admin_required
+def api_users_search():
+    """Typeahead: username / email / phone / id. Returns JSON list."""
+    from flask import jsonify
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 1:
+        return jsonify({"users": []})
+    query = User.query
+    if getattr(current_user, "is_agent", False) and not getattr(current_user, "is_admin", False):
+        downline = get_downline_ids(current_user.id)
+        if downline:
+            query = query.filter(User.id.in_(list(downline)))
+        else:
+            return jsonify({"users": []})
+    like = f"%{q}%"
+    filters = [
+        User.username.ilike(like),
+        User.email.ilike(like),
+        User.phone.ilike(like),
+        User.full_name.ilike(like),
+    ]
+    if q.isdigit():
+        filters.append(User.id == int(q))
+    rows = (
+        query.filter(or_(*filters))
+        .order_by(User.last_login.desc().nullslast(), User.username.asc())
+        .limit(12)
+        .all()
+    )
+    return jsonify({
+        "users": [
+            {
+                "id": u.id,
+                "username": u.username,
+                "full_name": u.full_name or "",
+                "balance": float(u.available_balance or 0),
+                "membership": (u.membership.name if u.membership else None),
+            }
+            for u in rows
+        ]
+    })
 
 
 @admin_bp.route("/combos")
