@@ -2,79 +2,108 @@
 {% block title %}Deposits{% endblock %}
 {% block page_title %}Deposits{% endblock %}
 {% block content %}
-{% if current_user.is_agent and not current_user.is_admin %}<p class="text-xs text-amber-200 mb-2">Showing deposits for your downline only.</p>{% endif %}
+<div class="max-w-7xl space-y-5">
+  {% if current_user.is_agent and not current_user.is_admin %}
+  <p class="text-xs text-amber-200 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2">Showing deposits for your downline only.</p>
+  {% endif %}
 
-<div class="space-y-5 max-w-7xl">
-  <div class="flex flex-wrap gap-2">
-    <a href="{{ url_for('admin.deposits') }}" class="px-3 py-1.5 rounded-lg text-sm {% if not status %}adm-btn{% else %}bg-white/5{% endif %}">All</a>
-    <a href="{{ url_for('admin.deposits', status='Pending') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Pending' %}bg-amber-600{% else %}bg-white/5{% endif %}">Pending</a>
-    <a href="{{ url_for('admin.deposits', status='Approved') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Approved' %}bg-emerald-600{% else %}bg-white/5{% endif %}">Approved</a>
-    <a href="{{ url_for('admin.deposits', status='Rejected') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Rejected' %}bg-rose-600{% else %}bg-white/5{% endif %}">Rejected</a>
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500">Money in</p>
+      <h2 class="adm-metal text-xl mt-0.5">Deposits</h2>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      {% set pills = [('', 'All'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')] %}
+      {% for val, label in pills %}
+      <a href="{{ url_for('admin.deposits', status=val or none) if val else url_for('admin.deposits') }}"
+         class="px-3 py-1.5 rounded-lg text-xs font-bold transition
+         {% if (status or '') == val %}
+           {% if val == 'Pending' %}bg-amber-500 text-black
+           {% elif val == 'Approved' %}bg-emerald-600 text-white
+           {% elif val == 'Rejected' %}bg-rose-600 text-white
+           {% else %}bg-white text-zinc-900{% endif %}
+         {% else %}bg-white/5 text-zinc-400 hover:bg-white/10{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </div>
   </div>
 
-  <form method="GET" class="adm-card p-4 flex gap-3">
-    <input type="text" name="search" value="{{ search|default('') }}" placeholder="Search username or reference..."
-           class="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
+  <form method="GET" class="adm-card p-3 flex flex-wrap gap-2 items-center">
+    <input type="text" name="search" value="{{ search|default('') }}" placeholder="Search username or reference…"
+           class="flex-1 min-w-[180px] text-sm">
     {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
-    <button class="adm-btn px-5 rounded-xl text-sm font-semibold">Search</button>
+    <button type="submit" class="adm-btn">Search</button>
   </form>
 
   <form method="POST" action="{{ url_for('admin.bulk_approve_deposits') }}" id="bulkDepForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
     <div class="flex flex-wrap gap-2 mb-3">
-      <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold">Bulk approve</button>
-      <button type="submit" formaction="{{ url_for('admin.bulk_reject_deposits') }}" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold"
+      <button type="submit" class="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold">Bulk approve</button>
+      <button type="submit" formaction="{{ url_for('admin.bulk_reject_deposits') }}"
+              class="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold"
               onclick="return confirm('Reject selected deposits?')">Bulk reject</button>
     </div>
 
-    <button type="submit" class="mb-4 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-sm font-semibold">Bulk Approve Selected</button>
     <div class="adm-card overflow-hidden">
-      <table class="adm-table">
-        <thead class="bg-slate-800 text-left text-zinc-400">
-          <tr>
-            <th class="p-4 w-10"></th>
-            <th class="p-4">User</th>
-            <th class="p-4">Reference</th>
-            <th class="p-4">Method</th>
-            <th class="p-4">Amount</th>
-            <th class="p-4">Status</th>
-            <th class="p-4">Date</th>
-            <th class="p-4">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/5">
-          {% for d in deposits.items %}
-          <tr class="hover:bg-white/[0.03]">
-            <td class="p-4">{% if d.status=='Pending' %}<input type="checkbox" name="deposit_ids" value="{{ d.id }}">{% endif %}</td>
-            <td class="p-4">{% if d.user %}<a href="{{ url_for('admin.view_user', user_id=d.user_id) }}" class="text-indigo-400">{{ d.user.username }}</a>{% else %}#{{ d.user_id }}{% endif %}</td>
-            <td class="p-4 font-mono text-xs">{{ d.transaction_id or d.id }}</td>
-            <td class="p-4">{{ d.payment_method or '—' }}</td>
-            <td class="p-4 font-semibold text-emerald-400">{{ money(current_user, d.amount) }}</td>
-            <td class="p-4">{{ d.status }}</td>
-            <td class="p-4 text-xs text-zinc-500">{% if d.created_at %}{{ d.created_at|localtime('%d %b %Y %H:%M') }}{% endif %}</td>
-            <td class="p-4">
-              {% if d.status=='Pending' %}
-              <a href="{{ url_for('admin.approve_deposit', deposit_id=d.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>
-              <a href="{{ url_for('admin.reject_deposit', deposit_id=d.id) }}" class="text-rose-400 text-xs font-semibold">Reject</a>
-              {% endif %}
-              {% if d.proof_image %}
-              <a href="{{ url_for('static', filename='uploads/deposits/' ~ d.proof_image) }}" target="_blank" class="text-xs text-zinc-400 ml-2">Proof</a>
-              {% endif %}
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="8" class="p-10 text-center text-zinc-500">No deposits</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th class="w-10"></th>
+              <th>User</th>
+              <th>Reference</th>
+              <th>Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date (EAT)</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in deposits.items %}
+            <tr>
+              <td>{% if d.status == 'Pending' %}<input type="checkbox" name="deposit_ids" value="{{ d.id }}" class="rounded">{% endif %}</td>
+              <td>
+                {% if d.user %}
+                <a href="{{ url_for('admin.view_user', user_id=d.user_id) }}" class="font-semibold text-sky-300 hover:text-white">@{{ d.user.username }}</a>
+                {% else %}#{{ d.user_id }}{% endif %}
+              </td>
+              <td class="font-mono text-xs text-zinc-400">{{ d.transaction_id or d.id }}</td>
+              <td class="text-sm">{{ d.payment_method or '—' }}</td>
+              <td class="font-bold text-emerald-300">{{ money(current_user, d.amount) }}</td>
+              <td>
+                {% if d.status == 'Pending' %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-200">Pending</span>
+                {% elif d.status == 'Approved' %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">Approved</span>
+                {% elif d.status == 'Rejected' %}<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300">Rejected</span>
+                {% else %}<span class="text-xs text-zinc-400">{{ d.status }}</span>{% endif %}
+              </td>
+              <td class="text-xs text-zinc-500 whitespace-nowrap">
+                {% if d.created_at %}{{ d.created_at|localtime('%d %b %Y · %H:%M') }}{% endif %}
+              </td>
+              <td class="text-right whitespace-nowrap space-x-1">
+                {% if d.status == 'Pending' %}
+                <a href="{{ url_for('admin.approve_deposit', deposit_id=d.id) }}" class="inline-flex rounded-lg bg-emerald-600/90 hover:bg-emerald-500 px-2.5 py-1 text-[11px] font-bold">Approve</a>
+                <a href="{{ url_for('admin.reject_deposit', deposit_id=d.id) }}" class="inline-flex rounded-lg bg-rose-600/90 hover:bg-rose-500 px-2.5 py-1 text-[11px] font-bold">Reject</a>
+                {% endif %}
+                {% if d.proof_image %}
+                <a href="{{ url_for('static', filename='uploads/deposits/' ~ d.proof_image) }}" target="_blank" rel="noopener"
+                   class="inline-flex rounded-lg bg-zinc-700 hover:bg-zinc-600 px-2.5 py-1 text-[11px] font-bold">Proof</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="p-12 text-center text-zinc-500">No deposits</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </form>
 
-  {% if deposits.pages > 1 %}
-  <div class="flex justify-center gap-2">
-    {% if deposits.has_prev %}<a href="{{ url_for('admin.deposits', page=deposits.prev_num, status=status) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Prev</a>{% endif %}
-    <span class="text-sm text-zinc-400 py-1.5">{{ deposits.page }}/{{ deposits.pages }}</span>
-    {% if deposits.has_next %}<a href="{{ url_for('admin.deposits', page=deposits.next_num, status=status) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Next</a>{% endif %}
+  {% if deposits.pages is defined and deposits.pages > 1 %}
+  <div class="flex justify-center items-center gap-2">
+    {% if deposits.has_prev %}<a href="{{ url_for('admin.deposits', page=deposits.prev_num, status=status) }}" class="adm-btn-ghost">← Prev</a>{% endif %}
+    <span class="text-sm text-zinc-500">{{ deposits.page }} / {{ deposits.pages }}</span>
+    {% if deposits.has_next %}<a href="{{ url_for('admin.deposits', page=deposits.next_num, status=status) }}" class="adm-btn-ghost">Next →</a>{% endif %}
   </div>
   {% endif %}
 </div>

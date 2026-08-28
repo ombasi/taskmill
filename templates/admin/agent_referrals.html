@@ -2,6 +2,8 @@
 {% block title %}Referrals · {{ agent.username }}{% endblock %}
 {% block page_title %}Referrals · {{ agent.username }}{% endblock %}
 {% block content %}
+<div class="max-w-7xl">
+
 <div class="space-y-6">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div>
@@ -21,18 +23,18 @@
   </div>
 
   <div class="grid sm:grid-cols-3 gap-3">
-    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Total in tree</p><p class="text-2xl font-black">{{ team_count }}</p></div>
-    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Direct referrals</p><p class="text-2xl font-black text-sky-300">{{ direct_count }}</p></div>
-    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Deeper levels</p><p class="text-2xl font-black text-violet-300">{{ team_count - direct_count }}</p></div>
+    <div class="adm-card p-4"><p class="text-xs text-zinc-500">Total in tree</p><p class="text-2xl font-black">{{ team_count }}</p></div>
+    <div class="adm-card p-4"><p class="text-xs text-zinc-500">Direct referrals</p><p class="text-2xl font-black text-sky-300">{{ direct_count }}</p></div>
+    <div class="adm-card p-4"><p class="text-xs text-zinc-500">Deeper levels</p><p class="text-2xl font-black text-violet-300">{{ team_count - direct_count }}</p></div>
   </div>
 
-  <div class="glass rounded-3xl overflow-hidden">
+  <div class="adm-card overflow-hidden">
     <div class="p-4 border-b border-white/5 font-bold flex justify-between">
       <span>All referrals under {{ agent.username }}</span>
       <span class="text-xs text-zinc-500 font-normal">Click a user to open details</span>
     </div>
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="adm-table">
         <thead class="bg-slate-800/80 text-left text-zinc-400">
           <tr>
             <th class="p-3">User</th>
@@ -74,7 +76,7 @@
               {{ money(current_user, u.available_balance or 0) }}
             </td>
             <td class="p-3 text-xs text-zinc-500">
-              {% if u.created_at %}{{ u.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}
+              {% if u.created_at %}{{ u.created_at|localtime('%d %b %Y · %H:%M') }} EAT{% else %}—{% endif %}
             </td>
           </tr>
           {% else %}
@@ -86,5 +88,6 @@
       </table>
     </div>
   </div>
+</div>
 </div>
 {% endblock %}

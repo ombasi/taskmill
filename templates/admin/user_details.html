@@ -87,11 +87,14 @@
             {{ user.referrer.username if user.referrer else ('#' ~ user.referred_by_id) }}
           </a>
           {% endif %}
-          <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-zinc-400 hover:text-white">Tree →</a>
+          <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}"
+             class="inline-flex items-center gap-1.5 text-xs font-bold rounded-lg bg-violet-600/90 hover:bg-violet-500 text-white px-2.5 py-1">
+            <i class="fa-solid fa-sitemap text-[10px]"></i> View referrals
+          </a>
         </div>
         <p class="text-xs text-zinc-500 mt-2">
           Last seen:
-          {% if ls %}{% if format_gmt is defined %}{{ format_gmt(ls, '%d %b %Y %H:%M') }}{% else %}{{ ls.strftime('%d %b %Y %H:%M') }} GMT{% endif %}{% else %}Never{% endif %}
+          {% if ls %}{{ ls|localtime('%d %b %Y · %H:%M') if localtime is defined else ls.strftime('%d %b %Y %H:%M') }} EAT{% else %}Never{% endif %}
           · IP {{ last_ip|default(user.ip_address or '—') }}
         </p>
       </div>
@@ -167,24 +170,6 @@
         <button type="button" onclick="openPayoutModal()" class="ud-act bg-cyan-700 mt-3 max-w-[10rem]">Edit payout</button>
       </section>
 
-      <section class="ud-card">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="!mb-0">Direct referrals</h3>
-          <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-[11px] font-bold text-zinc-400 hover:text-white">Full tree →</a>
-        </div>
-        {% if referrals %}
-        <div class="max-h-48 overflow-y-auto space-y-1.5">
-          {% for r in referrals %}
-          <a href="{{ url_for('admin.view_user', user_id=r.id) }}" class="flex justify-between gap-2 text-sm py-1.5 border-b border-white/5 hover:text-sky-200">
-            <span class="font-semibold">@{{ r.username }}</span>
-            <span class="text-xs text-zinc-500 font-mono">{{ r.referral_code or '' }}</span>
-          </a>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-sm text-zinc-500">None yet</p>
-        {% endif %}
-      </section>
 
       <section class="ud-card">
         <h3>Staff notes</h3>
@@ -264,7 +249,7 @@
           <tbody>
             {% for row in login_history|default([]) %}
             <tr>
-              <td class="whitespace-nowrap text-zinc-400">{% if row.login_time %}{{ row.login_time.strftime('%d %b %Y %H:%M') }}{% else %}—{% endif %}</td>
+              <td class="whitespace-nowrap text-zinc-400">{% if row.login_time %}{{ row.login_time|localtime('%d %b %Y · %H:%M') if localtime is defined else row.login_time.strftime('%d %b %Y %H:%M') }} EAT{% else %}—{% endif %}</td>
               <td class="font-mono text-xs">{{ row.ip_address or '—' }}</td>
               <td>{{ row.location or '—' }}</td>
               <td>{{ row.device or '—' }}</td>
