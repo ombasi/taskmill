@@ -1,115 +1,85 @@
 {% extends "admin/base.html" %}
 {% block title %}Dashboard{% endblock %}
-{% block page_title %}Command center{% endblock %}
+{% block page_title %}Operations{% endblock %}
 {% block content %}
-<div class="space-y-6">
-  <div class="glass rounded-3xl p-5">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-      <h3 class="font-bold text-lg">Pending ops queue</h3>
-      <span class="text-xs text-zinc-500">Act fast — users are waiting</span>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 hover:bg-amber-500/15 transition">
-        <p class="text-xs text-amber-200/80">Deposits</p>
-        <p class="text-3xl font-black text-amber-300 mt-1">{{ pending_deposits|default(0) }}</p>
-        <p class="text-[11px] text-zinc-500 mt-1">Review & approve →</p>
-      </a>
-      <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 hover:bg-rose-500/15 transition">
-        <p class="text-xs text-rose-200/80">Withdrawals</p>
-        <p class="text-3xl font-black text-rose-300 mt-1">{{ pending_withdrawals|default(0) }}</p>
-        <p class="text-[11px] text-zinc-500 mt-1">Pay out →</p>
-      </a>
-      <a href="{{ url_for('chat.admin_inbox') }}" class="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4 hover:bg-sky-500/15 transition">
-        <p class="text-xs text-sky-200/80">Unread chats</p>
-        <p class="text-3xl font-black text-sky-300 mt-1">{{ unread_chats|default(0) }}</p>
-        <p class="text-[11px] text-zinc-500 mt-1">Reply →</p>
-      </a>
-      <a href="{{ url_for('admin.users', negative='1') }}" class="rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4 hover:bg-violet-500/15 transition">
-        <p class="text-xs text-violet-200/80">Negative balances</p>
-        <p class="text-3xl font-black text-violet-300 mt-1">{{ negative_count|default(0) }}</p>
-        <p class="text-[11px] text-zinc-500 mt-1">Review users →</p>
-      </a>
-    </div>
-  </div>
-
-
-  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+<div class="space-y-6 max-w-7xl">
+  <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <p class="text-indigo-300 text-xs font-semibold tracking-[0.2em] uppercase">Overview</p>
-      <h2 class="text-2xl md:text-3xl font-black mt-1">Operations at a glance</h2>
+      <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">Admin console</p>
+      <h2 class="adm-metal text-2xl md:text-3xl mt-1">Operations overview</h2>
+      <p class="text-sm text-zinc-500 mt-1">Pending money, users, and tasks that need attention.</p>
     </div>
-    <a href="{{ url_for('admin.daily_ops_report') }}" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-sm font-semibold transition">
-      <i class="fa-solid fa-chart-pie"></i> Daily report
-    </a>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.daily_ops_report') }}" class="adm-btn-ghost"><i class="fa-solid fa-chart-column"></i> Daily report</a>
+      <a href="{{ url_for('admin.stuck_users') }}" class="adm-btn-ghost"><i class="fa-solid fa-triangle-exclamation"></i> Stuck users</a>
+    </div>
   </div>
 
   <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-    <div class="stat-card glass rounded-2xl p-5">
-      <p class="text-zinc-400 text-xs">Users</p>
-      <p class="text-3xl font-black mt-2">{{ total_users|default(0) }}</p>
+    <div class="adm-kpi">
+      <p class="label">Users</p>
+      <p class="value">{{ total_users|default(0) }}</p>
     </div>
-    <div class="stat-card glass rounded-2xl p-5">
-      <p class="text-zinc-400 text-xs">Pending deposits</p>
-      <p class="text-3xl font-black mt-2 text-amber-300">{{ pending_deposits|default(0) }}</p>
-      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-[11px] text-indigo-400 mt-2 inline-block">Review →</a>
+    <div class="adm-kpi">
+      <p class="label">Pending deposits</p>
+      <p class="value text-amber-300">{{ pending_deposits|default(0) }}</p>
+      <a href="{{ url_for('admin.deposits', status='Pending') }}" class="text-[11px] font-semibold text-zinc-400 hover:text-white mt-2 inline-block">Review →</a>
     </div>
-    <div class="stat-card glass rounded-2xl p-5">
-      <p class="text-zinc-400 text-xs">Pending withdrawals</p>
-      <p class="text-3xl font-black mt-2 text-rose-400">{{ pending_withdrawals|default(0) }}</p>
-      <a href="{{ url_for('admin.withdrawals') }}" class="text-[11px] text-indigo-400 mt-2 inline-block">Review →</a>
+    <div class="adm-kpi">
+      <p class="label">Pending withdrawals</p>
+      <p class="value text-rose-300">{{ pending_withdrawals|default(0) }}</p>
+      <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="text-[11px] font-semibold text-zinc-400 hover:text-white mt-2 inline-block">Review →</a>
     </div>
-    <div class="stat-card glass rounded-2xl p-5">
-      <p class="text-zinc-400 text-xs">Active tasks</p>
-      <p class="text-3xl font-black mt-2 text-yellow-300">{{ active_tasks|default(0) }}</p>
+    <div class="adm-kpi">
+      <p class="label">Active tasks</p>
+      <p class="value text-sky-200">{{ active_tasks|default(0) }}</p>
     </div>
   </div>
 
   <div class="grid lg:grid-cols-3 gap-4">
-    <div class="lg:col-span-2 glass rounded-2xl p-5">
-      <h3 class="font-bold mb-4">Quick actions</h3>
+    <div class="lg:col-span-2 adm-card p-5">
+      <h3 class="text-sm font-bold text-zinc-300 mb-4">Primary actions</h3>
       <div class="grid sm:grid-cols-3 gap-3">
-        <a href="{{ url_for('admin.users') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-users text-indigo-400 mb-2"></i>
-          <p class="text-sm font-semibold">Manage users</p>
+        <a href="{{ url_for('admin.users') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-users text-zinc-300 mb-2"></i>
+          <p class="text-sm font-semibold">Users</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Search, balances, roles</p>
         </a>
-        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-arrow-down text-emerald-400 mb-2"></i>
-          <p class="text-sm font-semibold">Approve deposits</p>
+        <a href="{{ url_for('admin.deposits', status='Pending') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-arrow-down text-emerald-400/90 mb-2"></i>
+          <p class="text-sm font-semibold">Deposits</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Approve or reject</p>
         </a>
-        <a href="{{ url_for('admin.withdrawals') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-arrow-up text-rose-400 mb-2"></i>
-          <p class="text-sm font-semibold">Pay withdrawals</p>
+        <a href="{{ url_for('admin.withdrawals', status='Pending') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-arrow-up text-rose-400/90 mb-2"></i>
+          <p class="text-sm font-semibold">Withdrawals</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Process payouts</p>
         </a>
-        <a href="{{ url_for('admin.products') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-box text-amber-400 mb-2"></i>
-          <p class="text-sm font-semibold">Products</p>
+        <a href="{{ url_for('chat.admin_inbox') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-comments text-sky-300/90 mb-2"></i>
+          <p class="text-sm font-semibold">Chat</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Support inbox</p>
         </a>
-        <a href="{{ url_for('admin.combos') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-bolt text-violet-400 mb-2"></i>
-          <p class="text-sm font-semibold">Combo manager</p>
+        <a href="{{ url_for('admin.combos') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-bolt text-amber-300/90 mb-2"></i>
+          <p class="text-sm font-semibold">Combos</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Assign high-value tasks</p>
         </a>
-        <a href="{{ url_for('chat.admin_inbox') }}" class="stat-card rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition">
-          <i class="fa-solid fa-comments text-sky-400 mb-2"></i>
-          <p class="text-sm font-semibold">Support chat</p>
+        <a href="{{ url_for('admin.agents_hub') }}" class="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:bg-white/[0.06] transition">
+          <i class="fa-solid fa-sitemap text-violet-300/90 mb-2"></i>
+          <p class="text-sm font-semibold">Agents</p>
+          <p class="text-[11px] text-zinc-500 mt-1">Teams &amp; referrals</p>
         </a>
       </div>
     </div>
-
-    <div class="glass rounded-2xl p-5">
-      <h3 class="font-bold mb-3">Attention</h3>
-      <ul class="space-y-3 text-sm">
-        <li class="flex justify-between gap-2 border-b border-white/5 pb-2">
-          <span class="text-zinc-400">Pending deposits</span>
-          <span class="font-bold text-amber-300">{{ pending_deposits|default(0) }}</span>
-        </li>
-        <li class="flex justify-between gap-2 border-b border-white/5 pb-2">
-          <span class="text-zinc-400">Pending withdrawals</span>
-          <span class="font-bold text-rose-400">{{ pending_withdrawals|default(0) }}</span>
-        </li>
-        <li class="flex justify-between gap-2">
-          <span class="text-zinc-400">Active tasks</span>
-          <span class="font-bold">{{ active_tasks|default(0) }}</span>
-        </li>
+    <div class="adm-card p-5">
+      <h3 class="text-sm font-bold text-zinc-300 mb-3">System</h3>
+      <ul class="space-y-2 text-sm">
+        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.payment_settings') }}"><span>Payment methods</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.memberships') }}"><span>Memberships</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.settings') }}"><span>Settings</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('admin.products') }}"><span>Products</span><span>→</span></a></li>
+        <li><a class="flex justify-between text-zinc-400 hover:text-white" href="{{ url_for('auth.setup_2fa') }}"><span>2FA security</span><span>→</span></a></li>
       </ul>
     </div>
   </div>

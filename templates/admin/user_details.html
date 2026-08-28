@@ -2,6 +2,35 @@
 {% block title %}User · {{ user.username }}{% endblock %}
 {% block page_title %}User · {{ user.username }}{% endblock %}
 {% block content %}
+<style>
+  .ud-wrap { max-width: 72rem; margin: 0 auto; }
+  .ud-hero {
+    border-radius: 1.15rem; border: 1px solid rgba(226,232,240,.1);
+    background: linear-gradient(155deg, rgba(30,36,50,.96), rgba(10,12,18,.98));
+    padding: 1.35rem 1.5rem; box-shadow: 0 16px 40px -24px rgba(0,0,0,.75);
+  }
+  .ud-section {
+    border-radius: 1.15rem; border: 1px solid rgba(226,232,240,.09);
+    background: rgba(15,18,28,.92); padding: 1.25rem 1.35rem;
+  }
+  .ud-section h3 {
+    font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: #94a3b8; margin-bottom: 1rem;
+  }
+  .ud-stat {
+    border-radius: .85rem; border: 1px solid rgba(255,255,255,.06);
+    background: rgba(0,0,0,.28); padding: .75rem .9rem;
+  }
+  .ud-stat p:first-child { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #71717a; font-weight: 700; }
+  .ud-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: .75rem; padding: .7rem 1rem; font-size: .8125rem; font-weight: 700;
+    border: 1px solid transparent; transition: filter .15s, background .15s;
+  }
+  .ud-btn:hover { filter: brightness(1.08); }
+</style>
+<div class="ud-wrap space-y-5">
+
 
 {# Presence #}
 {% set ls = user.last_seen or user.last_login %}
@@ -147,7 +176,7 @@
 
   
   {# Direct referrals list #}
-  <div class="glass rounded-3xl p-6 mb-6">
+  <div class="ud-section mb-0">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold">Direct referrals</h3>
       <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-indigo-300">Full tree →</a>
@@ -177,7 +206,7 @@
 
   {# Actions organized #}
 
-  <div class="glass rounded-3xl p-6 space-y-6">
+  <div class="ud-section space-y-5">
     <h3 class="text-lg font-bold">Quick actions</h3>
 
     <div>
@@ -234,7 +263,7 @@
   </div>
 
   {# Simple data tabs #}
-  <div class="glass rounded-3xl p-6">
+  <div class="ud-section">
     <div class="flex flex-wrap gap-2 border-b border-white/10 pb-3 mb-4">
       <button type="button" class="tab-btn active text-sm px-3 py-1.5 rounded-lg bg-indigo-600" data-tab="tab-wallet">Wallet</button>
       <button type="button" class="tab-btn text-sm px-3 py-1.5 rounded-lg bg-white/5" data-tab="tab-tasks">Tasks</button>
