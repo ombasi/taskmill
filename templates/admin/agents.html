@@ -44,7 +44,10 @@
           <td class="p-4 text-amber-300">{{ r.pending_deposits }}</td>
           <td class="p-4">{{ r.tasks }}</td>
           <td class="p-4 text-right">
-            <a href="{{ url_for('admin.team_report', agent_id=r.agent.id) }}" class="text-sm text-indigo-400 font-medium">Report →</a>
+            <div class="flex flex-col items-end gap-1">
+              <a href="{{ url_for('admin.agent_referrals', agent_id=r.agent.id) }}" class="text-sm text-emerald-400 font-semibold">View referrals →</a>
+              <a href="{{ url_for('admin.team_report', agent_id=r.agent.id) }}" class="text-xs text-indigo-400 font-medium">Report</a>
+            </div>
           </td>
         </tr>
         {% else %}
@@ -71,7 +74,7 @@
         <tbody class="divide-y divide-white/5">
           {% for log in logs %}
           <tr>
-            <td class="p-3 text-xs text-zinc-500 whitespace-nowrap">{% if log.created_at %}{{ log.created_at.strftime('%d %b %H:%M') }}{% endif %}</td>
+            <td class="p-3 text-xs text-zinc-500 whitespace-nowrap">{% if log.created_at %}{{ log.created_at|localtime('%d %b %H:%M') }}{% endif %}</td>
             <td class="p-3">{{ log.admin.username if log.admin else log.admin_id }}</td>
             <td class="p-3">{{ log.module }}</td>
             <td class="p-3 font-medium">{{ log.action }}</td>

@@ -1,0 +1,90 @@
+{% extends "admin/base.html" %}
+{% block title %}Referrals · {{ agent.username }}{% endblock %}
+{% block page_title %}Referrals · {{ agent.username }}{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="text-xs text-zinc-500 uppercase tracking-wider">Team leader</p>
+      <h2 class="text-xl font-black">
+        <a href="{{ url_for('admin.view_user', user_id=agent.id) }}" class="text-indigo-300 hover:text-white">@{{ agent.username }}</a>
+      </h2>
+      <p class="text-sm text-zinc-400 mt-1">
+        Code: <span class="font-mono font-bold text-emerald-300">{{ agent.referral_code or '—' }}</span>
+        · Team {{ team_count }} · Direct {{ direct_count }}
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.team_report', agent_id=agent.id) }}" class="rounded-xl bg-white/10 hover:bg-white/15 px-4 py-2 text-sm font-semibold">Team report</a>
+      <a href="{{ url_for('admin.agents_hub') }}" class="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-semibold">All agents</a>
+    </div>
+  </div>
+
+  <div class="grid sm:grid-cols-3 gap-3">
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Total in tree</p><p class="text-2xl font-black">{{ team_count }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Direct referrals</p><p class="text-2xl font-black text-sky-300">{{ direct_count }}</p></div>
+    <div class="glass rounded-2xl p-4"><p class="text-xs text-zinc-500">Deeper levels</p><p class="text-2xl font-black text-violet-300">{{ team_count - direct_count }}</p></div>
+  </div>
+
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="p-4 border-b border-white/5 font-bold flex justify-between">
+      <span>All referrals under {{ agent.username }}</span>
+      <span class="text-xs text-zinc-500 font-normal">Click a user to open details</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-800/80 text-left text-zinc-400">
+          <tr>
+            <th class="p-3">User</th>
+            <th class="p-3">Their code</th>
+            <th class="p-3">Referred by</th>
+            <th class="p-3">Level</th>
+            <th class="p-3">Membership</th>
+            <th class="p-3">Balance</th>
+            <th class="p-3">Joined</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          {% for u in members %}
+          {% set is_direct = u.referred_by_id == agent.id %}
+          <tr class="hover:bg-white/5">
+            <td class="p-3 font-semibold">
+              <a href="{{ url_for('admin.view_user', user_id=u.id) }}" class="text-indigo-300 hover:text-white">@{{ u.username }}</a>
+              <p class="text-xs text-zinc-500">{{ u.full_name or '' }} · #{{ u.id }}</p>
+            </td>
+            <td class="p-3 font-mono text-emerald-300/90 text-xs">{{ u.referral_code or '—' }}</td>
+            <td class="p-3 text-xs text-zinc-400">
+              {% if u.referred_by_id == agent.id %}
+                {{ agent.username }}
+              {% elif u.referrer %}
+                {{ u.referrer.username }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td class="p-3">
+              {% if is_direct %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/30">Direct</span>
+              {% else %}
+              <span class="text-xs px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-200 border border-violet-400/30">Downline</span>
+              {% endif %}
+            </td>
+            <td class="p-3">{{ u.membership.name if u.membership else '—' }}</td>
+            <td class="p-3 font-semibold {% if (u.available_balance or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">
+              {{ money(current_user, u.available_balance or 0) }}
+            </td>
+            <td class="p-3 text-xs text-zinc-500">
+              {% if u.created_at %}{{ u.created_at.strftime('%d %b %Y') }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="p-10 text-center text-zinc-500">No users under this referral code yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

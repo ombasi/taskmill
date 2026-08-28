@@ -93,6 +93,19 @@
         <div>
           <h2 class="text-2xl font-black">{{ user.full_name or user.username }}</h2>
           <p class="text-zinc-400 text-sm">@{{ user.username }} · #{{ user.id }} · {{ user.email }}</p>
+          <p class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span class="text-zinc-500">Referral code</span>
+            <span class="font-mono font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-400/25 px-2.5 py-1 rounded-lg">{{ user.referral_code or '—' }}</span>
+            {% if user.referred_by_id %}
+            <span class="text-zinc-500">· Referred by</span>
+            <a href="{{ url_for('admin.view_user', user_id=user.referred_by_id) }}" class="text-indigo-300 font-semibold hover:text-white">
+              {{ user.referrer.username if user.referrer else ('#' ~ user.referred_by_id) }}
+            </a>
+            {% endif %}
+            {% if user.is_agent or (user.referral_count or 0) > 0 %}
+            <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-sky-300 hover:text-white ml-1">View tree →</a>
+            {% endif %}
+          </p>
           <div class="flex flex-wrap gap-2 mt-2">
             <span class="text-[11px] rounded-full px-2.5 py-1 {% if user.is_active %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
               {{ 'Active' if user.is_active else 'Inactive' }}
@@ -132,7 +145,38 @@
     </div>
   </div>
 
+  
+  {# Direct referrals list #}
+  <div class="glass rounded-3xl p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold">Direct referrals</h3>
+      <a href="{{ url_for('admin.agent_referrals', agent_id=user.id) }}" class="text-xs font-bold text-indigo-300">Full tree →</a>
+    </div>
+    {% if referrals %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-zinc-500 text-xs uppercase">
+          <tr><th class="pb-2">User</th><th class="pb-2">Code</th><th class="pb-2">Balance</th><th class="pb-2">Joined</th></tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          {% for r in referrals %}
+          <tr>
+            <td class="py-2"><a class="text-indigo-300 font-semibold" href="{{ url_for('admin.view_user', user_id=r.id) }}">@{{ r.username }}</a></td>
+            <td class="py-2 font-mono text-emerald-300/90">{{ r.referral_code or '—' }}</td>
+            <td class="py-2">{{ money(current_user, r.available_balance or 0) }}</td>
+            <td class="py-2 text-xs text-zinc-500">{% if r.created_at %}{{ r.created_at.strftime('%d %b %Y') }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-sm text-zinc-500">No direct referrals yet.</p>
+    {% endif %}
+  </div>
+
   {# Actions organized #}
+
   <div class="glass rounded-3xl p-6 space-y-6">
     <h3 class="text-lg font-bold">Quick actions</h3>
 

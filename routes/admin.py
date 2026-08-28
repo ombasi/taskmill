@@ -3300,6 +3300,40 @@ def team_report():
     )
 
 
+
+
+@admin_bp.route("/agents/<int:agent_id>/referrals")
+@login_required
+@admin_required
+def agent_referrals(agent_id):
+    """Main admin: full referral tree under a team leader / any user."""
+    if not getattr(current_user, "is_admin", False):
+        # Support agents may only open their own tree
+        if not getattr(current_user, "is_agent", False) or int(agent_id) != int(current_user.id):
+            flash("Only main admin can view other agents' referrals.", "danger")
+            return redirect(url_for("admin.users"))
+    agent = User.query.get_or_404(agent_id)
+    downline_ids = list(get_downline_ids(agent.id))
+    members = []
+    if downline_ids:
+        members = (
+            User.query.filter(User.id.in_(downline_ids))
+            .order_by(User.created_at.desc())
+            .all()
+        )
+    # Direct referrals only
+    direct = [u for u in members if getattr(u, "referred_by_id", None) == agent.id]
+    deeper = [u for u in members if getattr(u, "referred_by_id", None) != agent.id]
+    return render_template(
+        "admin/agent_referrals.html",
+        agent=agent,
+        members=members,
+        direct=direct,
+        deeper=deeper,
+        team_count=len(members),
+        direct_count=len(direct),
+    )
+
 # ==========================================================
 # AGENTS HUB (full admin) — list, logs, charts
 # ==========================================================
