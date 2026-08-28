@@ -2,19 +2,21 @@
 {% block title %}Deposits{% endblock %}
 {% block page_title %}Deposits{% endblock %}
 {% block content %}
-<div class="space-y-6">
+{% if current_user.is_agent and not current_user.is_admin %}<p class="text-xs text-amber-200 mb-2">Showing deposits for your downline only.</p>{% endif %}
+
+<div class="space-y-5 max-w-7xl">
   <div class="flex flex-wrap gap-2">
-    <a href="{{ url_for('admin.deposits') }}" class="px-3 py-1.5 rounded-lg text-sm {% if not status %}bg-indigo-600{% else %}bg-white/5{% endif %}">All</a>
+    <a href="{{ url_for('admin.deposits') }}" class="px-3 py-1.5 rounded-lg text-sm {% if not status %}adm-btn{% else %}bg-white/5{% endif %}">All</a>
     <a href="{{ url_for('admin.deposits', status='Pending') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Pending' %}bg-amber-600{% else %}bg-white/5{% endif %}">Pending</a>
     <a href="{{ url_for('admin.deposits', status='Approved') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Approved' %}bg-emerald-600{% else %}bg-white/5{% endif %}">Approved</a>
     <a href="{{ url_for('admin.deposits', status='Rejected') }}" class="px-3 py-1.5 rounded-lg text-sm {% if status=='Rejected' %}bg-rose-600{% else %}bg-white/5{% endif %}">Rejected</a>
   </div>
 
-  <form method="GET" class="glass rounded-2xl p-4 flex gap-3">
+  <form method="GET" class="adm-card p-4 flex gap-3">
     <input type="text" name="search" value="{{ search|default('') }}" placeholder="Search username or reference..."
            class="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
     {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
-    <button class="bg-indigo-600 px-5 rounded-xl text-sm font-semibold">Search</button>
+    <button class="adm-btn px-5 rounded-xl text-sm font-semibold">Search</button>
   </form>
 
   <form method="POST" action="{{ url_for('admin.bulk_approve_deposits') }}" id="bulkDepForm">
@@ -26,8 +28,8 @@
     </div>
 
     <button type="submit" class="mb-4 bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-sm font-semibold">Bulk Approve Selected</button>
-    <div class="glass rounded-3xl overflow-hidden">
-      <table class="w-full text-sm">
+    <div class="adm-card overflow-hidden">
+      <table class="adm-table">
         <thead class="bg-slate-800 text-left text-zinc-400">
           <tr>
             <th class="p-4 w-10"></th>
@@ -49,7 +51,7 @@
             <td class="p-4">{{ d.payment_method or '—' }}</td>
             <td class="p-4 font-semibold text-emerald-400">{{ money(current_user, d.amount) }}</td>
             <td class="p-4">{{ d.status }}</td>
-            <td class="p-4 text-xs text-zinc-500">{% if d.created_at %}{{ d.created_at.strftime('%d %b %Y %H:%M') }}{% endif %}</td>
+            <td class="p-4 text-xs text-zinc-500">{% if d.created_at %}{{ d.created_at|localtime('%d %b %Y %H:%M') }}{% endif %}</td>
             <td class="p-4">
               {% if d.status=='Pending' %}
               <a href="{{ url_for('admin.approve_deposit', deposit_id=d.id) }}" class="text-emerald-400 text-xs font-semibold mr-2">Approve</a>

@@ -55,7 +55,7 @@
 {% endif %}
 
 
-  <section class="glass rounded-2xl p-4 mt-4">
+  <section class="adm-card p-4 mt-4">
     <h3 class="font-bold text-sm mb-2">Telegram Chat ID</h3>
     <p class="text-xs text-zinc-400 mb-3">User sends Chat ID via support. Paste it here to enable alerts. Bot: @taskmill_bot</p>
     <form method="POST" action="{{ url_for('admin.set_user_telegram', user_id=user.id) }}" class="flex flex-wrap gap-2 items-end">
@@ -113,7 +113,7 @@
 <div class="space-y-6">
 
   {# Profile header #}
-  <div class="glass rounded-3xl p-6 md:p-8">
+  <div class="adm-card p-6 md:p-8">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="flex items-center gap-4">
         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl font-black">
@@ -455,7 +455,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
 </script>
 
   {# Payout status strip #}
-  <div class="glass rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
+  <div class="adm-card p-4 flex flex-wrap items-center justify-between gap-3">
     <div class="text-sm">
       <span class="text-zinc-500">Payout:</span>
       {% if user.payout_confirmed and user.payout_method %}
@@ -474,7 +474,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
   </div>
 
 
-<div class="glass rounded-3xl p-5 mt-4">
+<div class="adm-card p-5 mt-4">
     <h3 class="font-bold mb-3">Staff notes</h3>
     <form method="POST" action="{{ url_for('admin.add_user_note', user_id=user.id) }}" class="space-y-2 mb-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -1,239 +1,111 @@
 {% extends "admin/base.html" %}
-
 {% block title %}Products{% endblock %}
 {% block page_title %}Products{% endblock %}
-
 {% block content %}
+<div class="max-w-7xl">
 
-<div class="space-y-8">
+<div class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-zinc-400">
+      <span class="text-white font-semibold">{{ total_all|default(products.total) }}</span> products
+      {% if products.pages > 1 %}· page {{ products.page }}/{{ products.pages }}{% endif %}
+    </p>
+    <a href="{{ url_for('admin.create_product') }}"
+       class="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 text-sm font-semibold">
+      <i class="fa fa-plus mr-1"></i> New product
+    </a>
+  </div>
 
-    <!-- Header -->
+  <form method="GET" class="adm-card p-3">
+    <input type="text" name="search" placeholder="Search product..."
+           value="{{ request.args.get('search','') }}"
+           class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm">
+  </form>
 
-    <div class="flex justify-between items-center">
-
-        <div>
-
-            <h2 class="text-4xl font-black">
-                Products
-            </h2>
-
-            <p class="text-zinc-400 mt-2">
-                Manage Taskmill products.
-                <span class="text-white font-semibold">{{ total_all|default(products.total) }}</span> total
-                {% if products.pages > 1 %}· page {{ products.page }}/{{ products.pages }}{% endif %}
-            </p>
-
+  <div class="md:hidden space-y-3">
+    {% for product in products.items %}
+    <div class="adm-card p-4">
+      <div class="flex gap-3">
+        {% if product.image %}
+        <img src="{{ media(product.image) }}" alt="" class="w-16 h-16 rounded-xl object-cover shrink-0 bg-slate-800">
+        {% else %}
+        <div class="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 text-zinc-500">
+          <i class="fa fa-box"></i>
         </div>
-
-        <a href="{{ url_for('admin.create_product') }}"
-           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl">
-
-            <i class="fa fa-plus mr-2"></i>
-
-            New Product
-
-        </a>
-
-    </div>
-
-    <!-- Search -->
-
-    <form method="GET">
-
-        <div class="glass rounded-3xl p-6">
-
-            <input
-                type="text"
-                name="search"
-                placeholder="Search product..."
-                value="{{ request.args.get('search','') }}"
-                class="w-full bg-slate-800 rounded-xl p-4">
-
-        </div>
-
-    </form>
-
-    <!-- Table -->
-
-    <div class="glass rounded-3xl overflow-hidden">
-
-        <table class="w-full">
-
-            <thead class="bg-slate-800">
-
-            <tr>
-
-                <th class="p-4 text-left">Image</th>
-                <th class="p-4 text-left">Name</th>
-                <th class="p-4 text-left">Category</th>
-                <th class="p-4 text-left">Partner</th>
-                <th class="p-4 text-left">Price</th>
-                <th class="p-4 text-left">Commission</th>
-                <th class="p-4 text-left">Stock</th>
-                <th class="p-4 text-left">Status</th>
-                <th class="p-4 text-center">Actions</th>
-
-            </tr>
-
-            </thead>
-
-            <tbody>
-
-            {% for product in products.items %}
-
-            <tr class="border-t border-slate-700 hover:bg-slate-800">
-
-                <td class="p-4">
-
-                    {% if product.image %}
-
-                        <img src="{{ media(product.image) }}"
-                             class="w-14 h-14 rounded-lg object-cover">
-
-                    {% else %}
-
-                        <div class="w-14 h-14 rounded-lg bg-slate-700 flex items-center justify-center">
-
-                            <i class="fa fa-box"></i>
-
-                        </div>
-
-                    {% endif %}
-
-                </td>
-
-                <td>{{ product.name }}</td>
-
-                <td>{{ product.category }}</td>
-
-                <td>
-
-                    {% if product.partner %}
-
-                        {{ product.partner.name }}
-
-                    {% else %}
-
-                        -
-
-                    {% endif %}
-
-                </td>
-
-                <td>
-
-                    {{ money(current_user, product.price) }}
-
-                </td>
-
-                <td>
-
-                    {{ money(current_user, product.commission) }}
-
-                </td>
-
-                <td>
-
-                    {{ product.stock }}
-
-                </td>
-
-                <td>
-
-                    {% if product.active %}
-
-                        <span class="bg-green-600 px-3 py-1 rounded-full">
-
-                            Active
-
-                        </span>
-
-                    {% else %}
-
-                        <span class="bg-red-600 px-3 py-1 rounded-full">
-
-                            Disabled
-
-                        </span>
-
-                    {% endif %}
-
-                </td>
-
-                <td>
-
-                    <div class="flex justify-center gap-2">
-
-                        <a href="{{ url_for('admin.edit_product',id=product.id) }}"
-                           class="bg-indigo-600 px-3 py-2 rounded-lg">
-
-                            <i class="fa fa-pen"></i>
-
-                        </a>
-
-                        <a href="{{ url_for('admin.toggle_product',id=product.id) }}"
-                           class="bg-yellow-500 px-3 py-2 rounded-lg">
-
-                            <i class="fa fa-power-off"></i>
-
-                        </a>
-
-                        <a href="{{ url_for('admin.delete_product',id=product.id) }}"
-                           onclick="return confirm('Delete product?')"
-                           class="bg-red-600 px-3 py-2 rounded-lg">
-
-                            <i class="fa fa-trash"></i>
-
-                        </a>
-
-                    </div>
-
-                </td>
-
-            </tr>
-
-            {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-    <!-- Pagination -->
-
-    <div class="flex justify-center gap-4">
-
-        {% if products.has_prev %}
-
-        <a href="{{ url_for('admin.products', page=products.prev_num, search=search or request.args.get('search','')) }}"
-           class="bg-slate-800 px-5 py-3 rounded-xl">
-
-            Previous
-
-        </a>
-
         {% endif %}
-
-        <span class="px-5 py-3">
-
-            Page {{ products.page }} of {{ products.pages }}
-
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-sm leading-snug line-clamp-2">{{ product.name }}</p>
+          <p class="text-[11px] text-zinc-500 mt-1">{{ product.category or '—' }}</p>
+          <p class="text-emerald-400 font-bold mt-1">{{ money(current_user, product.price) }}</p>
+        </div>
+        <span class="text-[10px] h-fit rounded-full px-2 py-0.5 shrink-0 {% if product.active or product.is_active %}bg-emerald-500/15 text-emerald-300{% else %}bg-zinc-500/20 text-zinc-400{% endif %}">
+          {% if product.active or product.is_active %}Active{% else %}Off{% endif %}
         </span>
-
-        {% if products.has_next %}
-
-        <a href="{{ url_for('admin.products', page=products.next_num, search=search or request.args.get('search','')) }}"
-           class="bg-slate-800 px-5 py-3 rounded-xl">
-
-            Next
-
-        </a>
-
-        {% endif %}
-
+      </div>
+      <div class="flex gap-2 mt-3">
+        <a href="{{ url_for('admin.edit_product', id=product.id) }}"
+           class="flex-1 text-center rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold">Edit</a>
+        <a href="{{ url_for('admin.delete_product', id=product.id) }}"
+           onclick="return confirm('Delete this product?')"
+           class="flex-1 text-center rounded-xl border border-rose-500/40 text-rose-300 py-2.5 text-sm font-semibold">Delete</a>
+      </div>
     </div>
+    {% else %}
+    <p class="text-center text-zinc-500 py-12 text-sm">No products found</p>
+    {% endfor %}
+  </div>
 
+  <div class="hidden md:block adm-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="adm-table">
+        <thead class="bg-slate-800/80 text-left text-zinc-400">
+          <tr>
+            <th class="p-4">Image</th>
+            <th class="p-4">Name</th>
+            <th class="p-4">Category</th>
+            <th class="p-4">Price</th>
+            <th class="p-4">Status</th>
+            <th class="p-4 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+          {% for product in products.items %}
+          <tr class="hover:bg-white/[0.03]">
+            <td class="p-4">
+              {% if product.image %}
+              <img src="{{ media(product.image) }}" class="w-12 h-12 rounded-lg object-cover" alt="">
+              {% else %}
+              <div class="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-zinc-500"><i class="fa fa-box"></i></div>
+              {% endif %}
+            </td>
+            <td class="p-4 font-medium max-w-xs truncate">{{ product.name }}</td>
+            <td class="p-4 text-zinc-400">{{ product.category or '—' }}</td>
+            <td class="p-4 text-emerald-400 font-semibold">{{ money(current_user, product.price) }}</td>
+            <td class="p-4 text-xs">{% if product.active or product.is_active %}<span class="text-emerald-300">Active</span>{% else %}<span class="text-zinc-500">Off</span>{% endif %}</td>
+            <td class="p-4 text-center">
+              <a href="{{ url_for('admin.edit_product', id=product.id) }}" class="text-indigo-400 text-xs font-semibold mr-3">Edit</a>
+              <a href="{{ url_for('admin.delete_product', id=product.id) }}" onclick="return confirm('Delete?')" class="text-rose-400 text-xs font-semibold">Delete</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="p-10 text-center text-zinc-500">No products</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if products.pages > 1 %}
+  <div class="flex justify-center gap-2">
+    {% if products.has_prev %}
+    <a href="{{ url_for('admin.products', page=products.prev_num, search=request.args.get('search','')) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Prev</a>
+    {% endif %}
+    <span class="text-sm text-zinc-400 py-1.5">{{ products.page }}/{{ products.pages }}</span>
+    {% if products.has_next %}
+    <a href="{{ url_for('admin.products', page=products.next_num, search=request.args.get('search','')) }}" class="px-3 py-1.5 rounded-lg bg-white/5 text-sm">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
-
+</div>
 {% endblock %}

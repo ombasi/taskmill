@@ -2,21 +2,22 @@
 {% block title %}Withdrawals{% endblock %}
 {% block page_title %}Withdrawals{% endblock %}
 {% block content %}
+<p class="text-xs text-zinc-500 mb-3">Pending → Processing → Approved / Rejected / Paid. Processing rows can still be approved or rejected.</p>
 <form method="POST" action="{{ url_for('admin.bulk_withdrawals_processing') }}" class="mb-3">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
   <button type="submit" class="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold">Mark selected as Processing</button>
   <p class="text-[11px] text-zinc-500 mt-1">Select pending rows with checkboxes (if shown), or use per-row Processing.</p>
 </form>
 
-<div class="space-y-6">
+<div class="space-y-5 max-w-7xl">
   <div class="grid md:grid-cols-4 gap-4">
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Pending</p><h2 class="text-3xl font-black text-amber-300">{{ pending }}</h2></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Approved Today</p><h2 class="text-3xl font-black text-emerald-400">{{ approved_today }}</h2></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Rejected</p><h2 class="text-3xl font-black text-rose-400">{{ rejected }}</h2></div>
-    <div class="glass rounded-2xl p-5"><p class="text-zinc-400 text-sm">Today's Amount</p><h2 class="text-2xl font-black">{{ money(current_user, today_amount) }}</h2></div>
+    <div class="adm-card p-5"><p class="text-zinc-400 text-sm">Pending</p><h2 class="text-3xl font-black text-amber-300">{{ pending }}</h2></div>
+    <div class="adm-card p-5"><p class="text-zinc-400 text-sm">Approved Today</p><h2 class="text-3xl font-black text-emerald-400">{{ approved_today }}</h2></div>
+    <div class="adm-card p-5"><p class="text-zinc-400 text-sm">Rejected</p><h2 class="text-3xl font-black text-rose-400">{{ rejected }}</h2></div>
+    <div class="adm-card p-5"><p class="text-zinc-400 text-sm">Today's Amount</p><h2 class="text-2xl font-black">{{ money(current_user, today_amount) }}</h2></div>
   </div>
 
-  <form method="GET" class="glass rounded-2xl p-4 flex gap-3">
+  <form method="GET" class="adm-card p-4 flex gap-3">
     <select name="status" class="bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm">
       <option value="">All Status</option>
       {% for s in ['Pending','Processing','Approved','Rejected','Paid'] %}
@@ -26,8 +27,8 @@
     <button class="bg-indigo-600 px-5 rounded-xl text-sm font-semibold">Filter</button>
   </form>
 
-  <div class="glass rounded-3xl overflow-hidden">
-    <table class="w-full text-sm">
+  <div class="adm-card overflow-hidden">
+    <table class="adm-table">
       <thead class="bg-slate-800 text-left text-zinc-400">
         <tr>
           <th class="p-4">ID</th>
@@ -49,7 +50,7 @@
           <td class="p-4">{{ w.payment_method or '—' }}</td>
           <td class="p-4 text-xs">{{ w.account_number or w.wallet_address or '—' }}</td>
           <td class="p-4">{{ w.status }}</td>
-          <td class="p-4 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at.strftime('%d %b %Y') }}{% endif %}</td>
+          <td class="p-4 text-xs text-zinc-500">{% if w.created_at %}{{ w.created_at|localtime('%d %b %Y') }}{% endif %}</td>
           <td class="p-4 space-x-2 whitespace-nowrap">
             {% if w.status == 'Pending' %}
               <a href="{{ url_for('admin.mark_withdrawal_processing', withdrawal_id=w.id) }}" class="text-amber-400 text-xs font-semibold">Processing</a>

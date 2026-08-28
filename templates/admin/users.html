@@ -3,123 +3,63 @@
 {% block page_title %}Users{% endblock %}
 {% block content %}
 {% if current_user.is_agent and not current_user.is_admin %}
-<div class="rounded-2xl border border-teal-500/30 bg-teal-500/10 px-4 py-3 text-sm text-teal-100 mb-4">
-  <strong>Team leader mode</strong> — you only see users who signed up under your referral tree (pyramid).
+<div class="rounded-xl border border-teal-500/25 bg-teal-500/10 px-4 py-3 text-sm text-teal-100 mb-4">
+  <strong>Team leader mode</strong> — only users under your referral tree.
 </div>
 {% endif %}
-
-<div class="space-y-6">
+<div class="space-y-5 max-w-7xl">
   <div class="flex flex-wrap gap-3 items-center justify-between">
-    <div class="flex flex-wrap gap-2">
-      <a href="{{ url_for('admin.create_user') }}?role=user"
-         class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-bold shadow-lg shadow-indigo-900/30 hover:brightness-110 transition">
-        <i class="fa-solid fa-user-plus"></i> Add user
-      </a>
-      <a href="{{ url_for('admin.create_user') }}?role=admin"
-         class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-3 text-sm font-bold shadow-lg shadow-amber-900/20 hover:brightness-110 transition">
-        <i class="fa-solid fa-user-shield"></i> Create admin
-      </a>
+    <div>
+      <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-500">Directory</p>
+      <h2 class="adm-metal text-xl mt-0.5">{% if users.total is defined %}{{ users.total }}{% else %}Users{% endif %}</h2>
     </div>
-    <p class="text-sm text-zinc-400 font-medium">{{ users.total }} users</p>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.create_user') }}?role=user" class="adm-btn"><i class="fa-solid fa-user-plus"></i> Add user</a>
+      {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.create_user') }}?role=admin" class="adm-btn-ghost"><i class="fa-solid fa-user-shield"></i> Create admin</a>
+      {% endif %}
+    </div>
   </div>
-
-  <form method="GET" class="glass rounded-2xl p-4 flex flex-wrap gap-3 items-center">
-    <input name="q" value="{{ q or '' }}" placeholder="Search username, email, phone..."
-           class="flex-1 min-w-[200px] bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm">
-    <label class="flex items-center gap-2 text-sm text-zinc-300">
-      <input type="checkbox" name="negative" value="1" {% if filter_neg %}checked{% endif %} class="rounded">
-      Negative balance
+  <form method="GET" class="adm-card p-4 flex flex-wrap gap-3 items-center">
+    <input name="q" value="{{ q or '' }}" placeholder="Search username, email, phone…" class="flex-1 min-w-[200px] text-sm">
+    <label class="flex items-center gap-2 text-sm text-zinc-400">
+      <input type="checkbox" name="negative" value="1" {% if filter_neg %}checked{% endif %} class="rounded"> Negative balance
     </label>
-    <button class="bg-indigo-600 hover:bg-indigo-500 px-5 py-3 rounded-xl text-sm font-semibold transition">Search</button>
+    <button type="submit" class="adm-btn">Search</button>
   </form>
-
-  <div class="glass rounded-3xl overflow-hidden">
-    <table class="w-full text-base">
-      <thead class="bg-slate-800/90 text-left text-zinc-400 text-sm">
-        <tr>
-          <th class="p-5">User</th>
-          <th class="p-5">Membership</th>
-          <th class="p-5">Telegram</th>
-          <th class="p-5">Balance</th>
-          <th class="p-5">Presence</th>
-          <th class="p-5 text-right">Action</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-white/5">
-        {% for user in users.items %}
-        <tr class="hover:bg-white/[0.03] transition">
-          <td class="p-5">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/30 to-violet-600/30 border border-white/10 flex items-center justify-center text-lg font-black text-indigo-200 shrink-0">
-                {{ (user.username or '?')[0]|upper }}
-              </div>
-              <div class="min-w-0">
-                <p class="text-lg font-bold tracking-tight">
-                  {{ user.username }}
-                  {% if user.is_admin %}<span class="ml-1 text-[10px] align-middle rounded-md bg-amber-500/20 text-amber-300 px-1.5 py-0.5">ADMIN</span>{% endif %}{% if user.is_agent %}<span class="ml-1 text-[10px] align-middle rounded-md bg-teal-500/20 text-teal-300 px-1.5 py-0.5">AGENT</span>{% endif %}
-                </p>
-                <p class="text-sm text-zinc-400 mt-0.5">{{ user.full_name or '—' }}</p>
-                <p class="text-xs text-zinc-500 mt-0.5">{{ user.email }}{% if user.phone %} · {{ user.phone }}{% endif %}</p>
-              </div>
-            </div>
-          </td>
-          <td class="p-5">
-            <span class="inline-flex items-center rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-sm font-semibold">
-              {{ user.membership.name if user.membership else '—' }}
-            </span>
-          </td>
-                      <td class="p-4">
-              {% if user.telegram_chat_id %}
-              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-2.5 py-1 text-[10px] font-bold text-emerald-300" title="{{ user.telegram_chat_id }}">Linked</span>
-              {% else %}
-              <span class="inline-flex items-center gap-1 rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-[10px] font-bold text-zinc-500">Not linked</span>
-              {% endif %}
+  <div class="adm-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="adm-table">
+        <thead>
+          <tr><th>User</th><th>Membership</th><th>Telegram</th><th>Balance</th><th>Presence</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for user in users.items %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="font-semibold text-sky-200 hover:text-white">@{{ user.username }}</a>
+              <p class="text-[11px] text-zinc-500">{{ user.full_name or '' }} · #{{ user.id }}</p>
+              {% if user.is_agent %}<span class="adm-badge text-violet-200">Agent</span>{% endif %}
+              {% if user.is_admin %}<span class="adm-badge text-amber-200">Admin</span>{% endif %}
             </td>
-<td class="p-5">
-            <p class="text-lg font-black {% if (user.available_balance or 0)|float < 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">
-              {{ money(current_user, user.available_balance) }}
-            </p>
-          </td>
-          <td class="p-5">
-            {% set ls = user.last_seen or user.last_login %}
-            {% set online = ls and ((now_utc - ls).total_seconds() < 300) if now_utc is defined and ls else false %}
-            {% if user.is_blocked %}
-            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-rose-300">
-              <span class="w-2 h-2 rounded-full bg-rose-400"></span> Blocked
-            </span>
-            {% elif online %}
-            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-300">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online
-            </span>
-            {% else %}
-            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-400">
-              <span class="w-2 h-2 rounded-full bg-zinc-500"></span> Offline
-            </span>
-            {% endif %}
-            <p class="text-[11px] text-zinc-500 mt-1">
-              {% if ls %}{{ format_gmt(ls, '%d %b %H:%M') if format_gmt is defined else (ls.strftime('%d %b %H:%M') ~ ' GMT') }}{% else %}Never{% endif %}
-            </p>
-          </td>
-          <td class="p-5 text-right">
-            <a href="{{ url_for('admin.view_user', user_id=user.id) }}"
-               class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-900/40 hover:scale-[1.03] hover:shadow-indigo-700/40 active:scale-[0.98] transition">
-              Open
-              <i class="fa-solid fa-arrow-right text-xs opacity-90"></i>
-            </a>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" class="p-12 text-center text-zinc-500">No users found</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            <td>{{ user.membership.name if user.membership else '—' }}</td>
+            <td class="text-xs text-zinc-400">{{ user.telegram_chat_id or '—' }}</td>
+            <td class="font-semibold {% if (user.available_balance or 0)|float < 0 %}text-rose-300{% else %}text-emerald-300{% endif %}">{{ money(current_user, user.available_balance or 0) }}</td>
+            <td class="text-xs text-zinc-500">{% if user.last_login %}{{ user.last_login.strftime('%d %b %H:%M') }} UTC{% else %}Never{% endif %}</td>
+            <td class="text-right"><a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="text-xs font-bold text-zinc-300 hover:text-white">Open →</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="p-12 text-center text-zinc-500">No users found</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-
-  {% if users.pages > 1 %}
-  <div class="flex justify-center gap-2">
-    {% if users.has_prev %}<a href="{{ url_for('admin.users', page=users.prev_num, q=q) }}" class="px-4 py-2 rounded-xl bg-white/5 text-sm font-medium">Prev</a>{% endif %}
-    <span class="text-sm text-zinc-400 py-2">{{ users.page }} / {{ users.pages }}</span>
-    {% if users.has_next %}<a href="{{ url_for('admin.users', page=users.next_num, q=q) }}" class="px-4 py-2 rounded-xl bg-white/5 text-sm font-medium">Next</a>{% endif %}
+  {% if users.pages is defined and users.pages > 1 %}
+  <div class="flex gap-2 justify-center items-center">
+    {% if users.has_prev %}<a class="adm-btn-ghost" href="{{ url_for('admin.users', page=users.prev_num, q=q or '') }}">← Prev</a>{% endif %}
+    <span class="text-sm text-zinc-500">Page {{ users.page }} / {{ users.pages }}</span>
+    {% if users.has_next %}<a class="adm-btn-ghost" href="{{ url_for('admin.users', page=users.next_num, q=q or '') }}">Next →</a>{% endif %}
   </div>
   {% endif %}
 </div>
